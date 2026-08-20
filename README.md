@@ -31,7 +31,6 @@
 - Dark Material 3 Expressive interface
 - Official OpenGL ES branding and `#BA2A8D` primary accent
 
-
 # Screenshots
 
 <p align="center">
@@ -51,9 +50,9 @@
   <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/database_0.1.11.png" width="500">
 </p>
 
+## UI
 
-
-
+OpenGLESScope uses a dark Material 3 Expressive interface designed for dense graphics-capability data without hiding the underlying implementation evidence.
 ## UI
 
 OpenGLESScope uses a dark Material 3 Expressive interface designed for dense graphics-capability data without hiding the underlying implementation evidence.
