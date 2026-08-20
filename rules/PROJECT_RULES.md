@@ -64,8 +64,8 @@
 - Stored report IDs are SHA-256 hashes of stable canonical JSON.
 - Pagination uses server-authored submitted_at/id ordering.
 
-## Release 0.1.19
-- Application version is 0.1.19. Database versioning is independent and changes only when the database is explicitly updated.
+## Release 0.1.20
+- Application version is 0.1.20 with versionCode 120. Database versioning is independent and changes only when the database is explicitly updated.
 - Package/namespace is com.efishell.openglesscope.
 - Official release repository is EFIShell0/OpenGLESScope.
 - Official database repository is EFIShell0/OpenGLESScope_database.
@@ -158,3 +158,16 @@
 - The probe service accepts result paths only as direct children of the private cache/probe directory with the expected generated filename pattern.
 - Release source, resources, documentation, archive entries and binary asset metadata contain no legacy graphics-project identifiers or external comparison-project identifiers.
 - Coverage comparison is an engineering audit input only; comparison-project branding is never shipped in application artifacts.
+
+## Release 0.1.20 update-channel requirements
+- Application version is 0.1.20 with versionCode 120. Database versioning remains independent and is not changed by this application release.
+- The official update source remains the public EFIShell0/OpenGLESScope GitHub repository only.
+- Update metadata is obtained from the official GitHub Releases API release list so a repository whose newest published release is marked pre-release does not fail with GitHub's `/releases/latest` 404 behavior.
+- Draft GitHub releases are never update candidates.
+- Published stable and pre-release entries may be considered, but a candidate must have a parseable dotted numeric version and must be strictly newer than the installed application version.
+- At most 20 recent official releases are materialized and the response body is bounded to 2 MiB.
+- Candidate ordering is determined by parsed numeric version rather than trusting GitHub list order.
+- APK selection retains installed-ABI matching with universal fallback.
+- Release asset URLs remain restricted to HTTPS github.com paths under `/EFIShell0/OpenGLESScope/releases/download/` with no user-info, query or fragment.
+- Startup update checks remain metadata-only and silent when up to date or when a background check fails. Manual checks use the same metadata path and surface actionable failures.
+- No APK download starts until explicit user confirmation. Downloaded APK verification continues to require the expected package identity, signing certificate, strictly newer versionCode and strictly newer versionName before Android's installer is opened.

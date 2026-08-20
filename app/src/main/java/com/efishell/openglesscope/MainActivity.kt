@@ -134,7 +134,7 @@ import java.util.concurrent.TimeUnit
 
 private const val DATABASE_API = "https://openglesscope-database-api.openglesscope.workers.dev"
 private const val DATABASE_WEB = "https://efishell0.github.io/OpenGLESScope_database/"
-private const val RELEASE_API = "https://api.github.com/repos/EFIShell0/OpenGLESScope/releases/latest"
+private const val RELEASES_API = "https://api.github.com/repos/EFIShell0/OpenGLESScope/releases?per_page=20"
 private const val REPOSITORY_WEB = "https://github.com/EFIShell0/OpenGLESScope"
 private const val DEVELOPER_WEB = "https://github.com/EFIShell0"
 private val Brand = ComposeColor(0xFFBA2A8D)
@@ -303,17 +303,28 @@ class MainActivity : ComponentActivity() {
 
     private fun fetchLatestCompatibleUpdate(): AppUpdate? {
         val request = Request.Builder()
-            .url(RELEASE_API)
+            .url(RELEASES_API)
             .header("Accept", "application/vnd.github+json")
+            .header("X-GitHub-Api-Version", "2022-11-28")
             .header("User-Agent", "OpenGLESScope/${installedVersionName()}")
             .get()
             .build()
         return HTTP_CLIENT.newCall(request).execute().use { response ->
             if (!response.isSuccessful) error("Update check failed (HTTP ${response.code}).")
-            val json = JSONObject(readResponseTextLimited(response.body, 1024 * 1024))
-            val latest = json.optString("tag_name").trim().removePrefix("v")
-            if (!isNewerVersion(latest, installedVersionName())) return null
-            val assets = json.optJSONArray("assets") ?: return null
+            val releases = JSONArray(readResponseTextLimited(response.body, 2 * 1024 * 1024))
+            val current = installedVersionName()
+            val candidates = (0 until releases.length())
+                .mapNotNull { releases.optJSONObject(it) }
+                .filter { !it.optBoolean("draft", false) }
+                .mapNotNull { release ->
+                    val version = release.optString("tag_name").trim().removePrefix("v")
+                    if (version.isBlank() || !version.matches(Regex("\\d+(?:\\.\\d+){1,3}(?:[-+][0-9A-Za-z.-]+)?"))) null else release to version
+                }
+                .sortedWith { a, b -> -compareVersions(a.second.substringBefore('-'), b.second.substringBefore('-')) }
+            val candidate = candidates.firstOrNull { isNewerVersion(it.second, current) } ?: return null
+            val json = candidate.first
+            val latest = candidate.second
+            val assets = json.optJSONArray("assets") ?: error("A newer OpenGLESScope release exists, but its asset list is unavailable.")
             val apkAssets = (0 until assets.length()).mapNotNull { assets.optJSONObject(it) }.filter { it.optString("name").endsWith(".apk", true) }
             val abi = detectInstalledAbi(this)
             val abiTokens = when (abi) {
@@ -328,7 +339,7 @@ class MainActivity : ComponentActivity() {
             val url = selected.optString("browser_download_url")
             val parsedUrl = url.toHttpUrlOrNull()
             if (parsedUrl == null || parsedUrl.scheme != "https" || parsedUrl.host != "github.com" || parsedUrl.username.isNotEmpty() || parsedUrl.password.isNotEmpty() || parsedUrl.query != null || parsedUrl.fragment != null || !parsedUrl.encodedPath.startsWith("/EFIShell0/OpenGLESScope/releases/download/")) error("The release APK URL is not an official OpenGLESScope GitHub release asset.")
-            AppUpdate(latest, selected.optString("name"), url, json.optString("body").trim().ifBlank { "No release notes were provided for this GitHub release." }, abi, if (exact != null) abi else "universal", installedVersionName(), installedVersionCode())
+            AppUpdate(latest, selected.optString("name"), url, json.optString("body").trim().ifBlank { "No release notes were provided for this GitHub release." }, abi, if (exact != null) abi else "universal", current, installedVersionCode())
         }
     }
 
