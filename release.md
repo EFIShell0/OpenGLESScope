@@ -1,3 +1,8 @@
-# OpenGLESScope 0.1.0
+# OpenGLESScope 0.1.19
 
-Initial OpenGL ES/EGL capability-viewer release with blue branding, native runtime collection, searchable capability screens, Android Display/HDR reporting, complete TXT/HTML export, explicit public database submission, official update checks, three Android ABIs, and no third-party graphics driver bundle path.
+Version name: `0.1.19`  
+Version code: `119`
+
+## Changes
+
+TXT and HTML reports now contain capability evidence and local report metadata only. Public database, database API and repository URLs are no longer embedded in exported reports. Application-side database and repository actions remain available from Info.

@@ -1,11 +1,10 @@
-# OpenGLESScope 0.1.0
+# OpenGLESScope 0.1.19
 
-OpenGLESScope is an Android OpenGL ES/EGL capability viewer built around real OpenGL ES and EGL runtime queries.
+OpenGLESScope collects runtime OpenGL ES, EGL and Android display/HDR capability evidence from the active Android implementation.
 
-It reports renderer/vendor strings, OpenGL ES and GLSL ES versions, runtime GL/EGL extensions, implementation limits, compressed texture formats, shader precision, EGL configurations, and Android Display/HDR information. Third-party graphics driver bundle loading is intentionally absent.
+## 0.1.19
 
-Package: `com.efishell.openglesscope`
-
-Database: `https://efishell0.github.io/OpenGLESScope_database/`
-
-Repository: `https://github.com/EFIShell0/OpenGLESScope`
+- TXT exports no longer embed public database, database API or repository URLs.
+- HTML exports no longer include the bottom links section.
+- Database submission, update checks and Info actions are unchanged.
+- Export completeness, Android TV navigation, isolated native probing and ABI release gates remain unchanged.

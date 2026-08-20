@@ -24,6 +24,9 @@
 - arm64-v8a required.
 - x86_64 required.
 - x86 intentionally excluded.
+- Release builds must produce four APK artifacts: universal, arm64-v8a, armeabi-v7a and x86_64.
+- The universal APK must contain exactly arm64-v8a, armeabi-v7a and x86_64 native libraries and must not contain x86.
+- Each split APK must contain only its declared ABI native library.
 
 ## Architecture
 - Kotlin and Jetpack Compose for UI.
@@ -61,10 +64,97 @@
 - Stored report IDs are SHA-256 hashes of stable canonical JSON.
 - Pagination uses server-authored submitted_at/id ordering.
 
-## Release 0.1.0
-- Application and database version are 0.1.0.
+## Release 0.1.19
+- Application version is 0.1.19. Database versioning is independent and changes only when the database is explicitly updated.
 - Package/namespace is com.efishell.openglesscope.
 - Official release repository is EFIShell0/OpenGLESScope.
 - Official database repository is EFIShell0/OpenGLESScope_database.
-- Primary UI accent is blue throughout the application and database.
+- Primary UI accent is the official OpenGL ES brand tone #BA2A8D throughout the application and database.
 - Only OpenGL ES, EGL and Android display capability paths are permitted.
+
+## 0.1.19 audit additions
+- OpenGL ES capability collection creates the highest context the system implementation can provide, then reports the actual runtime GL_VERSION without guessing.
+- Android HDR type collection uses Display.Mode.supportedHdrTypes on API 34+ and the legacy HDR capability list only on older supported Android versions.
+- Update checks follow the official release flow: startup performs a non-blocking metadata-only check, manual checks use the same path, and no APK is downloaded without explicit user confirmation.
+- UI, TXT and HTML expose the complete collected OpenGL ES, EGL, display/HDR, limits, extensions, formats, shader precision, query diagnostics and EGL-config datasets. Database submission must remain compatible with the independently versioned accepted schema and includes the complete human-readable report snapshot.
+- The update installer uses REQUEST_INSTALL_PACKAGES only for the explicit update flow and a non-exported FileProvider restricted to cache/updates.
+- Official OpenGL ES artwork is the only OpenGL ES brand source; the application does not invent a replacement OpenGL ES mark.
+
+- Shader and program binary format enumerations are reported only from the corresponding runtime GL queries.
+- Version-gated OpenGL ES 3.0, 3.1 and 3.2 implementation limits are queried directly from the current context.
+
+- JNI entry points use stable non-mangled Java method names and are protected from release shrinking/renaming.
+- Phone launcher, round launcher, adaptive launcher and Android TV banner preserve the established application shell layout geometry while using the official OpenGL ES artwork and SCOPE wordmark.
+- Application shell quality parity includes icon-based navigation, back/settings/info affordances and landscape navigation behavior matching the established application shell, excluding API-specific pages and brand colors.
+- Application-shell parity requires the established navigation geometry, spring page transitions, animated status banners, landscape focus behavior, card spacing/radii and expressive action-button alignment to remain intact unless a platform constraint requires a documented deviation.
+
+## 0.1.19 collector-quality requirements
+- Native OpenGL ES/EGL probing runs in the dedicated non-exported `:opengles_probe` process. The UI process must not load the collector native library.
+- The probe process uses one worker thread and a process-wide native-probe lock.
+- Probe results are complete snapshots published through private-cache temporary-file replacement; partial snapshots are not parsed as final reports.
+- Probe result size is bounded to 8 MiB and probe duration to 20 seconds. Timeout/oversize handling terminates the probe process and reports Unavailable instead of retaining a stuck native worker.
+- A native-library load failure, JNI failure or probe exception must not crash the main application process.
+- Every attempted GL implementation query records an explicit Available or Unavailable diagnostic. Failed queries must not silently disappear.
+- Queries that are not applicable to the actual core version or exact extension evidence are not executed merely to populate a field.
+- OpenGL ES 2.0/3.0/3.1/3.2 implementation-limit families used by the comparison capability viewer are a minimum coverage floor; current Khronos core requirements remain authoritative.
+- Known compressed/shader/program binary enums are displayed as symbolic name plus raw hexadecimal value. Unknown enumerants remain raw hexadecimal values.
+- EGL config enumeration covers the EGL 1.5 core configuration attribute set and preserves per-attribute query failure as unavailable/null evidence.
+- Current Android display mode, resolution and supported display modes are display evidence only and must not be interpreted as GL/EGL capability.
+- UI, TXT and HTML exports must expose every collected dataset and query diagnostic. Export is disabled when the base capability report is unavailable.
+- Database submission remains compatible with the independently versioned database schema. No application-only release may mutate the database schema or version.
+- Database response parsing is bounded, database URL construction is restricted to the official HTTPS host, and report submission remains explicit and complete-report only.
+
+## 0.1.19 UI and coverage requirements
+- Settings is not a standalone destination. Report export and database actions live in Info. Collection policy and raw network-endpoint cards are not exposed as standalone Info sections.
+- Primary page animation direction is derived from the visible navigation order, never enum declaration order.
+- Search fields preserve the established rounded 22 dp geometry, spacing and placeholder presentation.
+- Android-reported HDR types use the established HDR card/logo presentation where matching bundled artwork exists; unknown types remain text and are never guessed.
+- Large LazyColumn datasets use stable keys where the collected key is intrinsically unique.
+- external OpenGL ES capability reference OpenGL ES 2.0/3.0/3.1/3.2 information families are a minimum comparison floor, excluding sensors and unrelated Android inventory. Khronos core specifications remain authoritative.
+- UI, TXT and HTML must continue to expose the same complete collected capability datasets and diagnostics.
+
+## 0.1.19 audit additions
+- Android TV D-pad, Enter/Center and Back navigation are first-class usability requirements. All actionable cards and navigation destinations must be focusable through Compose focus traversal and expose a visible focus state.
+- Leanback launcher support and non-required touchscreen declarations remain present so television devices do not require touch input.
+- Complete database payload parity includes query diagnostics, all collected EGL 1.5 configuration attributes and Android display mode evidence already present in UI/TXT/HTML. Database versioning remains independent.
+- “All OpenGL ES queries” means all relevant implementation capability queries for the active core version and evidenced extensions, not mutable rendering state, object state, framebuffer state or synthetic feature tests.
+
+## 0.1.19 export, database and update parity requirements
+- TXT and HTML export use Android Storage Access Framework CreateDocument on phones and tablets.
+- Android TV export, and document-provider launch failure, fall back to the public Downloads collection rather than silently failing.
+- Android 9 and older request WRITE_EXTERNAL_STORAGE only when the Downloads fallback is actually required; the manifest permission is capped at API 28.
+- SAF and Downloads writes report success or failure to the user and never silently discard an export error.
+- TXT and HTML generation runs off the UI thread and concurrent export generation is blocked until the current snapshot is handed to the destination flow.
+- Database submission exposes one in-flight operation at a time, remains disabled without a complete report, uses the fixed official HTTPS endpoint, sends the complete structured dataset plus canonical TXT snapshot, and never truncates the report to satisfy the 2 MiB transport bound.
+- Database response materialization is bounded to 64 KiB and success/failure parsing must tolerate an absent report ID without producing misleading UI text.
+- The HTTP resolver uses the Android platform DNS resolver, prefers IPv6 addresses when both families are available, retains IPv4 fallback, and never substitutes numeric address literals for HTTPS hostnames.
+- Update checks remain asynchronous and metadata-only until explicit download confirmation. Manual and startup checks share the same code path and status-banner behavior.
+- Update ABI selection is based on the installed native-library directory when possible, then falls back to Android supported ABIs.
+- Release asset URLs are parsed and validated as HTTPS github.com paths under EFIShell0/OpenGLESScope/releases/download with no user-info, query or fragment before download.
+- Downloaded update APKs remain bounded, private-cache confined, package-identity checked, signing-certificate checked and strictly newer by versionCode and versionName before the package installer is opened.
+
+## 0.1.19 specification and evidence requirements
+- The OpenGL ES 3.2 implementation-dependent-value tables are an explicit core coverage gate. The collector must include the applicable multisample line-width range and granularity, fragment interpolation offset bits, layer provoking vertex, primitive-restart-for-patches support and texture-buffer offset alignment queries in addition to the existing core limit families.
+- A runtime extension list is evidence, not an inference source. Extension names must retain runtime spelling and enumeration order. Any extension-specific numeric query must be gated by the exact advertised extension that defines it.
+- Feature UI must return Unknown, not Unsupported, when the relevant extension enumeration itself is unavailable.
+- Query summaries must keep Available, Unavailable, Not applicable and Unknown separate.
+- Android HDR constants may be named only when the platform API level exposes the corresponding official constant; unknown integer values remain identified by their Android HDR type value.
+- Android TV release support requires armeabi-v7a and arm64-v8a APK coverage as well as the universal APK, with x86_64 retained for the required desktop/emulator ABI. Native libraries remain 16 KiB-page compatible.
+
+## 0.1.19 Android TV browse and HTML-report requirements
+- Android TV D-pad browsing must traverse read-only capability content as well as actionable controls. Read-only section, item, metric, HDR and key/value surfaces are focus targets on television devices and request bring-into-view when focused.
+- D-pad Down/Up must be able to advance through capability evidence without requiring a touchscreen, mouse wheel or clickable control.
+- Focusability added for television browsing must not turn read-only evidence into an action and Enter/Center must not mutate state on read-only cards.
+- HTML report presentation quality tracks the established report shell: embedded application branding, hero metrics, responsive dark layout, section cards, readable wide tables, monospace technical identifiers and explicit query-status badges.
+- HTML remains self-contained and does not load remote scripts, styles, fonts or tracking resources.
+- TXT and HTML exports do not embed public database, database API or source-repository URLs; exported reports contain collected capability evidence and local report metadata only.
+- Runtime extension enumeration is vendor-neutral and complete for the active implementation: every exact GL extension token reported by the implementation and every EGL display/client extension token is retained. Vendor-specific extensions are not guessed from GPU branding.
+- Extension-specific numeric capability queries are executed only when the exact defining extension is advertised and the query is valid for the active context; vendor extensions that expose no implementation query are represented by their exact runtime extension token rather than synthetic values.
+
+## 0.1.19 completion and artifact-cleanliness requirements
+- Info must not expose standalone Collection policy or Network sections; fixed endpoint and transport policy remain implementation details unless needed for an actionable error or security disclosure.
+- TXT export, HTML export and public-database submission remain disabled while capability collection is in progress, after an incomplete collection, and whenever a complete available report snapshot does not exist.
+- A report action may become enabled only after the collection coroutine has completed and the parsed snapshot is marked available.
+- The probe service accepts result paths only as direct children of the private cache/probe directory with the expected generated filename pattern.
+- Release source, resources, documentation, archive entries and binary asset metadata contain no legacy graphics-project identifiers or external comparison-project identifiers.
+- Coverage comparison is an engineering audit input only; comparison-project branding is never shipped in application artifacts.

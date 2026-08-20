@@ -1,6 +1,5 @@
-# 0.1.0
-- Initial OpenGLESScope release.
-- Native OpenGL ES/EGL capability collector.
-- Blue OpenGLESScope branding and package identity.
-- Complete TXT/HTML export and database submission flow.
-- System OpenGL ES/EGL collection is the only graphics capability path.
+# 0.1.19
+
+- Removed database, database API and repository URLs from TXT reports.
+- Removed the links section from the bottom of HTML reports.
+- Added an export-cleanliness rule requiring capability-focused TXT/HTML output without service/repository links.
