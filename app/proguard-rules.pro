@@ -1,0 +1,2 @@
+-keep class com.efishell.openglesscope.MainActivity { *; }
+-keepclasseswithmembers class * { native <methods>; }
