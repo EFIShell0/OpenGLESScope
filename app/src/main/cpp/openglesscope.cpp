@@ -185,21 +185,6 @@ static std::pair<int, int> parseGlVersion(const char* s) {
 
 static int versionCode(const std::pair<int, int>& v) { return v.first * 100 + v.second * 10; }
 
-static std::pair<int, int> runtimeGlVersion(const char* text) {
-    const auto parsed = parseGlVersion(text);
-    GLint major = 0;
-    GLint minor = 0;
-    while (glGetError() != GL_NO_ERROR) {}
-    glGetIntegerv(GL_MAJOR_VERSION, &major);
-    const GLenum majorError = glGetError();
-    while (glGetError() != GL_NO_ERROR) {}
-    glGetIntegerv(GL_MINOR_VERSION, &minor);
-    const GLenum minorError = glGetError();
-    if (majorError == GL_NO_ERROR && minorError == GL_NO_ERROR && major >= 3 && minor >= 0) return {major, minor};
-    return parsed;
-}
-
-
 static void clearGlErrors() { while (glGetError() != GL_NO_ERROR) {} }
 
 struct QueryDiagnosticNative { std::string name; std::string status; std::string detail; };
@@ -207,6 +192,31 @@ static thread_local std::vector<QueryDiagnosticNative>* activeDiagnostics = null
 
 static std::string glErrorHex(GLenum error) { std::ostringstream o; o << "0x" << std::uppercase << std::hex << static_cast<unsigned int>(error); return o.str(); }
 static void diagnostic(const char* name, GLenum error) { if (activeDiagnostics) activeDiagnostics->push_back({name, error == GL_NO_ERROR ? "Available" : "Unavailable", error == GL_NO_ERROR ? "" : std::string("GL error ") + glErrorHex(error)}); }
+
+static const char* queryGlString(GLenum name, const char* diagnosticName) {
+    clearGlErrors();
+    const auto* value = reinterpret_cast<const char*>(glGetString(name));
+    const GLenum error = glGetError();
+    diagnostic(diagnosticName, error == GL_NO_ERROR && value != nullptr ? GL_NO_ERROR : error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
+    return error == GL_NO_ERROR ? value : nullptr;
+}
+
+static std::pair<int, int> runtimeGlVersion(const char* text) {
+    const auto parsed = parseGlVersion(text);
+    if (versionCode(parsed) < 300) return parsed;
+    GLint major = 0;
+    GLint minor = 0;
+    clearGlErrors();
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    const GLenum majorError = glGetError();
+    diagnostic("GL_MAJOR_VERSION", majorError);
+    clearGlErrors();
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    const GLenum minorError = glGetError();
+    diagnostic("GL_MINOR_VERSION", minorError);
+    if (majorError == GL_NO_ERROR && minorError == GL_NO_ERROR && major >= 3 && minor >= 0) return {major, minor};
+    return parsed;
+}
 
 
 static void addLimit(std::ostringstream& o, bool& first, const char* name, GLenum e) {
@@ -443,11 +453,14 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
         return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"eglMakeCurrent failed\"}");
     }
 
-    const char* glVendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-    const char* glRenderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
-    const char* glVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    const char* glslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+    std::vector<QueryDiagnosticNative> diagnostics;
+    activeDiagnostics = &diagnostics;
+    const char* glVendor = queryGlString(GL_VENDOR, "GL_VENDOR");
+    const char* glRenderer = queryGlString(GL_RENDERER, "GL_RENDERER");
+    const char* glVersion = queryGlString(GL_VERSION, "GL_VERSION");
+    const char* glslVersion = queryGlString(GL_SHADING_LANGUAGE_VERSION, "GL_SHADING_LANGUAGE_VERSION");
     if (glVendor == nullptr || glRenderer == nullptr || glVersion == nullptr || glslVersion == nullptr) {
+        activeDiagnostics = nullptr;
         eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroySurface(d, s);
         eglDestroyContext(d, c);
@@ -456,8 +469,6 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     }
     const auto parsed = runtimeGlVersion(glVersion);
     const int glCode = versionCode(parsed);
-    std::vector<QueryDiagnosticNative> diagnostics;
-    activeDiagnostics = &diagnostics;
     const auto glExt = glExtensions(glCode);
     const char* clientExtensionText = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
     const auto clientExt = splitExt(clientExtensionText);
@@ -559,6 +570,7 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
         addLimit(o, first, "GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS", GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS);
         addLimit64(o, first, "GL_MAX_UNIFORM_BLOCK_SIZE", GL_MAX_UNIFORM_BLOCK_SIZE);
         addLimit(o, first, "GL_MAX_UNIFORM_BUFFER_BINDINGS", GL_MAX_UNIFORM_BUFFER_BINDINGS);
+        addLimit(o, first, "GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT", GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT);
         addLimit(o, first, "GL_MAX_VARYING_COMPONENTS", GL_MAX_VARYING_COMPONENTS);
         addLimit(o, first, "GL_MAX_VERTEX_OUTPUT_COMPONENTS", GL_MAX_VERTEX_OUTPUT_COMPONENTS);
         addLimit(o, first, "GL_MAX_VERTEX_UNIFORM_BLOCKS", GL_MAX_VERTEX_UNIFORM_BLOCKS);
@@ -605,6 +617,7 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
         addLimit(o, first, "GL_MAX_SAMPLE_MASK_WORDS", GL_MAX_SAMPLE_MASK_WORDS);
         addLimit64(o, first, "GL_MAX_SHADER_STORAGE_BLOCK_SIZE", GL_MAX_SHADER_STORAGE_BLOCK_SIZE);
         addLimit(o, first, "GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS", GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS);
+        addLimit(o, first, "GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT", GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT);
         addLimit(o, first, "GL_MAX_UNIFORM_LOCATIONS", GL_MAX_UNIFORM_LOCATIONS);
         addLimit(o, first, "GL_MAX_VERTEX_ATTRIB_BINDINGS", GL_MAX_VERTEX_ATTRIB_BINDINGS);
         addLimit(o, first, "GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET", GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET);

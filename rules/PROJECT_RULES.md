@@ -189,3 +189,28 @@
 - TXT Application information follows the established VulkanScope hierarchy while retaining OpenGLESScope identity: Application, version, version code, package, installed application ABI, Developer, Nickname and the EFIShell0 GitHub profile.
 - The TXT GitHub entry is application/developer profile metadata only. Database, Database API and source-repository URLs remain excluded from exported TXT/HTML metadata unless a later rule explicitly changes that policy.
 - These presentation/export changes must not alter OpenGL ES/EGL capability collection, query semantics, diagnostics, submission completeness, database schema or update-channel security.
+
+
+## Release 0.1.23 Overview GPU-logo parity requirements
+- Application version is 0.1.23 with versionCode 123. Database versioning remains independent and is not changed by this application release.
+- The Overview hero GPU vendor artwork uses the same geometry as VulkanScope: an 82 dp outer card, 18 dp corner radius, #111111 card surface, 8 dp internal image padding and ContentScale.Fit.
+- Vendor artwork remains presentation-only and must never infer OpenGL ES/EGL capability support from branding.
+- This release must not alter OpenGL ES/EGL collection, query semantics, diagnostics, report completeness, database schema/submission behavior, update security or ABI policy.
+
+
+## Release 0.1.24 end-to-end producer/database and specification-audit requirements
+- Application version is 0.1.24 with versionCode 124. OpenGLESScope Database remains independently versioned; this release is validated against Database 0.1.19 without mutating its D1 schema or Worker version.
+- Database submission must remain accepted by the Database 0.1.19 exact schema. Top-level display evidence and technicalReport.display remain byte-semantically equivalent after JSON materialization, including nullable mode and wide-color evidence.
+- The driver.version database field must not reuse GL_VERSION. OpenGL ES exposes implementation/version identity through GL_VERSION but no standardized standalone graphics-driver version query; absent standardized evidence is reported explicitly as unavailable.
+- Android display evidence that cannot be queried on the running API level is null/unavailable, never fabricated as false/unsupported. In particular, wide-color-gamut evidence is unavailable before API 26.
+- Android HDR_TYPE_INVALID is never presented as an HDR capability. API 34+ mode-specific HDR types remain authoritative for the active Display.Mode; other unknown non-invalid integer values remain visible as raw Android HDR type values.
+- Display/HDR evidence is refreshed when Android reports display addition, removal or change so UI, TXT, HTML and Database submission do not silently retain a stale mode snapshot.
+- OpenGL ES 3.0 core implementation-dependent coverage includes GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT. OpenGL ES 3.1+ coverage includes GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT. Both are queried directly only when their core version applies and receive query diagnostics.
+- GL_VENDOR, GL_RENDERER, GL_VERSION and GL_SHADING_LANGUAGE_VERSION successful runtime queries receive diagnostics. GL_MAJOR_VERSION and GL_MINOR_VERSION are queried only for OpenGL ES 3.0+ and fall back to the parsed GL_VERSION core version when unavailable.
+- UI labels must distinguish parsed core-version fields from direct GL_MAJOR_VERSION/GL_MINOR_VERSION query evidence.
+- EGL Config search covers every displayed configuration attribute rather than only ID/renderable/surface fields.
+- TXT, HTML, UI and Database payload retain the same collected datasets: runtime identity, limits, exact GL/EGL extension tokens, format enumerations, precision, diagnostics, EGL configs and Android display/HDR evidence. Newly collected core alignment values flow through all four paths without a presentation-only omission.
+- Generated HTML remains self-contained, escapes report-derived strings and declares a restrictive local CSP plus no-referrer policy; no remote script, style, font or tracking dependency is permitted.
+- Update version ordering ignores SemVer build metadata for precedence and orders a stable release above a pre-release with the same numeric core. Numeric pre-release identifiers compare numerically and build metadata never turns a newer release into an older one.
+- Source release archives exclude transient Python bytecode/cache directories and other generated build caches.
+- Current Khronos OpenGL ES 3.2 / GLSL ES 3.20 and EGL 1.5 specifications plus current Android Display/HDR API documentation remain the primary specification references. No marketing/vendor database substitutes for runtime evidence.

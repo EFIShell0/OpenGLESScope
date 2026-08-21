@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.content.Intent
+import android.hardware.display.DisplayManager
 import android.content.pm.PackageManager
 import android.provider.Settings
 import android.provider.MediaStore
@@ -14,6 +15,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Display
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -94,6 +97,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -179,7 +183,7 @@ internal data class GlReport(
     val eglConfigs: List<EglConfigEntry>,
     val diagnostics: List<QueryDiagnostic>
 )
-internal data class DisplayInfo(val name: String, val modeId: Int, val width: Int, val height: Int, val refreshRate: Float, val supportedModes: List<String>, val hdrTypes: List<String>, val desiredMaxLuminance: Float?, val desiredMaxAverageLuminance: Float?, val desiredMinLuminance: Float?, val wideColor: Boolean)
+internal data class DisplayInfo(val name: String, val modeId: Int?, val width: Int?, val height: Int?, val refreshRate: Float?, val supportedModes: List<String>, val hdrTypes: List<String>, val desiredMaxLuminance: Float?, val desiredMaxAverageLuminance: Float?, val desiredMinLuminance: Float?, val wideColor: Boolean?)
 private enum class EvidenceState { Supported, Unsupported, Unknown }
 private enum class Page(val title: String) {
     Overview("Overview"), OpenGLES("OpenGL ES"), Display("Display & HDR"), EGL("EGL"), Features("Features"), Limits("Limits"), Formats("Formats"), Extensions("Extensions"), Precision("Precision"), Configs("EGL Configs"), Info("Info")
@@ -324,7 +328,7 @@ class MainActivity : ComponentActivity() {
                     val version = release.optString("tag_name").trim().removePrefix("v")
                     if (version.isBlank() || !version.matches(Regex("\\d+(?:\\.\\d+){1,3}(?:[-+][0-9A-Za-z.-]+)?"))) null else release to version
                 }
-                .sortedWith { a, b -> -compareVersions(a.second.substringBefore('-'), b.second.substringBefore('-')) }
+                .sortedWith { a, b -> -compareVersions(a.second, b.second) }
             val candidate = candidates.firstOrNull { isNewerVersion(it.second, current) } ?: return null
             val json = candidate.first
             val latest = candidate.second
@@ -356,7 +360,7 @@ class MainActivity : ComponentActivity() {
             legacy
         }
     }.getOrDefault(0L)
-    private fun isNewerVersion(candidate: String, current: String): Boolean = compareVersions(candidate.substringBefore('-'), current.substringBefore('-')) > 0
+    private fun isNewerVersion(candidate: String, current: String): Boolean = compareVersions(candidate, current) > 0
 
     internal fun downloadAndInstallUpdate(update: AppUpdate) {
         if (updateStatus is UpdateStatus.Downloading) return
@@ -498,20 +502,20 @@ private fun safeFilePart(s: String): String = s.replace(Regex("[^A-Za-z0-9._-]+"
 
 private fun displayInfo(activity: Activity): DisplayInfo {
     val d = if (Build.VERSION.SDK_INT >= 30) activity.display else @Suppress("DEPRECATION") activity.windowManager.defaultDisplay
-    if (d == null) return DisplayInfo("Unknown", 0, 0, 0, 0f, emptyList(), emptyList(), null, null, null, false)
+    if (d == null) return DisplayInfo("Unavailable", null, null, null, null, emptyList(), emptyList(), null, null, null, null)
     val hdr = if (Build.VERSION.SDK_INT >= 24) d.hdrCapabilities else null
     val rawTypes = when {
         Build.VERSION.SDK_INT >= 34 -> d.mode.supportedHdrTypes.toList()
         Build.VERSION.SDK_INT >= 24 -> @Suppress("DEPRECATION") hdr?.supportedHdrTypes?.toList().orEmpty()
         else -> emptyList()
     }
-    val types = rawTypes.distinct().map { hdrName(it) }
-    val wide = if (Build.VERSION.SDK_INT >= 26) d.isWideColorGamut else false
+    val types = rawTypes.filter { Build.VERSION.SDK_INT < 34 || it != Display.HdrCapabilities.HDR_TYPE_INVALID }.distinct().map { hdrName(it) }
+    val wide = if (Build.VERSION.SDK_INT >= 26) d.isWideColorGamut else null
     val invalid = if (Build.VERSION.SDK_INT >= 24) Display.HdrCapabilities.INVALID_LUMINANCE else -1f
     fun validLuminance(v: Float?): Float? = v?.takeIf { it != invalid && it >= 0f && it.isFinite() }
     val mode = d.mode
     val supportedModes = d.supportedModes.map { candidate -> "${candidate.physicalWidth}×${candidate.physicalHeight} @ ${String.format(java.util.Locale.US, "%.2f", candidate.refreshRate)} Hz" }.distinct()
-    return DisplayInfo(d.name, mode.modeId, mode.physicalWidth, mode.physicalHeight, mode.refreshRate, supportedModes, types, validLuminance(hdr?.desiredMaxLuminance), validLuminance(hdr?.desiredMaxAverageLuminance), validLuminance(hdr?.desiredMinLuminance), wide)
+    return DisplayInfo(d.name.ifBlank { "Unavailable" }, mode.modeId, mode.physicalWidth, mode.physicalHeight, mode.refreshRate, supportedModes, types, validLuminance(hdr?.desiredMaxLuminance), validLuminance(hdr?.desiredMaxAverageLuminance), validLuminance(hdr?.desiredMinLuminance), wide)
 }
 
 private fun hdrName(v: Int): String = when {
@@ -529,7 +533,17 @@ private fun OpenGLESScopeApp(activity: MainActivity) {
     var collecting by remember { mutableStateOf(true) }
     var collectionCompleted by remember { mutableStateOf(false) }
     var page by remember { mutableStateOf(Page.Overview) }
-    val display = remember { displayInfo(activity) }
+    var display by remember { mutableStateOf(displayInfo(activity)) }
+    DisposableEffect(activity) {
+        val displayManager = activity.getSystemService(DisplayManager::class.java)
+        val listener = object : DisplayManager.DisplayListener {
+            override fun onDisplayAdded(displayId: Int) { display = displayInfo(activity) }
+            override fun onDisplayRemoved(displayId: Int) { display = displayInfo(activity) }
+            override fun onDisplayChanged(displayId: Int) { display = displayInfo(activity) }
+        }
+        displayManager?.registerDisplayListener(listener, Handler(Looper.getMainLooper()))
+        onDispose { displayManager?.unregisterDisplayListener(listener) }
+    }
     LaunchedEffect(Unit) {
         collecting = true
         collectionCompleted = false
@@ -839,7 +853,7 @@ private fun OverviewPage(report: GlReport, display: DisplayInfo, navigate: (Page
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 MetricCard("HDR", if (display.hdrTypes.isEmpty()) "Unavailable" else "${display.hdrTypes.size} types", Modifier.weight(1f))
-                MetricCard("Wide gamut", if (display.wideColor) "Supported" else "Unsupported", Modifier.weight(1f))
+                MetricCard("Wide gamut", when (display.wideColor) { true -> "Supported"; false -> "Not supported"; null -> "Unavailable" }, Modifier.weight(1f))
             }
         }
         item {
@@ -920,7 +934,27 @@ private fun VendorLogo(vendor: String, renderer: String, modifier: Modifier = Mo
         "verisilicon" in text || "vsi" in text -> R.drawable.gpu_vendor_vsi
         else -> R.drawable.gpu_vendor_unknown
     }
-    Image(painter = painterResource(icon), contentDescription = null, contentScale = ContentScale.Fit, modifier = modifier)
+    Card(colors = CardDefaults.cardColors(containerColor = ComposeColor(0xFF111111)), shape = RoundedCornerShape(18.dp), modifier = modifier) {
+        Image(
+            painter = painterResource(icon),
+            contentDescription = when {
+                "qualcomm" in text || "adreno" in text -> "Qualcomm"
+                "arm" in text || "mali" in text -> "Arm"
+                "imagination" in text || "powervr" in text -> "Imagination Technologies"
+                "nvidia" in text || "tegra" in text -> "NVIDIA"
+                "intel" in text -> "Intel"
+                "amd" in text || "radeon" in text -> "AMD"
+                "broadcom" in text || "videocore" in text -> "Broadcom"
+                "samsung" in text || "xclipse" in text -> "Samsung"
+                "huawei" in text -> "Huawei"
+                "vivante" in text -> "Vivante"
+                "verisilicon" in text || "vsi" in text -> "VeriSilicon"
+                else -> "Unknown vendor"
+            },
+            modifier = Modifier.fillMaxSize().padding(8.dp),
+            contentScale = ContentScale.Fit
+        )
+    }
 }
 
 @Composable
@@ -967,11 +1001,13 @@ private fun ExploreCard(onNavigate: (Page) -> Unit) {
 
 @Composable
 private fun OpenGLESPage(r: GlReport) = CapabilityListPage("OpenGL ES runtime", listOf(
+    "Driver mode" to "System OpenGL ES/EGL",
+    "Driver version" to "Unavailable (OpenGL ES does not expose a standardized driver-version query)",
     "Renderer" to r.renderer,
     "Vendor" to r.vendor,
     "GL_VERSION" to r.glVersion,
-    "GL_MAJOR_VERSION" to r.glMajor.toString(),
-    "GL_MINOR_VERSION" to r.glMinor.toString(),
+    "Parsed core major" to r.glMajor.toString(),
+    "Parsed core minor" to r.glMinor.toString(),
     "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion
 ))
 
@@ -981,10 +1017,10 @@ private fun DisplayPage(d: DisplayInfo) {
         item {
             CapabilitySectionCard("Display") {
                 CapabilityKeyValue("Display", d.name)
-                CapabilityKeyValue("Current mode ID", d.modeId.toString())
-                CapabilityKeyValue("Current mode resolution", if (d.width > 0 && d.height > 0) "${d.width} × ${d.height}" else "Unavailable")
-                CapabilityKeyValue("Refresh rate", String.format(java.util.Locale.US, "%.2f Hz", d.refreshRate))
-                CapabilityKeyValue("Wide color gamut", if (d.wideColor) "SUPPORTED" else "UNSUPPORTED")
+                CapabilityKeyValue("Current mode ID", d.modeId?.toString() ?: "Unavailable")
+                CapabilityKeyValue("Current mode resolution", if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width} × ${d.height}" else "Unavailable")
+                CapabilityKeyValue("Refresh rate", d.refreshRate?.let { String.format(java.util.Locale.US, "%.2f Hz", it) } ?: "Unavailable")
+                CapabilityKeyValue("Wide color gamut", when (d.wideColor) { true -> "SUPPORTED"; false -> "NOT SUPPORTED"; null -> "UNAVAILABLE" })
             }
         }
         item {
@@ -1012,7 +1048,7 @@ private fun DisplayPage(d: DisplayInfo) {
         }
         item {
             CapabilitySectionCard("Display evidence") {
-                CapabilityKeyValue("Android wide color gamut", if (d.wideColor) "Supported" else "Unsupported")
+                CapabilityKeyValue("Android wide color gamut", when (d.wideColor) { true -> "Supported"; false -> "Not supported"; null -> "Unavailable" })
                 Text("Android display and HDR evidence is reported separately from OpenGL ES and EGL capability data.", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -1136,7 +1172,7 @@ private fun ExtensionsPage(r: GlReport) {
 private fun PrecisionPage(r: GlReport) {
     LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item { CapabilitySectionCard("Shader precision") { CapabilityKeyValue("Entries", r.precision.size.toString()) } }
-        items(r.precision) { p ->
+        items(r.precision, key = { "${it.shader}|${it.type}" }) { p ->
             CapabilityItemCard {
                 CapabilityKeyValue("Shader", p.shader)
                 CapabilityKeyValue("Type", p.type)
@@ -1152,7 +1188,18 @@ private fun eglBooleanLabel(value: Int?): String = when (value) { 0 -> "False"; 
 @Composable
 private fun ConfigsPage(r: GlReport) {
     var query by remember { mutableStateOf("") }
-    val rows = remember(r.eglConfigs, query) { r.eglConfigs.filter { query.isBlank() || it.id.toString().contains(query) || it.renderableType.orEmpty().contains(query, true) || it.surfaceType.orEmpty().contains(query, true) } }
+    val rows = remember(r.eglConfigs, query) {
+        r.eglConfigs.filter { c ->
+            query.isBlank() || listOf(
+                c.id, c.red, c.green, c.blue, c.alpha, c.depth, c.stencil, c.sampleBuffers, c.samples,
+                c.surfaceType, c.renderableType, c.conformant, c.configCaveat, c.colorBufferType, c.level,
+                c.nativeRenderable, c.nativeVisualId, c.minSwapInterval, c.maxSwapInterval, c.bufferSize,
+                c.luminanceSize, c.alphaMaskSize, c.bindToTextureRgb, c.bindToTextureRgba, c.maxPbufferWidth,
+                c.maxPbufferHeight, c.maxPbufferPixels, c.nativeVisualType, c.transparentType, c.transparentRed,
+                c.transparentGreen, c.transparentBlue
+            ).joinToString(" ") { it?.toString().orEmpty() }.contains(query, true)
+        }
+    }
     LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             CapabilitySectionCard("EGL Configs") {
@@ -1727,7 +1774,38 @@ private fun readResponseTextLimited(body: ResponseBody, maxBytes: Int): String {
     return output.toString(Charsets.UTF_8.name())
 }
 
-private fun compareVersions(a: String, b: String): Int { val aa=a.split('.').map{it.toIntOrNull()?:0}; val bb=b.split('.').map{it.toIntOrNull()?:0}; for(i in 0 until maxOf(aa.size,bb.size)){val x=aa.getOrElse(i){0}; val y=bb.getOrElse(i){0}; if(x!=y)return x.compareTo(y)}; return 0 }
+private fun compareVersions(a: String, b: String): Int {
+    fun parse(value: String): Pair<List<Int>, List<String>?> {
+        val withoutBuild = value.substringBefore('+')
+        val core = withoutBuild.substringBefore('-').split('.').map { it.toIntOrNull() ?: 0 }
+        val suffix = withoutBuild.substringAfter('-', "").takeIf { it.isNotEmpty() }?.split('.')
+        return core to suffix
+    }
+    val (aa, ap) = parse(a)
+    val (bb, bp) = parse(b)
+    for (i in 0 until maxOf(aa.size, bb.size)) {
+        val x = aa.getOrElse(i) { 0 }
+        val y = bb.getOrElse(i) { 0 }
+        if (x != y) return x.compareTo(y)
+    }
+    if (ap == null && bp != null) return 1
+    if (ap != null && bp == null) return -1
+    if (ap == null || bp == null) return 0
+    for (i in 0 until maxOf(ap.size, bp.size)) {
+        val x = ap.getOrNull(i) ?: return -1
+        val y = bp.getOrNull(i) ?: return 1
+        val xn = x.toIntOrNull()
+        val yn = y.toIntOrNull()
+        val c = when {
+            xn != null && yn != null -> xn.compareTo(yn)
+            xn != null -> -1
+            yn != null -> 1
+            else -> x.compareTo(y)
+        }
+        if (c != 0) return c
+    }
+    return 0
+}
 
 private suspend fun submitReport(context: Context, report: GlReport, display: DisplayInfo): String = withContext(Dispatchers.IO) {
     try {
@@ -1774,10 +1852,10 @@ private fun submissionJson(context: Context, r: GlReport, d: DisplayInfo): JSONO
         put("application", JSONObject().put("name", "OpenGLESScope").put("packageName", "com.efishell.openglesscope").put("version", BuildConfig.VERSION_NAME).put("versionCode", BuildConfig.VERSION_CODE))
         put("device", JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL).put("product", Build.PRODUCT).put("androidRelease", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT))
         put("gpu", JSONObject().put("name", r.renderer).put("vendor", r.vendor))
-        put("driver", JSONObject().put("mode", "System OpenGL ES/EGL").put("version", r.glVersion))
+        put("driver", JSONObject().put("mode", "System OpenGL ES/EGL").put("version", "Unavailable (OpenGL ES does not expose a standardized driver-version query)"))
         put("opengles", JSONObject().put("version", r.glVersion).put("major", r.glMajor).put("minor", r.glMinor).put("glslVersion", r.glslVersion).put("extensions", JSONArray(r.extensions)).put("extensionCount", r.extensions.size))
         put("egl", JSONObject().put("vendor", r.egl.vendor).put("version", r.egl.version).put("initializedVersion", r.egl.initializedVersion).put("clientApis", r.egl.clientApis).put("extensions", JSONArray(r.egl.extensions)).put("clientExtensions", JSONArray(r.egl.clientExtensions)).put("extensionCount", r.egl.extensions.size).put("clientExtensionCount", r.egl.clientExtensions.size))
-        put("display", JSONObject().put("name", d.name).put("modeId", d.modeId).put("width", d.width).put("height", d.height).put("refreshRate", d.refreshRate).put("supportedModes", JSONArray(d.supportedModes)).put("wideColor", d.wideColor).put("hdrTypes", JSONArray(d.hdrTypes)).putNullable("desiredMaxLuminance", d.desiredMaxLuminance).putNullable("desiredMaxAverageLuminance", d.desiredMaxAverageLuminance).putNullable("desiredMinLuminance", d.desiredMinLuminance))
+        put("display", JSONObject().put("name", d.name).putNullable("modeId", d.modeId).putNullable("width", d.width).putNullable("height", d.height).putNullable("refreshRate", d.refreshRate).put("supportedModes", JSONArray(d.supportedModes)).putNullable("wideColor", d.wideColor).put("hdrTypes", JSONArray(d.hdrTypes)).putNullable("desiredMaxLuminance", d.desiredMaxLuminance).putNullable("desiredMaxAverageLuminance", d.desiredMaxAverageLuminance).putNullable("desiredMinLuminance", d.desiredMinLuminance))
         put("collection", JSONObject().put("status", if (r.available) "available" else "unavailable").put("complete", r.available).put("source", "active Android system EGL/OpenGL ES implementation"))
         put("technicalReport", JSONObject()
             .put("schemaVersion", 1)
@@ -1791,7 +1869,7 @@ private fun submissionJson(context: Context, r: GlReport, d: DisplayInfo): JSONO
             .put("precision", JSONArray(r.precision.map { JSONObject().put("shader", it.shader).put("type", it.type).put("rangeMin", it.rangeMin).put("rangeMax", it.rangeMax).put("precision", it.precision) }))
             .put("queryDiagnostics", JSONArray(r.diagnostics.map { JSONObject().put("name", it.name).put("status", it.status).put("detail", it.detail) }))
             .put("eglConfigs", configs)
-            .put("display", JSONObject().put("name", d.name).put("modeId", d.modeId).put("width", d.width).put("height", d.height).put("refreshRate", d.refreshRate).put("supportedModes", JSONArray(d.supportedModes)).put("wideColor", d.wideColor).put("hdrTypes", JSONArray(d.hdrTypes)).putNullable("desiredMaxLuminance", d.desiredMaxLuminance).putNullable("desiredMaxAverageLuminance", d.desiredMaxAverageLuminance).putNullable("desiredMinLuminance", d.desiredMinLuminance)))
+            .put("display", JSONObject().put("name", d.name).putNullable("modeId", d.modeId).putNullable("width", d.width).putNullable("height", d.height).putNullable("refreshRate", d.refreshRate).put("supportedModes", JSONArray(d.supportedModes)).putNullable("wideColor", d.wideColor).put("hdrTypes", JSONArray(d.hdrTypes)).putNullable("desiredMaxLuminance", d.desiredMaxLuminance).putNullable("desiredMaxAverageLuminance", d.desiredMaxAverageLuminance).putNullable("desiredMinLuminance", d.desiredMinLuminance)))
         put("reportText", text)
     }
 }
@@ -1902,9 +1980,10 @@ private fun reportText(context: Context, r: GlReport, d: DisplayInfo): String = 
     appendLine("GitHub: https://github.com/EFIShell0")
     appendLine("GPU: ${r.renderer.ifBlank { "Unavailable" }}")
     appendLine("Driver mode: System OpenGL ES/EGL")
+    appendLine("Driver version: Unavailable (OpenGL ES does not expose a standardized driver-version query)")
     appendLine("OpenGL ES: ${r.glVersion.ifBlank { "Unavailable" }}")
     appendLine("EGL: ${r.egl.initializedVersion.ifBlank { r.egl.version.ifBlank { "Unavailable" } }}")
-    appendLine("Display: ${if (d.width > 0 && d.height > 0) "${d.width}x${d.height} @ ${d.refreshRate} Hz" else d.name.ifBlank { "Unavailable" }}")
+    appendLine("Display: ${if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width}x${d.height} @ ${d.refreshRate?.let { String.format(java.util.Locale.US, "%.2f", it) } ?: "Unavailable"} Hz" else d.name.ifBlank { "Unavailable" }}")
     appendLine("HDR types: ${d.hdrTypes.joinToString(", ").ifBlank { "Unavailable" }}")
     appendLine("Android: ${Build.MANUFACTURER} ${Build.MODEL}, ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
     appendLine("Supported device ABIs: ${Build.SUPPORTED_ABIS.joinToString(", ")}")
@@ -1932,10 +2011,10 @@ private fun reportText(context: Context, r: GlReport, d: DisplayInfo): String = 
     appendLine()
     appendLine("DISPLAY & HDR")
     appendLine("Display: ${d.name}")
-    appendLine("Current mode: ${d.modeId} | ${d.width}x${d.height} | ${d.refreshRate} Hz")
+    appendLine("Current mode: ${d.modeId?.toString() ?: "Unavailable"} | ${if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width}x${d.height}" else "Unavailable"} | ${d.refreshRate?.let { "$it Hz" } ?: "Unavailable"}")
     appendLine("Supported display modes (${d.supportedModes.size}): ${if (d.supportedModes.isEmpty()) "Unavailable" else d.supportedModes.joinToString(" | ")}")
-    appendLine("Refresh rate: ${d.refreshRate} Hz")
-    appendLine("Wide color gamut: ${if (d.wideColor) "Reported by Android display API" else "Not reported by Android display API"}")
+    appendLine("Refresh rate: ${d.refreshRate?.let { "$it Hz" } ?: "Unavailable"}")
+    appendLine("Wide color gamut: ${when (d.wideColor) { true -> "Reported by Android display API"; false -> "Not supported by Android display API"; null -> "Unavailable on this Android API/display context" }}")
     appendLine("HDR types: ${if (d.hdrTypes.isEmpty()) "Unavailable" else d.hdrTypes.joinToString()}")
     appendLine("Desired max luminance: ${d.desiredMaxLuminance?.let { "$it cd/m²" } ?: "Unavailable"}")
     appendLine("Desired max average luminance: ${d.desiredMaxAverageLuminance?.let { "$it cd/m²" } ?: "Unavailable"}")
@@ -1980,7 +2059,8 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
         val v = value.trim().lowercase(java.util.Locale.ROOT)
         return when {
             v == "available" || v == "supported" || v == "true" || v == "yes" -> "yes"
-            v == "unavailable" || v == "unsupported" || v == "false" || v == "no" -> "no"
+            v == "unavailable" -> "unavailable"
+            v == "unsupported" || v == "false" || v == "no" -> "no"
             v.contains("not applicable") -> "neutral"
             v.contains("unknown") -> "unknown"
             else -> "available"
@@ -2014,12 +2094,12 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
     val deviceRows = rows(listOf(
         "Manufacturer" to Build.MANUFACTURER, "Model" to Build.MODEL, "Product" to Build.PRODUCT, "Android" to Build.VERSION.RELEASE, "SDK" to Build.VERSION.SDK_INT
     ))
-    val glRows = rows(listOf("GL_RENDERER" to r.renderer, "GL_VENDOR" to r.vendor, "GL_VERSION" to r.glVersion, "Parsed core version" to "${r.glMajor}.${r.glMinor}", "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion))
+    val glRows = rows(listOf("Driver mode" to "System OpenGL ES/EGL", "Driver version" to "Unavailable (OpenGL ES does not expose a standardized driver-version query)", "GL_RENDERER" to r.renderer, "GL_VENDOR" to r.vendor, "GL_VERSION" to r.glVersion, "Parsed core version" to "${r.glMajor}.${r.glMinor}", "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion))
     val eglRows = rows(listOf("EGL_VENDOR" to r.egl.vendor, "EGL_VERSION" to r.egl.version, "Initialized EGL version" to r.egl.initializedVersion, "EGL_CLIENT_APIS" to r.egl.clientApis))
     val displayRows = rows(listOf(
-        "Display" to d.name, "Current mode ID" to d.modeId, "Current mode resolution" to if (d.width > 0 && d.height > 0) "${d.width} × ${d.height}" else "Unavailable",
-        "Refresh rate" to "${d.refreshRate} Hz", "Supported display modes" to if (d.supportedModes.isEmpty()) "Unavailable" else d.supportedModes.joinToString(" | "),
-        "Wide color gamut" to if (d.wideColor) "Reported by Android display API" else "Not reported by Android display API",
+        "Display" to d.name, "Current mode ID" to (d.modeId?.toString() ?: "Unavailable"), "Current mode resolution" to if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width} × ${d.height}" else "Unavailable",
+        "Refresh rate" to (d.refreshRate?.let { "$it Hz" } ?: "Unavailable"), "Supported display modes" to if (d.supportedModes.isEmpty()) "Unavailable" else d.supportedModes.joinToString(" | "),
+        "Wide color gamut" to when (d.wideColor) { true -> "Reported by Android display API"; false -> "Not supported by Android display API"; null -> "Unavailable on this Android API/display context" },
         "HDR types" to if (d.hdrTypes.isEmpty()) "Unavailable" else d.hdrTypes.joinToString(),
         "Desired max luminance" to d.desiredMaxLuminance?.let { "$it cd/m²" }, "Desired max average luminance" to d.desiredMaxAverageLuminance?.let { "$it cd/m²" }, "Desired min luminance" to d.desiredMinLuminance?.let { "$it cd/m²" }
     ))
@@ -2032,13 +2112,13 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
     val naQueries = r.diagnostics.count { it.status == "Not applicable" }
     val unknownQueries = r.diagnostics.count { it.status == "Unknown" }
     return buildString {
-        append("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"color-scheme\" content=\"dark\"><title>OpenGLESScope report</title>")
-        append("<style>body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:#0a0a0b;color:#f4f4f5;margin:0;line-height:1.45}.wrap{max-width:1320px;margin:0 auto;padding:28px}.hero{background:linear-gradient(135deg,#21131e,#0f1012);border:1px solid #3b2636;border-radius:26px;padding:30px;box-shadow:0 16px 50px rgba(0,0,0,.28)}h1{margin:0 0 8px;font-size:36px}h2{margin:0 0 14px;font-size:22px}.muted{color:#a7a7ae}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px}.metric{background:#141113;border:1px solid #342630;border-radius:17px;padding:14px}.section{margin-top:24px;background:#111113;border:1px solid #30242c;border-radius:22px;padding:18px;overflow:auto}.section h2{position:sticky;left:0}table{border-collapse:collapse;width:100%;min-width:660px}td,th{border-bottom:1px solid #2c2329;padding:10px 8px;text-align:left;vertical-align:top}th{color:#cbcad0;font-weight:600}.badge{display:inline-block;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:800;letter-spacing:.03em}.yes{background:#133b28;color:#74e2a6}.available{background:#39142f;color:#f06bc7}.no{background:#49171c;color:#ff8f98}.neutral{background:#403713;color:#ffd76b}.unknown{background:#292a2f;color:#c6c6cc}.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}.small{font-size:13px}.subtle{color:#7f8088}.accent{color:#f06bc7}.github-link{color:#e25db8;text-decoration:none;font-weight:600}.github-link:hover{color:#f58bd6;text-decoration:underline}.github-link:visited{color:#e25db8}@media(max-width:700px){.wrap{padding:14px}.hero{padding:20px}.section{padding:14px}h1{font-size:29px}}</style></head><body><div class=\"wrap\">")
+        append("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"color-scheme\" content=\"dark\"><meta name=\"referrer\" content=\"no-referrer\"><meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'\"><title>OpenGLESScope report</title>")
+        append("<style>body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:#0a0a0b;color:#f4f4f5;margin:0;line-height:1.45}.wrap{max-width:1320px;margin:0 auto;padding:28px}.hero{background:linear-gradient(135deg,#21131e,#0f1012);border:1px solid #3b2636;border-radius:26px;padding:30px;box-shadow:0 16px 50px rgba(0,0,0,.28)}h1{margin:0 0 8px;font-size:36px}h2{margin:0 0 14px;font-size:22px}.muted{color:#a7a7ae}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px}.metric{background:#141113;border:1px solid #342630;border-radius:17px;padding:14px}.section{margin-top:24px;background:#111113;border:1px solid #30242c;border-radius:22px;padding:18px;overflow:auto}.section h2{position:sticky;left:0}table{border-collapse:collapse;width:100%;min-width:660px}td,th{border-bottom:1px solid #2c2329;padding:10px 8px;text-align:left;vertical-align:top}th{color:#cbcad0;font-weight:600}.badge{display:inline-block;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:800;letter-spacing:.03em}.yes{background:#133b28;color:#74e2a6}.available{background:#39142f;color:#f06bc7}.unavailable{background:#3a2b14;color:#ffc66d}.no{background:#49171c;color:#ff8f98}.neutral{background:#403713;color:#ffd76b}.unknown{background:#292a2f;color:#c6c6cc}.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}.small{font-size:13px}.subtle{color:#7f8088}.accent{color:#f06bc7}.github-link{color:#e25db8;text-decoration:none;font-weight:600}.github-link:hover{color:#f58bd6;text-decoration:underline}.github-link:visited{color:#e25db8}@media(max-width:700px){.wrap{padding:14px}.hero{padding:20px}.section{padding:14px}h1{font-size:29px}}</style></head><body><div class=\"wrap\">")
         append("<div class=\"hero\">")
         if (logoData != null) append("<div style=\"display:flex;align-items:center;justify-content:flex-start;margin-bottom:14px\"><img src=\"data:image/png;base64,$logoData\" alt=\"OpenGLESScope\" style=\"display:block;width:min(522px,100%);height:auto;max-height:76px;object-fit:contain;object-position:left center\"></div>") else append("<h1>OpenGLESScope</h1>")
         append("<div class=\"muted\">Runtime OpenGL ES and EGL capability report</div><div class=\"grid\">")
         fun metric(label: String, value: String) { append("<div class=\"metric\"><div class=\"muted small\">${e(label)}</div><strong>${e(value)}</strong></div>") }
-        metric("GPU", r.renderer.ifBlank { "Unavailable" }); metric("OpenGL ES", r.glVersion.ifBlank { "Unavailable" }); metric("EGL", r.egl.initializedVersion.ifBlank { r.egl.version }); metric("Display", if (d.width > 0 && d.height > 0) "${d.width} × ${d.height} @ ${String.format(java.util.Locale.US, "%.2f", d.refreshRate)} Hz" else d.name); metric("HDR", d.hdrTypes.joinToString(", ").ifBlank { "Unavailable" }); metric("Queries", "$availableQueries available / $unavailableQueries unavailable / $naQueries N/A / $unknownQueries unknown")
+        metric("GPU", r.renderer.ifBlank { "Unavailable" }); metric("OpenGL ES", r.glVersion.ifBlank { "Unavailable" }); metric("EGL", r.egl.initializedVersion.ifBlank { r.egl.version }); metric("Display", if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width} × ${d.height} @ ${d.refreshRate?.let { String.format(java.util.Locale.US, "%.2f", it) } ?: "Unavailable"} Hz" else d.name); metric("HDR", d.hdrTypes.joinToString(", ").ifBlank { "Unavailable" }); metric("Queries", "$availableQueries available / $unavailableQueries unavailable / $naQueries N/A / $unknownQueries unknown")
         append("</div></div>")
         fun section(title: String, header: String, body: String) { append("<div class=\"section\"><h2>${e(title)}</h2><table><thead><tr>$header</tr></thead><tbody>$body</tbody></table></div>") }
         fun htmlRows(values: List<Pair<String, String>>): String = values.joinToString("") { "<tr><td>${e(it.first)}</td><td>${it.second}</td></tr>" }

@@ -2,11 +2,11 @@
 
 **OpenGLESScope** is an advanced OpenGL ES, EGL, and Android display/HDR capability inspection and reporting tool for Android. It queries the active system graphics implementation directly and presents runtime GPU information, OpenGL ES versions, core capability state, implementation limits, extensions, compressed texture formats, shader and program binary formats, shader precision, EGL runtime information, EGL configurations, Android display modes, HDR capabilities, and query diagnostics.
 
-**Current version: 0.1.22**
+**Current version: 0.1.24**
 
 > OpenGLESScope reports what the active Android OpenGL ES/EGL implementation actually exposes. It does not infer capabilities from the GPU model, Android version, marketing specifications, or extension names alone.
 
-Database link: https://efishell0.github.io/OpenGLESScope_database/#overview
+Database link: https://efishell0.github.io/OpenGLESScope_database/
 
 ## Highlights
 
@@ -36,7 +36,7 @@ Database link: https://efishell0.github.io/OpenGLESScope_database/#overview
 # Screenshots
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/overview-1.jpg" width="200">
+  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/overview-2.jpg" width="200">
   <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/egl-configs-1.jpg" width="200">
   <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/opengles-1.jpg" width="200">
 </p>

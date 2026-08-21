@@ -1,15 +1,19 @@
-# OpenGLESScope 0.1.22 Build Audit
+# OpenGLESScope 0.1.24 Build Audit
 
-- Application version: 0.1.22
-- versionCode: 121
-- VulkanScope system navigation-bar parity (`#111111`): PASS
-- Android 10+ navigation-bar contrast enforcement disabled: PASS
-- API 27+ light-navigation-bar appearance disabled: PASS
-- HTML Application metadata parity: PASS
-- Developer/Nickname/GitHub profile rows: PASS
-- Database/API/source-repository links remain excluded from HTML export: PASS
-- Android/device HTML section remains separate: PASS
-- Android resource XML parse: PASS
-- Release verifier Python syntax: PASS
-- Source-comment scan: PASS
-- Gradle compile attempt: BLOCKED before compilation because `services.gradle.org` could not be resolved in the build environment (`UnknownHostException`). No APK compile success is claimed.
+- Application version: 0.1.24
+- versionCode: 124
+- OpenGLESScope Database 0.1.19 producer-contract review: PASS
+- Database 0.1.19 Worker contract suite: PASS
+- Database nullable display-evidence acceptance for 0.1.24: PASS
+- OpenGL ES 3.0 uniform-buffer alignment coverage: PASS
+- OpenGL ES 3.1 shader-storage-buffer alignment coverage: PASS
+- GL identity/version diagnostic coverage: PASS
+- Android API 24-25 wide-color unavailable semantics: PASS
+- Android API 34+ HDR_TYPE_INVALID exclusion: PASS
+- Display-change refresh path: PASS
+- TXT / HTML / structured-report dataset parity review: PASS
+- HTML escaping, local CSP and no-referrer hardening: PASS
+- Update-version precedence hardening: PASS
+- EGL Config full-field search: PASS
+- Release metadata and source cleanliness: PASS
+- Gradle compile: NOT VERIFIED in the assistant environment because Gradle 9.7.0 could not be downloaded from services.gradle.org.
