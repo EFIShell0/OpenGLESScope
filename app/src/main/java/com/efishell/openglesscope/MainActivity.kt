@@ -509,7 +509,7 @@ private fun displayInfo(activity: Activity): DisplayInfo {
         Build.VERSION.SDK_INT >= 24 -> @Suppress("DEPRECATION") hdr?.supportedHdrTypes?.toList().orEmpty()
         else -> emptyList()
     }
-    val types = rawTypes.filter { Build.VERSION.SDK_INT < 34 || it != Display.HdrCapabilities.HDR_TYPE_INVALID }.distinct().map { hdrName(it) }
+    val types = rawTypes.filter { it != Display.HdrCapabilities.HDR_TYPE_INVALID }.distinct().map { hdrName(it) }
     val wide = if (Build.VERSION.SDK_INT >= 26) d.isWideColorGamut else null
     val invalid = if (Build.VERSION.SDK_INT >= 24) Display.HdrCapabilities.INVALID_LUMINANCE else -1f
     fun validLuminance(v: Float?): Float? = v?.takeIf { it != invalid && it >= 0f && it.isFinite() }
@@ -537,9 +537,9 @@ private fun OpenGLESScopeApp(activity: MainActivity) {
     DisposableEffect(activity) {
         val displayManager = activity.getSystemService(DisplayManager::class.java)
         val listener = object : DisplayManager.DisplayListener {
-            override fun onDisplayAdded(displayId: Int) { display = displayInfo(activity) }
+            override fun onDisplayAdded(displayId: Int) { if (activity.display?.displayId == displayId) display = displayInfo(activity) }
             override fun onDisplayRemoved(displayId: Int) { display = displayInfo(activity) }
-            override fun onDisplayChanged(displayId: Int) { display = displayInfo(activity) }
+            override fun onDisplayChanged(displayId: Int) { if (activity.display?.displayId == displayId) display = displayInfo(activity) }
         }
         displayManager?.registerDisplayListener(listener, Handler(Looper.getMainLooper()))
         onDispose { displayManager?.unregisterDisplayListener(listener) }
@@ -1330,6 +1330,7 @@ private fun InfoPage(activity: MainActivity, report: GlReport, display: DisplayI
                 CapabilityKeyValue("Model", Build.MODEL)
                 CapabilityKeyValue("Android", Build.VERSION.RELEASE)
                 CapabilityKeyValue("SDK", Build.VERSION.SDK_INT.toString())
+                CapabilityKeyValue("Security patch", Build.VERSION.SECURITY_PATCH)
             }
         }
         item {
@@ -1850,7 +1851,7 @@ private fun submissionJson(context: Context, r: GlReport, d: DisplayInfo): JSONO
     return JSONObject().apply {
         put("schemaVersion", 2)
         put("application", JSONObject().put("name", "OpenGLESScope").put("packageName", "com.efishell.openglesscope").put("version", BuildConfig.VERSION_NAME).put("versionCode", BuildConfig.VERSION_CODE))
-        put("device", JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL).put("product", Build.PRODUCT).put("androidRelease", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT))
+        put("device", JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL).put("product", Build.PRODUCT).put("androidRelease", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT).put("securityPatch", Build.VERSION.SECURITY_PATCH))
         put("gpu", JSONObject().put("name", r.renderer).put("vendor", r.vendor))
         put("driver", JSONObject().put("mode", "System OpenGL ES/EGL").put("version", "Unavailable (OpenGL ES does not expose a standardized driver-version query)"))
         put("opengles", JSONObject().put("version", r.glVersion).put("major", r.glMajor).put("minor", r.glMinor).put("glslVersion", r.glslVersion).put("extensions", JSONArray(r.extensions)).put("extensionCount", r.extensions.size))
@@ -1986,6 +1987,7 @@ private fun reportText(context: Context, r: GlReport, d: DisplayInfo): String = 
     appendLine("Display: ${if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width}x${d.height} @ ${d.refreshRate?.let { String.format(java.util.Locale.US, "%.2f", it) } ?: "Unavailable"} Hz" else d.name.ifBlank { "Unavailable" }}")
     appendLine("HDR types: ${d.hdrTypes.joinToString(", ").ifBlank { "Unavailable" }}")
     appendLine("Android: ${Build.MANUFACTURER} ${Build.MODEL}, ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
+    appendLine("Android security patch: ${Build.VERSION.SECURITY_PATCH}")
     appendLine("Supported device ABIs: ${Build.SUPPORTED_ABIS.joinToString(", ")}")
     appendLine("Collection status: ${if (r.available) "Available" else "Unavailable"}")
     appendLine("Collection source: active Android system EGL/OpenGL ES implementation")
@@ -1995,6 +1997,7 @@ private fun reportText(context: Context, r: GlReport, d: DisplayInfo): String = 
     appendLine("Model: ${Build.MODEL}")
     appendLine("Product: ${Build.PRODUCT}")
     appendLine("Android: ${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}")
+    appendLine("Security patch: ${Build.VERSION.SECURITY_PATCH}")
     appendLine()
     appendLine("OPENGL ES")
     appendLine("GL_RENDERER: ${r.renderer}")
@@ -2092,7 +2095,7 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
         "GitHub" to "<a class=\"github-link\" href=\"https://github.com/EFIShell0\" rel=\"noopener noreferrer\">github.com/EFIShell0</a>"
     )
     val deviceRows = rows(listOf(
-        "Manufacturer" to Build.MANUFACTURER, "Model" to Build.MODEL, "Product" to Build.PRODUCT, "Android" to Build.VERSION.RELEASE, "SDK" to Build.VERSION.SDK_INT
+        "Manufacturer" to Build.MANUFACTURER, "Model" to Build.MODEL, "Product" to Build.PRODUCT, "Android" to Build.VERSION.RELEASE, "SDK" to Build.VERSION.SDK_INT, "Security patch" to Build.VERSION.SECURITY_PATCH
     ))
     val glRows = rows(listOf("Driver mode" to "System OpenGL ES/EGL", "Driver version" to "Unavailable (OpenGL ES does not expose a standardized driver-version query)", "GL_RENDERER" to r.renderer, "GL_VENDOR" to r.vendor, "GL_VERSION" to r.glVersion, "Parsed core version" to "${r.glMajor}.${r.glMinor}", "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion))
     val eglRows = rows(listOf("EGL_VENDOR" to r.egl.vendor, "EGL_VERSION" to r.egl.version, "Initialized EGL version" to r.egl.initializedVersion, "EGL_CLIENT_APIS" to r.egl.clientApis))

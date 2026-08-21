@@ -214,3 +214,40 @@
 - Update version ordering ignores SemVer build metadata for precedence and orders a stable release above a pre-release with the same numeric core. Numeric pre-release identifiers compare numerically and build metadata never turns a newer release into an older one.
 - Source release archives exclude transient Python bytecode/cache directories and other generated build caches.
 - Current Khronos OpenGL ES 3.2 / GLSL ES 3.20 and EGL 1.5 specifications plus current Android Display/HDR API documentation remain the primary specification references. No marketing/vendor database substitutes for runtime evidence.
+
+## Release 0.1.25 full application/specification/database-parity requirements
+- Application version is 0.1.25 with versionCode 125. OpenGLESScope Database remains independently versioned and this application release is validated against Database 0.1.21 without changing its exact submission schema or D1 storage.
+- Application ABI and Android platform evidence remain present in UI, TXT and self-contained HTML. Database 0.1.21 obtains ABI evidence from the canonical report text; the application must not add unaccepted top-level or technical-report JSON keys merely to duplicate that metadata.
+- Current Khronos baselines remain OpenGL ES 3.2, GLSL ES 3.20 and EGL 1.5. Runtime evidence and exact extension strings remain authoritative over device/GPU naming.
+- The OpenGL ES CapsViewer graphics-capability families are a comparison floor only: versions, exact extensions, compressed formats, shader/program binary formats, implementation limits and EGL information must remain covered, while sensors and unrelated Android inventory remain out of scope.
+- GL_KHR_debug implementation limits are queried on pre-3.2 contexts only when the exact GL_KHR_debug extension token is present. On OpenGL ES 3.2 they continue to use the corresponding core queries.
+- GL_EXT_disjoint_timer_query query-counter bit depths for TIME_ELAPSED_EXT and TIMESTAMP_EXT are collected only when the exact extension token is present and glGetQueryivEXT resolves. Missing entry points or query failures are recorded as Unavailable diagnostics rather than guessed values.
+- Every newly attempted extension-backed query must flow through the same limits dataset and query-diagnostic dataset consumed by UI, TXT, HTML and Database submission.
+- No query is executed solely because a GPU vendor/model is known. No unsupported, unavailable or unknown state may be converted to Supported.
+- Database submission remains all-or-nothing, explicit, bounded to 2 MiB, and restricted to the official HTTPS API hostname.
+- Source release validation must check version identity, ABI/report metadata presence, Database 0.1.21 contract compatibility, the new extension-backed query gates and absence of transient build/cache artifacts.
+
+## Release 0.2.1 full application, reporting, security and specification audit requirements
+- Application version is 0.2.1 with versionCode 201. Database versioning remains independent.
+- OpenGLESScope Database 0.1.26 is the compatibility reference for schema-v2 / technicalReport-v1 structure, report completeness, Display/HDR evidence, canonical TXT identity and transport/security behavior.
+- Database 0.1.26 currently accepts only producer versions matching 0.1.x. OpenGLESScope 0.2.1 must never falsify its application version to bypass that server-side producer gate. A Database release that explicitly accepts 0.2.x is required before 0.2.1 submissions can be accepted.
+- Android HDR luminance values are physical luminance metadata in cd/m² and must show that unit in the Display/HDR UI, TXT and HTML whenever a value is available. Structured Database fields remain numeric values whose field semantics are luminance in cd/m².
+- HDR_TYPE_INVALID is filtered from Android HDR-type evidence on every supported Android API level where the constant exists; it is never reported as a capability.
+- Display-change refresh work is limited to the activity display for addition/change callbacks while display removal still forces a refresh, avoiding unnecessary recomposition for unrelated displays.
+- Current Khronos baselines remain OpenGL ES 3.2, GLSL ES 3.20 and EGL 1.5. Exact runtime strings and exact runtime extension tokens remain authoritative.
+- No GPU model, vendor branding, Android version or marketing data may be used to infer OpenGL ES/EGL support.
+- UI, TXT, HTML and Database technicalReport payload must continue to expose the same collected runtime identity, exact extensions, limits, runtime formats, shader precision, EGL configuration, query-diagnostic and Android Display/HDR datasets without selective omission.
+- Native probe process isolation, 8 MiB probe-result bound, 20-second timeout, HTTPS-only official endpoints, explicit all-or-nothing submission, 2 MiB submission bound, update-package identity/signing/version validation, and non-exported FileProvider/service protections remain mandatory.
+- Source release archives must contain no build caches, Python bytecode, Gradle caches, IDE state, APK outputs or other transient generated artifacts.
+
+
+## Release 0.2.2 Android security-patch end-to-end reporting
+- Application version is 0.2.2 with versionCode 202. Database versioning remains independent.
+- Android `Build.VERSION.SECURITY_PATCH` is authoritative system patch-level evidence and is collected directly from Android; it is never inferred from SDK, release, device model, submission time or GPU identity.
+- The security patch is exposed in the Android information UI, canonical TXT report, self-contained HTML Device section and Database schema-2 `device.securityPatch` field.
+- Canonical TXT includes both the top-level `Android security patch: YYYY-MM-DD` evidence line and the DEVICE-section `Security patch: YYYY-MM-DD` line.
+- The Database payload and canonical TXT must carry the same patch level.
+- Android security-patch evidence is platform metadata only and must never alter OpenGL ES, EGL, Display/HDR, extension, limit or format capability state.
+- `Build.VERSION.SECURITY_PATCH` is available from API 23; the application minimum SDK remains 24, so no compatibility fallback or privileged property access is required.
+- Current Android API documentation and Android compatibility requirements define the platform security patch as a user-visible date-based patch level.
+- Existing native probe isolation, report completeness, export escaping, explicit upload, HTTPS host restriction, 2 MiB submission bound, update verification and ABI policy remain mandatory.

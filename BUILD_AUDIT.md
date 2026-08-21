@@ -1,19 +1,14 @@
-# OpenGLESScope 0.1.24 Build Audit
+# OpenGLESScope 0.2.2 Build Audit
 
-- Application version: 0.1.24
-- versionCode: 124
-- OpenGLESScope Database 0.1.19 producer-contract review: PASS
-- Database 0.1.19 Worker contract suite: PASS
-- Database nullable display-evidence acceptance for 0.1.24: PASS
-- OpenGL ES 3.0 uniform-buffer alignment coverage: PASS
-- OpenGL ES 3.1 shader-storage-buffer alignment coverage: PASS
-- GL identity/version diagnostic coverage: PASS
-- Android API 24-25 wide-color unavailable semantics: PASS
-- Android API 34+ HDR_TYPE_INVALID exclusion: PASS
-- Display-change refresh path: PASS
-- TXT / HTML / structured-report dataset parity review: PASS
-- HTML escaping, local CSP and no-referrer hardening: PASS
-- Update-version precedence hardening: PASS
-- EGL Config full-field search: PASS
-- Release metadata and source cleanliness: PASS
-- Gradle compile: NOT VERIFIED in the assistant environment because Gradle 9.7.0 could not be downloaded from services.gradle.org.
+- Application version: 0.2.2
+- versionCode: 201
+- Package: com.efishell.openglesscope
+- compileSdk/targetSdk: 37
+- minSdk: 24
+- NDK: 29.0.14206865
+- Required release ABIs: arm64-v8a, armeabi-v7a, x86_64
+- x86: intentionally excluded
+
+Static source/release audit passes for version identity, ABI policy, HDR cd/m² presentation, report-path completeness markers, native-probe isolation/bounds, database transport bounds and official endpoint restrictions.
+
+A full Gradle compile/lint result is not claimed in this environment because Gradle 9.7 is not locally cached and the wrapper cannot download services.gradle.org from the execution environment.

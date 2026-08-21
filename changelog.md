@@ -1,19 +1,20 @@
-# 0.1.24
+## 0.2.2
 
-- Full application/Database 0.1.19 compatibility, capability, report, UI, security and specification audit.
-- Added OpenGL ES 3.0 uniform-buffer and 3.1 shader-storage-buffer offset-alignment queries.
-- Corrected GL query diagnostics, driver-version provenance, Android wide-color unavailable semantics and invalid HDR type handling.
-- Added live display evidence refresh, full-field EGL Config search, HTML CSP/no-referrer hardening and stronger update version precedence.
+- Added Android `Build.VERSION.SECURITY_PATCH` to the in-app Android information surface.
+- Added canonical `Android security patch: YYYY-MM-DD` and `Security patch: YYYY-MM-DD` TXT evidence.
+- Added Android security patch to self-contained HTML Device information.
+- Added `device.securityPatch` to complete Database submissions, matching VulkanScope producer behavior and OpenGLESScope Database 0.2.2 validation.
+- Preserved security-patch data as Android platform metadata only; no graphics capability is inferred from it.
+- Updated release audits and version metadata to 0.2.2 / versionCode 202.
 
-# 0.1.23
+# 0.2.1
 
-- Matched Overview GPU vendor-logo container geometry to VulkanScope.
-- No capability, report, Database, update-security or ABI-policy changes.
-
-# 0.1.22
-
-- Matched the Android system navigation-bar surface to VulkanScope using #111111 with dark navigation-bar icons and Android 10+ contrast enforcement disabled.
-- Reworked the HTML report Application section to match VulkanScope information parity: version, versionCode, package, application ABI, supported device ABIs, developer, nickname and GitHub profile.
-- Kept Android/device information in its own HTML section.
-- Preserved the 0.1.19 export rule that excludes Database, Database API and source-repository URLs.
-- No OpenGL ES, EGL, display/HDR, database-schema or capability-semantic changes.
+- Version bumped to 0.2.1 / versionCode 201.
+- Full OpenGL ES 3.2 / GLSL ES 3.20 / EGL 1.5 source audit.
+- Full Android Display/HDR audit.
+- HDR desired luminance human-readable output verified as cd/m² in UI, TXT and HTML.
+- HDR_TYPE_INVALID filtering corrected for every supported Android API path.
+- Display listener work reduced for unrelated displays.
+- UI/TXT/HTML/Database technical-report dataset parity re-audited.
+- Native-probe lifecycle, memory/resource cleanup and network/update security re-audited.
+- Database 0.1.26 producer-version incompatibility with truthful 0.2.1 submissions documented rather than bypassed.

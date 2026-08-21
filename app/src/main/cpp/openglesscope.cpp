@@ -320,6 +320,24 @@ static void addIndexedLimit(std::ostringstream& o, bool& first, const char* name
     o << "{\"name\":" << q(indexedName) << ",\"value\":" << q(std::to_string(v)) << '}';
 }
 
+using GetQueryivExtProc = void (*)(GLenum, GLenum, GLint*);
+
+static void addQueryCounterBitsExt(std::ostringstream& o, bool& first, GetQueryivExtProc fn, const char* name, GLenum target) {
+    if (!fn) {
+        if (activeDiagnostics) activeDiagnostics->push_back({name, "Unavailable", "glGetQueryivEXT unavailable"});
+        return;
+    }
+    GLint v = 0;
+    clearGlErrors();
+    fn(target, 0x8864, &v);
+    const GLenum error = glGetError();
+    diagnostic(name, error);
+    if (error != GL_NO_ERROR) return;
+    if (!first) o << ',';
+    first = false;
+    o << "{\"name\":" << q(name) << ",\"value\":" << q(std::to_string(v)) << '}';
+}
+
 static std::vector<std::string> glExtensions(int glCode) {
     std::vector<std::string> out;
     if (glCode >= 300) {
@@ -514,6 +532,17 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     addHexLimit(o, first, "GL_IMPLEMENTATION_COLOR_READ_FORMAT", GL_IMPLEMENTATION_COLOR_READ_FORMAT);
     addHexLimit(o, first, "GL_IMPLEMENTATION_COLOR_READ_TYPE", GL_IMPLEMENTATION_COLOR_READ_TYPE);
     if (hasExt(glExt, "GL_EXT_texture_filter_anisotropic")) addFloatLimit(o, first, "GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT", 0x84FF);
+    if (glCode < 320 && hasExt(glExt, "GL_KHR_debug")) {
+        addLimit(o, first, "GL_MAX_DEBUG_MESSAGE_LENGTH", 0x9143);
+        addLimit(o, first, "GL_MAX_DEBUG_LOGGED_MESSAGES", 0x9144);
+        addLimit(o, first, "GL_MAX_DEBUG_GROUP_STACK_DEPTH", 0x826C);
+        addLimit(o, first, "GL_MAX_LABEL_LENGTH", 0x82E8);
+    }
+    if (hasExt(glExt, "GL_EXT_disjoint_timer_query")) {
+        const auto getQueryivExt = reinterpret_cast<GetQueryivExtProc>(eglGetProcAddress("glGetQueryivEXT"));
+        addQueryCounterBitsExt(o, first, getQueryivExt, "GL_TIME_ELAPSED_EXT_QUERY_COUNTER_BITS", 0x88BF);
+        addQueryCounterBitsExt(o, first, getQueryivExt, "GL_TIMESTAMP_EXT_QUERY_COUNTER_BITS", 0x8E28);
+    }
     if (hasExt(glExt, "GL_EXT_blend_func_extended")) addLimit(o, first, "GL_MAX_DUAL_SOURCE_DRAW_BUFFERS_EXT", 0x88FC);
     if (hasExt(glExt, "GL_OVR_multiview") || hasExt(glExt, "GL_OVR_multiview2")) addLimit(o, first, "GL_MAX_VIEWS_OVR", 0x9631);
     if (hasExt(glExt, "GL_EXT_multiview_draw_buffers")) addLimit(o, first, "GL_MAX_MULTIVIEW_BUFFERS_EXT", 0x90F2);
