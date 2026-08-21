@@ -222,6 +222,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.navigationBarColor = android.graphics.Color.rgb(17, 17, 17)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         setContent { OpenGLESScopeApp(this) }
         checkForApplicationUpdate(false)
     }
@@ -575,9 +579,9 @@ private fun OpenGLESScopeApp(activity: MainActivity) {
                                 onClick = { page = item.page },
                                 icon = {
                                     Icon(
-                                        painter = painterResource(if (item.page == Page.OpenGLES) R.drawable.ic_opengles_gl_es else item.icon),
+                                        painter = painterResource(when (item.page) { Page.OpenGLES -> R.drawable.ic_opengles_gl_es; Page.EGL -> R.drawable.ic_egl_official; else -> item.icon }),
                                         contentDescription = item.label,
-                                        modifier = Modifier.size(if (item.page == Page.OpenGLES) 27.dp else 24.dp)
+                                        modifier = Modifier.size(if (item.page == Page.OpenGLES || item.page == Page.EGL) 27.dp else 24.dp)
                                     )
                                 },
                                 label = { Text(item.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -653,7 +657,7 @@ private fun selectedNavigationPage(page: Page): Page = when (page) {
 private fun navigationItems(): List<NavigationItem> = listOf(
     NavigationItem(Page.Overview, "Overview", R.drawable.ic_home),
     NavigationItem(Page.OpenGLES, "OpenGL ES", R.drawable.ic_features),
-    NavigationItem(Page.EGL, "EGL", R.drawable.ic_surface),
+    NavigationItem(Page.EGL, "EGL", R.drawable.ic_egl_official),
     NavigationItem(Page.Display, "Display", R.drawable.ic_display),
     NavigationItem(Page.Extensions, "Extensions", R.drawable.ic_extensions)
 )
@@ -676,7 +680,7 @@ private fun pageIcon(page: Page): Int = when (page) {
     Page.Overview -> R.drawable.ic_home
     Page.OpenGLES -> R.drawable.ic_opengles_gl_es
     Page.Display -> R.drawable.ic_display
-    Page.EGL -> R.drawable.ic_surface
+    Page.EGL -> R.drawable.ic_egl_official
     Page.Features -> R.drawable.ic_features
     Page.Limits -> R.drawable.ic_properties
     Page.Formats -> R.drawable.ic_formats
@@ -724,9 +728,9 @@ private fun CompactNavigationRail(selectedPage: Page, onPageSelected: (Page) -> 
                         verticalArrangement = Arrangement.spacedBy(1.dp, Alignment.CenterVertically)
                     ) {
                         Icon(
-                            painter = painterResource(if (item.page == Page.OpenGLES) R.drawable.ic_opengles_gl_es else item.icon),
+                            painter = painterResource(when (item.page) { Page.OpenGLES -> R.drawable.ic_opengles_gl_es; Page.EGL -> R.drawable.ic_egl_official; else -> item.icon }),
                             contentDescription = item.label,
-                            modifier = Modifier.size(if (item.page == Page.OpenGLES) 23.dp else 21.dp),
+                            modifier = Modifier.size(if (item.page == Page.OpenGLES || item.page == Page.EGL) 23.dp else 21.dp),
                             tint = if (selected) ComposeColor.White else ComposeColor(0xFFB8B8B8)
                         )
                         Text(
@@ -937,7 +941,7 @@ private fun QuickAccessCard(title: String, destination: Page, navigate: (Page) -
             Icon(
                 painter = painterResource(pageIcon(destination)),
                 contentDescription = null,
-                modifier = Modifier.size(if (destination == Page.OpenGLES) 23.dp else 19.dp),
+                modifier = Modifier.size(if (destination == Page.OpenGLES || destination == Page.EGL) 23.dp else 19.dp),
                 tint = BrandSoft
             )
             Text(title, fontSize = 11.sp, lineHeight = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -1318,7 +1322,7 @@ private fun InfoPage(activity: MainActivity, report: GlReport, display: DisplayI
                             if (collectionReady && report.available && !exportInFlight) {
                                 exportInFlight = true
                                 scope.launch {
-                                    val content = withContext(Dispatchers.Default) { reportText(report, display) }
+                                    val content = withContext(Dispatchers.Default) { reportText(context, report, display) }
                                     exportDocument("${exportStem}.txt", content, "text/plain", textLauncher)
                                     exportInFlight = false
                                 }
@@ -1360,7 +1364,7 @@ private fun InfoPage(activity: MainActivity, report: GlReport, display: DisplayI
                             submissionInFlight = true
                             submitState = "Submitting complete technical report…"
                             scope.launch {
-                                submitState = submitReport(report, display)
+                                submitState = submitReport(context, report, display)
                                 submissionInFlight = false
                             }
                         }
@@ -1467,7 +1471,9 @@ private fun capabilitySectionIcon(title: String): Int = when {
     title.contains("quick access", true) || title.contains("explore", true) -> R.drawable.ic_home
     title.contains("OpenGL", true) || title.contains("snapshot", true) || title.contains("inspection", true) -> R.drawable.ic_opengles_gl_es
     title.contains("display", true) || title.contains("HDR", true) -> R.drawable.ic_display
-    title.contains("EGL", true) || title.contains("config", true) -> R.drawable.ic_surface
+    title.equals("EGL runtime", true) -> R.drawable.ic_egl_official
+    title.contains("EGL Config", true) || title.contains("config", true) -> R.drawable.ic_surface
+    title.contains("EGL", true) -> R.drawable.ic_egl_official
     title.contains("feature", true) -> R.drawable.ic_features
     title.contains("format", true) -> R.drawable.ic_formats
     title.contains("extension", true) -> R.drawable.ic_extensions
@@ -1723,12 +1729,12 @@ private fun readResponseTextLimited(body: ResponseBody, maxBytes: Int): String {
 
 private fun compareVersions(a: String, b: String): Int { val aa=a.split('.').map{it.toIntOrNull()?:0}; val bb=b.split('.').map{it.toIntOrNull()?:0}; for(i in 0 until maxOf(aa.size,bb.size)){val x=aa.getOrElse(i){0}; val y=bb.getOrElse(i){0}; if(x!=y)return x.compareTo(y)}; return 0 }
 
-private suspend fun submitReport(report: GlReport, display: DisplayInfo): String = withContext(Dispatchers.IO) {
+private suspend fun submitReport(context: Context, report: GlReport, display: DisplayInfo): String = withContext(Dispatchers.IO) {
     try {
         if (!report.available) return@withContext "Submission unavailable until a complete OpenGL ES report exists"
         val base = DATABASE_API.toHttpUrlOrNull() ?: return@withContext "The official OpenGLESScope Database endpoint is invalid"
         if (base.scheme != "https" || base.host != "openglesscope-database-api.openglesscope.workers.dev" || base.username.isNotEmpty() || base.password.isNotEmpty() || base.query != null || base.fragment != null || base.encodedPath != "/") return@withContext "The official OpenGLESScope Database endpoint is invalid"
-        val payload = submissionJson(report, display).toString()
+        val payload = submissionJson(context, report, display).toString()
         if (payload.toByteArray().size > 2 * 1024 * 1024) return@withContext "Report exceeds the 2 MiB transport limit; no data was truncated"
         val req = Request.Builder().url(base.newBuilder().addPathSegments("v1/reports").build()).header("Accept", "application/json")
             .post(payload.toRequestBody("application/json; charset=utf-8".toMediaType()))
@@ -1746,8 +1752,8 @@ private suspend fun submitReport(report: GlReport, display: DisplayInfo): String
     } catch (e: Exception) { "Submission failed · ${e.message ?: "network error"}" }
 }
 
-private fun submissionJson(r: GlReport, d: DisplayInfo): JSONObject {
-    val text = reportText(r, d)
+private fun submissionJson(context: Context, r: GlReport, d: DisplayInfo): JSONObject {
+    val text = reportText(context, r, d)
     val configs = JSONArray(r.eglConfigs.map { c ->
         JSONObject()
             .put("id", c.id)
@@ -1875,9 +1881,33 @@ private fun writeExport(context: Context, uri: Uri, content: String, mime: Strin
     return message
 }
 
-private fun reportText(r: GlReport, d: DisplayInfo): String = buildString {
-    appendLine("OpenGLESScope ${BuildConfig.VERSION_NAME}")
-    appendLine("Package: com.efishell.openglesscope")
+private fun reportText(context: Context, r: GlReport, d: DisplayInfo): String = buildString {
+    val packageInfo = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
+    val appVersionName = packageInfo?.versionName ?: BuildConfig.VERSION_NAME
+    val appVersionCode = if (packageInfo != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        packageInfo.longVersionCode.toString()
+    } else {
+        @Suppress("DEPRECATION") packageInfo?.versionCode?.toString() ?: BuildConfig.VERSION_CODE.toString()
+    }
+    val applicationAbi = detectInstalledAbi(context)
+    appendLine("OpenGLESScope report")
+    appendLine("==================")
+    appendLine("Application: OpenGLESScope")
+    appendLine("Application version: $appVersionName")
+    appendLine("Application version code: $appVersionCode")
+    appendLine("Application package: ${context.packageName}")
+    appendLine("Application ABI: $applicationAbi")
+    appendLine("Developer: Semih Boran")
+    appendLine("Nickname: EFI Shell")
+    appendLine("GitHub: https://github.com/EFIShell0")
+    appendLine("GPU: ${r.renderer.ifBlank { "Unavailable" }}")
+    appendLine("Driver mode: System OpenGL ES/EGL")
+    appendLine("OpenGL ES: ${r.glVersion.ifBlank { "Unavailable" }}")
+    appendLine("EGL: ${r.egl.initializedVersion.ifBlank { r.egl.version.ifBlank { "Unavailable" } }}")
+    appendLine("Display: ${if (d.width > 0 && d.height > 0) "${d.width}x${d.height} @ ${d.refreshRate} Hz" else d.name.ifBlank { "Unavailable" }}")
+    appendLine("HDR types: ${d.hdrTypes.joinToString(", ").ifBlank { "Unavailable" }}")
+    appendLine("Android: ${Build.MANUFACTURER} ${Build.MODEL}, ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
+    appendLine("Supported device ABIs: ${Build.SUPPORTED_ABIS.joinToString(", ")}")
     appendLine("Collection status: ${if (r.available) "Available" else "Unavailable"}")
     appendLine("Collection source: active Android system EGL/OpenGL ES implementation")
     appendLine()
@@ -1962,10 +1992,27 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
     val logoData = runCatching {
         context.resources.openRawResource(R.drawable.openglesscope_logo_horizontal).use { input -> Base64.encodeToString(input.readBytes(), Base64.NO_WRAP) }
     }.getOrNull()
+    val packageInfo = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
+    val appVersionName = packageInfo?.versionName ?: BuildConfig.VERSION_NAME
+    val appVersionCode = if (packageInfo != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        packageInfo.longVersionCode.toString()
+    } else {
+        @Suppress("DEPRECATION") packageInfo?.versionCode?.toString() ?: BuildConfig.VERSION_CODE.toString()
+    }
+    val applicationAbi = detectInstalledAbi(context)
+    val supportedDeviceAbis = Build.SUPPORTED_ABIS.joinToString(", ")
+    val applicationRows = listOf(
+        "Version" to e(appVersionName),
+        "Version code" to e(appVersionCode),
+        "Package" to e(context.packageName),
+        "Application ABI" to e(applicationAbi),
+        "Supported device ABIs" to e(supportedDeviceAbis),
+        "Developer" to "Semih Boran",
+        "Nickname" to "EFI Shell",
+        "GitHub" to "<a class=\"github-link\" href=\"https://github.com/EFIShell0\" rel=\"noopener noreferrer\">github.com/EFIShell0</a>"
+    )
     val deviceRows = rows(listOf(
-        "Application" to "OpenGLESScope ${BuildConfig.VERSION_NAME}", "Version code" to BuildConfig.VERSION_CODE, "Package" to context.packageName,
-        "Installed ABI" to detectInstalledAbi(context), "Supported device ABIs" to Build.SUPPORTED_ABIS.joinToString(", "),
-        "Manufacturer" to Build.MANUFACTURER, "Model" to Build.MODEL, "Product" to Build.PRODUCT, "Android" to "${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}"
+        "Manufacturer" to Build.MANUFACTURER, "Model" to Build.MODEL, "Product" to Build.PRODUCT, "Android" to Build.VERSION.RELEASE, "SDK" to Build.VERSION.SDK_INT
     ))
     val glRows = rows(listOf("GL_RENDERER" to r.renderer, "GL_VENDOR" to r.vendor, "GL_VERSION" to r.glVersion, "Parsed core version" to "${r.glMajor}.${r.glMinor}", "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion))
     val eglRows = rows(listOf("EGL_VENDOR" to r.egl.vendor, "EGL_VERSION" to r.egl.version, "Initialized EGL version" to r.egl.initializedVersion, "EGL_CLIENT_APIS" to r.egl.clientApis))
@@ -1986,7 +2033,7 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
     val unknownQueries = r.diagnostics.count { it.status == "Unknown" }
     return buildString {
         append("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"color-scheme\" content=\"dark\"><title>OpenGLESScope report</title>")
-        append("<style>body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:#0a0a0b;color:#f4f4f5;margin:0;line-height:1.45}.wrap{max-width:1320px;margin:0 auto;padding:28px}.hero{background:linear-gradient(135deg,#21131e,#0f1012);border:1px solid #3b2636;border-radius:26px;padding:30px;box-shadow:0 16px 50px rgba(0,0,0,.28)}h1{margin:0 0 8px;font-size:36px}h2{margin:0 0 14px;font-size:22px}.muted{color:#a7a7ae}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px}.metric{background:#141113;border:1px solid #342630;border-radius:17px;padding:14px}.section{margin-top:24px;background:#111113;border:1px solid #30242c;border-radius:22px;padding:18px;overflow:auto}.section h2{position:sticky;left:0}table{border-collapse:collapse;width:100%;min-width:660px}td,th{border-bottom:1px solid #2c2329;padding:10px 8px;text-align:left;vertical-align:top}th{color:#cbcad0;font-weight:600}.badge{display:inline-block;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:800;letter-spacing:.03em}.yes{background:#133b28;color:#74e2a6}.available{background:#39142f;color:#f06bc7}.no{background:#49171c;color:#ff8f98}.neutral{background:#403713;color:#ffd76b}.unknown{background:#292a2f;color:#c6c6cc}.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}.small{font-size:13px}.subtle{color:#7f8088}.accent{color:#f06bc7}.link{color:#e25db8;text-decoration:none;font-weight:600}.link:hover{color:#f58bd6;text-decoration:underline}@media(max-width:700px){.wrap{padding:14px}.hero{padding:20px}.section{padding:14px}h1{font-size:29px}}</style></head><body><div class=\"wrap\">")
+        append("<style>body{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;background:#0a0a0b;color:#f4f4f5;margin:0;line-height:1.45}.wrap{max-width:1320px;margin:0 auto;padding:28px}.hero{background:linear-gradient(135deg,#21131e,#0f1012);border:1px solid #3b2636;border-radius:26px;padding:30px;box-shadow:0 16px 50px rgba(0,0,0,.28)}h1{margin:0 0 8px;font-size:36px}h2{margin:0 0 14px;font-size:22px}.muted{color:#a7a7ae}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px}.metric{background:#141113;border:1px solid #342630;border-radius:17px;padding:14px}.section{margin-top:24px;background:#111113;border:1px solid #30242c;border-radius:22px;padding:18px;overflow:auto}.section h2{position:sticky;left:0}table{border-collapse:collapse;width:100%;min-width:660px}td,th{border-bottom:1px solid #2c2329;padding:10px 8px;text-align:left;vertical-align:top}th{color:#cbcad0;font-weight:600}.badge{display:inline-block;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:800;letter-spacing:.03em}.yes{background:#133b28;color:#74e2a6}.available{background:#39142f;color:#f06bc7}.no{background:#49171c;color:#ff8f98}.neutral{background:#403713;color:#ffd76b}.unknown{background:#292a2f;color:#c6c6cc}.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}.small{font-size:13px}.subtle{color:#7f8088}.accent{color:#f06bc7}.github-link{color:#e25db8;text-decoration:none;font-weight:600}.github-link:hover{color:#f58bd6;text-decoration:underline}.github-link:visited{color:#e25db8}@media(max-width:700px){.wrap{padding:14px}.hero{padding:20px}.section{padding:14px}h1{font-size:29px}}</style></head><body><div class=\"wrap\">")
         append("<div class=\"hero\">")
         if (logoData != null) append("<div style=\"display:flex;align-items:center;justify-content:flex-start;margin-bottom:14px\"><img src=\"data:image/png;base64,$logoData\" alt=\"OpenGLESScope\" style=\"display:block;width:min(522px,100%);height:auto;max-height:76px;object-fit:contain;object-position:left center\"></div>") else append("<h1>OpenGLESScope</h1>")
         append("<div class=\"muted\">Runtime OpenGL ES and EGL capability report</div><div class=\"grid\">")
@@ -1994,7 +2041,9 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
         metric("GPU", r.renderer.ifBlank { "Unavailable" }); metric("OpenGL ES", r.glVersion.ifBlank { "Unavailable" }); metric("EGL", r.egl.initializedVersion.ifBlank { r.egl.version }); metric("Display", if (d.width > 0 && d.height > 0) "${d.width} × ${d.height} @ ${String.format(java.util.Locale.US, "%.2f", d.refreshRate)} Hz" else d.name); metric("HDR", d.hdrTypes.joinToString(", ").ifBlank { "Unavailable" }); metric("Queries", "$availableQueries available / $unavailableQueries unavailable / $naQueries N/A / $unknownQueries unknown")
         append("</div></div>")
         fun section(title: String, header: String, body: String) { append("<div class=\"section\"><h2>${e(title)}</h2><table><thead><tr>$header</tr></thead><tbody>$body</tbody></table></div>") }
-        section("Application / device", "<th>Property</th><th>Value</th>", deviceRows)
+        fun htmlRows(values: List<Pair<String, String>>): String = values.joinToString("") { "<tr><td>${e(it.first)}</td><td>${it.second}</td></tr>" }
+        section("Application", "<th>Property</th><th>Value</th>", htmlRows(applicationRows))
+        section("Android / device", "<th>Property</th><th>Value</th>", deviceRows)
         section("OpenGL ES runtime", "<th>Property</th><th>Value</th>", glRows)
         section("EGL runtime", "<th>Property</th><th>Value</th>", eglRows)
         section("Android display &amp; HDR", "<th>Property</th><th>Value</th>", displayRows)

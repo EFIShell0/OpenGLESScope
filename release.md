@@ -1,25 +1,14 @@
-# OpenGLESScope 0.1.20
+# OpenGLESScope 0.1.22
 
-Version name: `0.1.20`  
-Version code: `120`
+Version name: `0.1.22`  
+Version code: `121`
 
-## Fixed
+## Changes
 
-- Fixed update checking when the newest GitHub release is published as a pre-release.
-- GitHub's `/releases/latest` endpoint excludes pre-releases and can return 404 when no stable release exists; OpenGLESScope now queries the bounded official release list instead.
-- Draft releases are ignored.
-- Published release candidates are sorted by parsed numeric version and must be newer than the installed application.
-
-## Preserved update security
-
-- Official repository only: `EFIShell0/OpenGLESScope`
-- HTTPS GitHub release assets only
-- ABI-specific asset selection with universal fallback
-- Explicit confirmation before download
-- Bounded APK download
-- Package identity validation
-- Signing-certificate validation
-- Strictly newer `versionCode`
-- Strictly newer `versionName`
-
-OpenGL ES/EGL capability collection, reporting and Database compatibility are unchanged.
+- Matched the Android system navigation bar to VulkanScope (`#111111`, dark appearance, Android 10+ contrast enforcement disabled).
+- Brought HTML report application metadata to VulkanScope parity.
+- Added Developer: Semih Boran.
+- Added Nickname: EFI Shell.
+- Added the clickable EFIShell0 GitHub profile link.
+- Split application identity from Android/device information in the HTML report.
+- OpenGL ES/EGL capability collection and report semantics are unchanged.

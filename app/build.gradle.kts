@@ -86,8 +86,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val releaseVersionName = "0.1.20"
-val releaseVersionCode = 120
+val releaseVersionName = "0.1.22"
+val releaseVersionCode = 122
 
 android {
     namespace = "com.efishell.openglesscope"

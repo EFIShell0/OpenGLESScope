@@ -39,7 +39,7 @@ canonical.mkdir(parents=True, exist_ok=True)
 for old in canonical.glob("*.apk"):
     old.unlink()
 for key, source in selected.items():
-    target = canonical / f"OpenGLESScope-0.1.20-{key}-release.apk"
+    target = canonical / f"OpenGLESScope-0.1.22-{key}-release.apk"
     shutil.copy2(source, target)
     if apk_abis(target) != expected[key]:
         raise SystemExit(f"Canonical artifact failed ABI verification: {target.name}")

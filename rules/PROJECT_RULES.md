@@ -171,3 +171,21 @@
 - Release asset URLs remain restricted to HTTPS github.com paths under `/EFIShell0/OpenGLESScope/releases/download/` with no user-info, query or fragment.
 - Startup update checks remain metadata-only and silent when up to date or when a background check fails. Manual checks use the same metadata path and surface actionable failures.
 - No APK download starts until explicit user confirmation. Downloaded APK verification continues to require the expected package identity, signing certificate, strictly newer versionCode and strictly newer versionName before Android's installer is opened.
+
+
+## Release 0.1.21 system navigation and HTML application parity requirements
+- Application version is 0.1.21 with versionCode 121. Database versioning remains independent and is not changed by this application release.
+- The Android system navigation-bar surface matches the established VulkanScope shell: #111111, dark-system-bar appearance, and Android 10+ navigation-bar contrast enforcement disabled. The status bar remains black.
+- The HTML report Application section uses the same application-information hierarchy as the VulkanScope report while retaining OpenGLESScope identity and brand colors. It includes Version, Version code, Package, Application ABI, Supported device ABIs, Developer, Nickname and the EFIShell0 GitHub profile link.
+- The HTML GitHub profile link is presentation/application metadata only. The 0.1.19 prohibition on public Database, Database API and source-repository URLs in TXT/HTML exports remains in force.
+- Android/device information remains a separate HTML section and must not be merged into application identity.
+- These parity changes must not modify OpenGL ES/EGL collection, capability semantics, diagnostics, report completeness, database submission schema or update security.
+
+
+## Release 0.1.22 EGL branding and TXT application parity requirements
+- Application version is 0.1.22 with versionCode 122. Database versioning remains independent and is not changed by this application release.
+- EGL navigation and in-application destination icons use the supplied official EGL artwork, preserving its geometry and transparent silhouette while matching the established OpenGL ES icon sizing and alignment behavior.
+- EGL Configs remains a distinct technical destination and does not masquerade as the EGL brand destination.
+- TXT Application information follows the established VulkanScope hierarchy while retaining OpenGLESScope identity: Application, version, version code, package, installed application ABI, Developer, Nickname and the EFIShell0 GitHub profile.
+- The TXT GitHub entry is application/developer profile metadata only. Database, Database API and source-repository URLs remain excluded from exported TXT/HTML metadata unless a later rule explicitly changes that policy.
+- These presentation/export changes must not alter OpenGL ES/EGL capability collection, query semantics, diagnostics, submission completeness, database schema or update-channel security.

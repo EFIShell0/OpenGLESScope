@@ -1,9 +1,7 @@
-# 0.1.20
+# 0.1.22
 
-- Fixed GitHub update checks returning HTTP 404 when the newest OpenGLESScope GitHub release is marked as a pre-release.
-- Replaced the `/releases/latest` metadata dependency with a bounded official release-list query.
-- Draft releases are excluded.
-- Stable and pre-release entries are version-sorted locally and only a strictly newer dotted numeric version can become an update candidate.
-- Retained ABI-specific APK selection with universal fallback.
-- Retained strict official GitHub release-asset URL validation, explicit download confirmation, download bounds, package/signature verification and newer versionCode/versionName checks.
-- No OpenGL ES, EGL, Display/HDR, report or database schema behavior changed.
+- Matched the Android system navigation-bar surface to VulkanScope using #111111 with dark navigation-bar icons and Android 10+ contrast enforcement disabled.
+- Reworked the HTML report Application section to match VulkanScope information parity: version, versionCode, package, application ABI, supported device ABIs, developer, nickname and GitHub profile.
+- Kept Android/device information in its own HTML section.
+- Preserved the 0.1.19 export rule that excludes Database, Database API and source-repository URLs.
+- No OpenGL ES, EGL, display/HDR, database-schema or capability-semantic changes.
