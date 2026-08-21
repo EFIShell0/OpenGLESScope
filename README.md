@@ -55,9 +55,6 @@ Database link: https://efishell0.github.io/OpenGLESScope_database/
 ## UI
 
 OpenGLESScope uses a dark Material 3 Expressive interface designed for dense graphics-capability data without hiding the underlying implementation evidence.
-## UI
-
-OpenGLESScope uses a dark Material 3 Expressive interface designed for dense graphics-capability data without hiding the underlying implementation evidence.
 
 The application is organized into dedicated inspection areas:
 
