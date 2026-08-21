@@ -6,7 +6,7 @@
 
 > OpenGLESScope reports what the active Android OpenGL ES/EGL implementation actually exposes. It does not infer capabilities from the GPU model, Android version, marketing specifications, or extension names alone.
 
-Database link: https://efishell0.github.io/OpenGLESScope_database/#overview
+Database link: https://efishell0.github.io/OpenGLESScope_database/
 
 ## Highlights
 
