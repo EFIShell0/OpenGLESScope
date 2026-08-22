@@ -6,8 +6,6 @@
 
 This app supports **Obtainium**. Identifying the storage links of Obtanium is sufficient.
 
-This app supports **Obtanium**. Identifying the storage links of Obtanium is sufficient.
-
 > OpenGLESScope reports what the active Android OpenGL ES/EGL implementation actually exposes. It does not infer capabilities from the GPU model, Android version, marketing specifications, or extension names alone.
 
 Database link: https://efishell0.github.io/OpenGLESScope_database/
