@@ -303,3 +303,10 @@
 - Update APK download and installation remain explicit user actions. Existing official-release provenance, HTTPS, package identity, signing-certificate, versionCode/versionName and ABI validation requirements remain mandatory.
 - OpenGL ES/EGL collection, report/export completeness, Database submission, Display/HDR semantics and capability-state semantics must not regress.
 
+## Release 0.2.8 Settings/Info Material 3 Expressive parity
+- Application version is 0.2.8 with versionCode 208. Database versioning remains independent.
+- The top-app-bar Info and Settings affordances must match VulkanScope's established Material 3 Expressive vector assets exactly, preserving 24 dp geometry, tint behavior, touch targets and accessibility labels.
+- On normal destinations, Info is the left action and Settings is the rightmost action, matching VulkanScope exactly. Settings and Info destinations do not expose either top-app-bar action, matching VulkanScope's hierarchy and preventing cross-destination ordering drift.
+- This release is UI-only for the Settings/Info top-bar affordances. OpenGL ES/EGL collection, Display/HDR semantics, report/export completeness, Database submission and update behavior must not regress.
+- Direct GitHub updates remain default-enabled for fresh installs subject to the 0.2.7 preference-preservation and update-security rules; Obtainium remains informational only and no Add to Obtainium runtime action is reintroduced.
+

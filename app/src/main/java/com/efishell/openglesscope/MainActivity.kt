@@ -841,10 +841,8 @@ private fun AppHeader(page: Page, onBack: () -> Unit, onSettings: () -> Unit, on
         },
         actions = {
             if (page != Page.Settings && page != Page.Info) {
-                IconButton(onClick = onSettings) { Icon(painterResource(R.drawable.ic_settings), contentDescription = "Settings") }
-            }
-            if (page != Page.Info) {
                 IconButton(onClick = onInfo) { Icon(painterResource(R.drawable.ic_info), contentDescription = "Info") }
+                IconButton(onClick = onSettings) { Icon(painterResource(R.drawable.ic_settings), contentDescription = "Settings") }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(containerColor = ComposeColor.Black)

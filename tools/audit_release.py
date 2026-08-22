@@ -10,8 +10,8 @@ native = (root / 'app/src/main/cpp/openglesscope.cpp').read_text()
 manifest = (root / 'app/src/main/AndroidManifest.xml').read_text()
 rules = (root / 'rules/PROJECT_RULES.md').read_text()
 checks = {
-    'versionName': 'val releaseVersionName = "0.2.7"' in gradle,
-    'versionCode': 'val releaseVersionCode = 207' in gradle,
+    'versionName': 'val releaseVersionName = "0.2.8"' in gradle,
+    'versionCode': 'val releaseVersionCode = 208' in gradle,
     'compileTarget37': 'compileSdk = 37' in gradle and 'targetSdk = 37' in gradle,
     'minSdk24': 'minSdk = 24' in gradle,
     'abis': all(x in gradle for x in ['arm64-v8a', 'armeabi-v7a', 'x86_64']) and 'include("x86")' not in gradle,
@@ -40,6 +40,9 @@ checks = {
     'securityPatchTxtDevice': 'Security patch: ${Build.VERSION.SECURITY_PATCH}' in main,
     'securityPatchUi': 'CapabilityKeyValue("Security patch", Build.VERSION.SECURITY_PATCH)' in main,
     'securityPatchHtml': '"Security patch" to Build.VERSION.SECURITY_PATCH' in main,
+    'expressiveHeaderOrder': 'IconButton(onClick = onInfo) { Icon(painterResource(R.drawable.ic_info), contentDescription = "Info") }\n                IconButton(onClick = onSettings) { Icon(painterResource(R.drawable.ic_settings), contentDescription = "Settings") }' in main,
+    'headerHidesBothOnSettingsInfo': 'if (page != Page.Settings && page != Page.Info) {' in main,
+    'release208Fastlane': (root / 'fastlane/metadata/android/en-US/changelogs/208.txt').is_file(),
 }
 source_files = [root / 'app/src/main/java/com/efishell/openglesscope/MainActivity.kt', root / 'app/src/main/java/com/efishell/openglesscope/OpenGLESProbeService.kt', root / 'app/src/main/cpp/openglesscope.cpp']
 for path in source_files:
@@ -50,7 +53,7 @@ for forbidden in ['.gradle', 'build', '.idea', '__pycache__']:
     checks[f'noTransient:{forbidden}'] = not any(p.name == forbidden for p in root.rglob('*'))
 failed = [k for k, v in checks.items() if not v]
 if failed:
-    print('OpenGLESScope 0.2.7 audit: FAIL')
+    print('OpenGLESScope 0.2.8 audit: FAIL')
     for key in failed:
         print(key)
     sys.exit(1)
@@ -84,4 +87,4 @@ if obtainium_settings.get('apkFilterRegEx') != r'(?i).*universal.*\.apk$' or obt
 if not (root / "LICENSE").is_file():
     raise SystemExit("Missing root LICENSE")
 
-print('OpenGLESScope 0.2.7 audit: PASS')
+print('OpenGLESScope 0.2.8 audit: PASS')

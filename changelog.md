@@ -1,3 +1,9 @@
+# 0.2.8
+
+- Aligned the Settings and Info top-app-bar icons with VulkanScope's Material 3 Expressive vector language.
+- Matched VulkanScope action placement exactly: Info left, Settings right, with both hidden on Settings/Info destinations.
+- Preserved Direct GitHub updates, Obtainium guidance and all OpenGL ES/EGL/Display/HDR collection and reporting behavior.
+
 # 0.2.7
 
 - Direct GitHub updates are now enabled by default on fresh installations so users receive release checks without prior setup.
