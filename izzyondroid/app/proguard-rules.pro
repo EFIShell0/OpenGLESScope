@@ -1,0 +1,3 @@
+-keep class com.efishell.openglesscope.MainActivity { *; }
+-keep class com.efishell.openglesscope.OpenGLESProbeService { *; }
+-keepclasseswithmembers class * { native <methods>; }

@@ -1,0 +1,5 @@
+OpenGLESScope is an open-source Android OpenGL ES and EGL capability inspector.
+
+It reports runtime OpenGL ES and GLSL ES identity, extensions, implementation limits, formats, shader precision, EGL implementation data, EGL Configs, query diagnostics and Android Display/HDR metadata. Reports can be exported as TXT or self-contained HTML and explicitly submitted to OpenGLESScope Database.
+
+Direct GitHub APK updates are disabled by default. If enabled manually in Settings, OpenGLESScope explains that updates downloaded directly from GitHub bypass IzzyOnDroid repository scanning and verification.

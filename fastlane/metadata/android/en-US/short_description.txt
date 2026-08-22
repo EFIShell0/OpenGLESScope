@@ -1,0 +1,1 @@
+Inspect OpenGL ES, EGL, limits, formats, precision, display and HDR on Android.
