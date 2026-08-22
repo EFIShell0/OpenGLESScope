@@ -10,8 +10,8 @@ native = (root / 'app/src/main/cpp/openglesscope.cpp').read_text()
 manifest = (root / 'app/src/main/AndroidManifest.xml').read_text()
 rules = (root / 'rules/PROJECT_RULES.md').read_text()
 checks = {
-    'versionName': 'val releaseVersionName = "0.2.4"' in gradle,
-    'versionCode': 'val releaseVersionCode = 204' in gradle,
+    'versionName': 'val releaseVersionName = "0.2.7"' in gradle,
+    'versionCode': 'val releaseVersionCode = 207' in gradle,
     'compileTarget37': 'compileSdk = 37' in gradle and 'targetSdk = 37' in gradle,
     'minSdk24': 'minSdk = 24' in gradle,
     'abis': all(x in gradle for x in ['arm64-v8a', 'armeabi-v7a', 'x86_64']) and 'include("x86")' not in gradle,
@@ -50,26 +50,38 @@ for forbidden in ['.gradle', 'build', '.idea', '__pycache__']:
     checks[f'noTransient:{forbidden}'] = not any(p.name == forbidden for p in root.rglob('*'))
 failed = [k for k, v in checks.items() if not v]
 if failed:
-    print('OpenGLESScope 0.2.4 audit: FAIL')
+    print('OpenGLESScope 0.2.7 audit: FAIL')
     for key in failed:
         print(key)
     sys.exit(1)
 
 main_source = (root / "app/src/main/java/com/efishell/openglesscope/MainActivity.kt").read_text(encoding="utf-8")
 for required in [
-    'prefs.getBoolean("direct_updates_enabled", false)',
+    'prefs.getBoolean("direct_updates_enabled", true)',
     'if (directUpdatesEnabled) {',
     'checkForApplicationUpdate(false)',
     'showDirectUpdatesDisabledIntroIfFirstInstall()',
     'kotlinx.coroutines.delay(7_000L)',
-    'Direct GitHub updates are disabled by default. You can enable them optionally in Settings.',
-    'Updates installed through this feature come from outside IzzyOnDroid and bypass IzzyOnDroid repository scanning and verification.',
+    'Direct GitHub updates are currently disabled. Obtainium can manage updates externally, or direct updates can be enabled in Settings.',
+    'may duplicate update notifications.',
     'github.com/EFIShell0/OpenGLESScope/releases',
     'Switch(checked = activity.directUpdatesEnabled'
 ]:
     if required not in main_source:
-        raise SystemExit(f"Missing IzzyOnDroid direct-update policy evidence: {required}")
+        raise SystemExit(f"Missing Obtainium update-management evidence: {required}")
+if 'Add to Obtainium' in main_source or 'obtainium://app/' in main_source or 'openInObtainium' in main_source:
+    raise SystemExit('Runtime source must not expose the removed Add to Obtainium action')
+if 'IzzyOnDroid' in main_source:
+    raise SystemExit('Current OpenGLESScope runtime source must not retain IzzyOnDroid-specific messaging')
+obtainium_config = root / 'obtainium-config.json'
+if not obtainium_config.is_file():
+    raise SystemExit('Missing obtainium-config.json')
+import json
+obtainium_data = json.loads(obtainium_config.read_text(encoding='utf-8'))
+obtainium_settings = json.loads(obtainium_data['apps'][0]['additionalSettings'])
+if obtainium_settings.get('apkFilterRegEx') != r'(?i).*universal.*\.apk$' or obtainium_settings.get('autoApkFilterByArch') is not False:
+    raise SystemExit('obtainium-config.json must preserve universal APK selection')
 if not (root / "LICENSE").is_file():
     raise SystemExit("Missing root LICENSE")
 
-print('OpenGLESScope 0.2.4 audit: PASS')
+print('OpenGLESScope 0.2.7 audit: PASS')

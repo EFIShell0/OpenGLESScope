@@ -1,0 +1,13 @@
+{
+  "apps": [
+    {
+      "id": "com.efishell.openglesscope",
+      "url": "https://github.com/EFIShell0/OpenGLESScope",
+      "author": "EFIShell0",
+      "name": "OpenGLESScope",
+      "preferredApkIndex": 0,
+      "additionalSettings": "{\"includePrereleases\":false,\"fallbackToOlderReleases\":false,\"apkFilterRegEx\":\"(?i).*universal.*\\\\.apk$\",\"invertAPKFilter\":false,\"autoApkFilterByArch\":false,\"trackOnly\":false,\"appName\":\"OpenGLESScope\"}",
+      "overrideSource": "GitHub"
+    }
+  ]
+}

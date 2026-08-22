@@ -1,26 +1,22 @@
-# OpenGLESScope 0.2.4
+# OpenGLESScope 0.2.7
 
-OpenGLESScope 0.2.3 adds IzzyOnDroid-compatible self-update behavior without changing OpenGL ES/EGL capability coverage.
+OpenGLESScope 0.2.7 changes the fresh-install update default while preserving both the built-in GitHub updater and optional Obtainium guidance. OpenGL ES/EGL capability coverage is unchanged.
 
 ## Changes
 
-- Direct GitHub update checks are disabled by default for every installation.
-- Added a Settings destination containing the Direct GitHub updates opt-in switch.
-- Enabling it requires explicit confirmation of the official GitHub Releases source and warns that direct APK updates bypass IzzyOnDroid repository scanning and verification.
-- No startup update request is made while the feature is disabled.
-- Manual update checks in Info remain unavailable until the feature is enabled.
-- Existing APK URL, package, signing certificate, ABI and version validation remains unchanged when direct updates are enabled.
-- Added a root MIT LICENSE and Fastlane metadata suitable for IzzyOnDroid ingestion.
-- OpenGL ES 3.2, GLSL ES 3.20, EGL 1.5 and UI/TXT/HTML/Database reporting remain unchanged.
+- **Direct GitHub updates** are enabled by default on fresh installations.
+- Existing installations keep their previously saved update preference.
+- Disabling Direct GitHub updates still prevents startup update discovery and APK download.
+- Obtainium remains an optional external update manager described in Settings and Info.
+- The **Add to Obtainium** button remains removed.
+- `obtainium-config.json` remains in the source release with universal-APK selection and architecture auto-filtering disabled.
+- No OpenGL ES/EGL capability, report, export or Database behavior was intentionally changed.
 
 ## Version
 
-- Version: `0.2.3`
-- versionCode: `203`
+- Version: `0.2.7`
+- versionCode: `207`
 - Package: `com.efishell.openglesscope`
-
-
-## 0.2.4 first-install update notice
-
-- Added a one-time seven-second first-install information banner for the default-disabled direct GitHub updater, reusing the existing update-status banner design.
-- The notice is non-modal, performs no network request, appears only on genuine first installation, and does not replace the separate IzzyOnDroid bypass confirmation required when direct updates are enabled.
+- OpenGL ES baseline: `3.2`
+- GLSL ES baseline: `3.20`
+- EGL baseline: `1.5`

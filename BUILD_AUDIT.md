@@ -1,22 +1,23 @@
-# OpenGLESScope 0.2.3 Build Audit
+# OpenGLESScope 0.2.7 Build Audit
 
-- Application version: 0.2.3
-- versionCode: 201
+- Application version: 0.2.7
+- versionCode: 207
 - Package: com.efishell.openglesscope
-- compileSdk/targetSdk: 37
-- minSdk: 24
-- NDK: 29.0.14206865
-- Required release ABIs: arm64-v8a, armeabi-v7a, x86_64
-- x86: intentionally excluded
+- OpenGL ES baseline: 3.2
+- GLSL ES baseline: 3.20
+- EGL baseline: 1.5
+- Release audit: PASS
+- Manifest parse: PASS
+- Obtainium config static verification: PASS
+- Add to Obtainium runtime action: removed
+- Obtainium informational guidance: retained
+- Universal-APK filter: `(?i).*universal.*\.apk$`
+- Obtainium architecture auto-filter: disabled
+- Built-in direct updater: enabled by default on fresh installs
+- Disabled-state first-install information banner logic is retained; a normal fresh install with the default-enabled updater proceeds directly to the non-blocking update check
+- Current runtime source contains no IzzyOnDroid-specific messaging
+- Existing package/signature/version/ABI update verification remains present
+- OpenGL ES/EGL capability/report/Database behavior was not changed by this release
 
-Static source/release audit passes for version identity, ABI policy, HDR cd/m² presentation, report-path completeness markers, native-probe isolation/bounds, database transport bounds and official endpoint restrictions.
-
-A full Gradle compile/lint result is not claimed in this environment because Gradle 9.7 is not locally cached and the wrapper cannot download services.gradle.org from the execution environment.
-
-
-## 0.2.4 first-install notice validation
-
-- One-time first-install gating: checked.
-- Seven-second non-modal update-style banner: checked.
-- No network request introduced by the notice: checked.
-- Existing direct-update consent flow preserved: checked.
+A full Gradle Kotlin/native compilation is not claimed unless completed by the validation environment.
+- Gradle assembleRelease attempt: NOT COMPLETED because the wrapper could not resolve services.gradle.org in this environment

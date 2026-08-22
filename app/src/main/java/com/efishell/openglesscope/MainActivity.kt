@@ -216,7 +216,7 @@ class MainActivity : ComponentActivity() {
     private var updateCheckJob: Job? = null
     private var pendingUpdateApk: File? = null
     private lateinit var prefs: android.content.SharedPreferences
-    internal var directUpdatesEnabled by mutableStateOf(false)
+    internal var directUpdatesEnabled by mutableStateOf(true)
     internal var directUpdatesConsentVisible by mutableStateOf(false)
 
 
@@ -236,7 +236,7 @@ class MainActivity : ComponentActivity() {
             window.isNavigationBarContrastEnforced = false
         }
         prefs = getSharedPreferences("settings", MODE_PRIVATE)
-        directUpdatesEnabled = prefs.getBoolean("direct_updates_enabled", false)
+        directUpdatesEnabled = prefs.getBoolean("direct_updates_enabled", true)
         setContent { OpenGLESScopeApp(this) }
         if (directUpdatesEnabled) {
             checkForApplicationUpdate(false)
@@ -321,7 +321,7 @@ class MainActivity : ComponentActivity() {
 
     internal fun checkForApplicationUpdate(showProgress: Boolean) {
         if (!directUpdatesEnabled) {
-            if (showProgress) updateStatus = UpdateStatus.Failed("Direct GitHub updates are disabled. Enable them in Settings.")
+            if (showProgress) updateStatus = UpdateStatus.Failed("Direct GitHub updates are disabled. Use Obtainium for external update management or enable them in Settings.")
             return
         }
         if (updateCheckJob?.isActive == true || updateStatus is UpdateStatus.Downloading) return
@@ -1305,15 +1305,17 @@ private fun SettingsPage(activity: MainActivity) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("Direct GitHub updates", fontWeight = FontWeight.SemiBold)
-                        Text(if (activity.directUpdatesEnabled) "Enabled · update checks use the official OpenGLESScope GitHub Releases channel" else "Disabled · recommended when updates are managed by IzzyOnDroid or another repository client", color = ComposeColor(0xFF8F8F8F), style = MaterialTheme.typography.bodySmall)
+                        Text(if (activity.directUpdatesEnabled) "Enabled · update checks use the official OpenGLESScope GitHub Releases channel" else "Disabled · recommended when Obtainium manages updates", color = ComposeColor(0xFF8F8F8F), style = MaterialTheme.typography.bodySmall)
                     }
                     Switch(checked = activity.directUpdatesEnabled, onCheckedChange = { activity.requestDirectUpdatesChanged(it) })
                 }
-                Text("When disabled, OpenGLESScope performs no startup update check and will not download update APKs. Enabling requires a confirmation explaining that direct GitHub APK updates bypass IzzyOnDroid repository screening and verification.", color = ComposeColor(0xFF777777), style = MaterialTheme.typography.bodySmall)
+                Text("Direct GitHub updates are enabled by default so new installations receive update checks. When disabled, OpenGLESScope performs no startup update check and will not download update APKs. Obtainium can track the universal APK from the official GitHub Releases channel without enabling the built-in updater.", color = ComposeColor(0xFF777777), style = MaterialTheme.typography.bodySmall)
+                val context = androidx.compose.ui.platform.LocalContext.current
             }
         }
     }
 }
+
 
 @Composable
 private fun DirectUpdatesConsentDialog(appName: String, releaseSource: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
@@ -1323,10 +1325,10 @@ private fun DirectUpdatesConsentDialog(appName: String, releaseSource: String, o
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("$appName will check for updates and download APKs directly from $releaseSource.")
-                Text("Updates installed through this feature come from outside IzzyOnDroid and bypass IzzyOnDroid repository scanning and verification. Leave this disabled to keep updates managed by IzzyOnDroid.", color = ComposeColor(0xFFB6ACAE), style = MaterialTheme.typography.bodySmall)
+                Text("If you use Obtainium, leave this disabled so Obtainium remains the single update manager. Enabling direct updates makes the app independently check the same official GitHub Releases source and may duplicate update notifications.", color = ComposeColor(0xFFB6ACAE), style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { Button(onClick = onConfirm) { Text("Enable anyway") } },
+        confirmButton = { Button(onClick = onConfirm) { Text("Enable direct updates") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }
@@ -1408,7 +1410,7 @@ private fun InfoPage(activity: MainActivity, report: GlReport, display: DisplayI
                 ExpressiveVersionBlock("OpenGLESScope", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE.toString(), activity.packageName, abi)
                 ExpressiveActionButton("Check for updates", if (activity.directUpdatesEnabled) "Official EFIShell0/OpenGLESScope GitHub release channel" else "Direct GitHub updates are disabled in Settings", R.drawable.ic_action_update, enabled = activity.directUpdatesEnabled) { activity.checkForApplicationUpdate(true) }
                 ExpressiveActionButton("Open GitHub repository", "Source, releases and project history", R.drawable.ic_action_github) { open(activity, REPOSITORY_WEB) }
-                Text(if (activity.directUpdatesEnabled) "Direct update checks use the official OpenGLESScope GitHub release channel. APK download still requires explicit review and confirmation." else "Direct GitHub update checks are disabled by default. Repository clients such as IzzyOnDroid can manage updates without OpenGLESScope contacting GitHub for update discovery.", color = ComposeColor(0xFF8F8F8F), style = MaterialTheme.typography.bodySmall)
+                Text(if (activity.directUpdatesEnabled) "Direct update checks use the official OpenGLESScope GitHub release channel. APK download still requires explicit review and confirmation." else "Direct GitHub update checks are currently disabled. Obtainium can manage updates from the official GitHub Releases source without OpenGLESScope running its own update discovery.", color = ComposeColor(0xFF8F8F8F), style = MaterialTheme.typography.bodySmall)
             }
         }
         item {
@@ -1566,7 +1568,7 @@ private fun UpdateStatusBanner(status: UpdateStatus, onInstall: (AppUpdate) -> U
                 when (status) {
                     UpdateStatus.Checking -> { LinearProgressIndicator(Modifier.width(72.dp)); Text("Checking for updates…", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
                     UpdateStatus.UpToDate -> { CapabilityStatusBadge("UP TO DATE", true); Text("OpenGLESScope is up to date.", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
-                    UpdateStatus.DirectUpdatesDisabledIntro -> { CapabilityStatusBadge("INFO", true); Text("Direct GitHub updates are disabled by default. You can enable them optionally in Settings.", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
+                    UpdateStatus.DirectUpdatesDisabledIntro -> { CapabilityStatusBadge("INFO", true); Text("Direct GitHub updates are currently disabled. Obtainium can manage updates externally, or direct updates can be enabled in Settings.", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
                     is UpdateStatus.Available -> { CapabilityStatusBadge("UPDATE", true); Text("OpenGLESScope ${status.update.version} available", modifier = Modifier.weight(1f)); TextButton(onClick = { onInstall(status.update) }) { Text("Review") } }
                     is UpdateStatus.Downloading -> { LinearProgressIndicator(Modifier.width(72.dp)); Text("Downloading update…", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
                     is UpdateStatus.Failed -> Text(status.message, color = ComposeColor(0xFFFF8A8A), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
