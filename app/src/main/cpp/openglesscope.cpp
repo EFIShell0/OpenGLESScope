@@ -68,18 +68,6 @@ static std::string enumDisplay(GLint value, const std::string& category) {
         if (value == 0x83F1) return "GL_COMPRESSED_RGBA_S3TC_DXT1_EXT (" + hexv(value) + ")";
         if (value == 0x83F2) return "GL_COMPRESSED_RGBA_S3TC_DXT3_EXT (" + hexv(value) + ")";
         if (value == 0x83F3) return "GL_COMPRESSED_RGBA_S3TC_DXT5_EXT (" + hexv(value) + ")";
-        if (value == 0x8C4C) return "GL_COMPRESSED_SRGB_S3TC_DXT1_EXT (" + hexv(value) + ")";
-        if (value == 0x8C4D) return "GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT (" + hexv(value) + ")";
-        if (value == 0x8C4E) return "GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT (" + hexv(value) + ")";
-        if (value == 0x8C4F) return "GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT (" + hexv(value) + ")";
-        if (value == 0x8DBB) return "GL_COMPRESSED_RED_RGTC1_EXT (" + hexv(value) + ")";
-        if (value == 0x8DBC) return "GL_COMPRESSED_SIGNED_RED_RGTC1_EXT (" + hexv(value) + ")";
-        if (value == 0x8DBD) return "GL_COMPRESSED_RED_GREEN_RGTC2_EXT (" + hexv(value) + ")";
-        if (value == 0x8DBE) return "GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT (" + hexv(value) + ")";
-        if (value == 0x8E8C) return "GL_COMPRESSED_RGBA_BPTC_UNORM_EXT (" + hexv(value) + ")";
-        if (value == 0x8E8D) return "GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT (" + hexv(value) + ")";
-        if (value == 0x8E8E) return "GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT (" + hexv(value) + ")";
-        if (value == 0x8E8F) return "GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT (" + hexv(value) + ")";
         if (value == 0x8C00) return "GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG (" + hexv(value) + ")";
         if (value == 0x8C01) return "GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG (" + hexv(value) + ")";
         if (value == 0x8C02) return "GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG (" + hexv(value) + ")";
@@ -146,18 +134,12 @@ static std::string enumDisplay(GLint value, const std::string& category) {
         if (value == 0x9250) return "GL_SHADER_BINARY_DMP (" + hexv(value) + ")";
         if (value == 0x9260) return "GL_GCCSO_SHADER_BINARY_FJ (" + hexv(value) + ")";
         if (value == 0x890B) return "GL_NVIDIA_PLATFORM_BINARY_NV (" + hexv(value) + ")";
-        if (value == 0x9770) return "GL_SHADER_BINARY_HUAWEI (" + hexv(value) + ")";
     }
     if (category == "programBinaryFormats") {
         if (value == 0x8740) return "GL_Z400_BINARY_AMD (" + hexv(value) + ")";
         if (value == 0x8F61) return "GL_MALI_PROGRAM_BINARY_ARM (" + hexv(value) + ")";
         if (value == 0x9130) return "GL_SGX_PROGRAM_BINARY_IMG (" + hexv(value) + ")";
         if (value == 0x93A6) return "GL_PROGRAM_BINARY_ANGLE (" + hexv(value) + ")";
-        if (value == 0x875F) return "GL_PROGRAM_BINARY_FORMAT_MESA (" + hexv(value) + ")";
-        if (value == 0x9251) return "GL_SMAPHS30_PROGRAM_BINARY_DMP (" + hexv(value) + ")";
-        if (value == 0x9252) return "GL_SMAPHS_PROGRAM_BINARY_DMP (" + hexv(value) + ")";
-        if (value == 0x9253) return "GL_DMP_PROGRAM_BINARY_DMP (" + hexv(value) + ")";
-        if (value == 0x9771) return "GL_PROGRAM_BINARY_HUAWEI (" + hexv(value) + ")";
     }
     return hexv(value);
 }
@@ -363,7 +345,6 @@ static std::vector<std::string> glExtensions(int glCode) {
         clearGlErrors();
         glGetIntegerv(GL_NUM_EXTENSIONS, &n);
         GLenum error = glGetError();
-        diagnostic("GL_NUM_EXTENSIONS", error == GL_NO_ERROR && n >= 0 && n < 65536 ? GL_NO_ERROR : error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
         if (error != GL_NO_ERROR || n < 0 || n >= 65536) {
             diagnostic("GL_EXTENSIONS", error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
             return out;
@@ -728,31 +709,25 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     }
     o << ']';
 
-    auto appendEnumArray = [&](const char* key, const char* countName, GLenum countEnum, const char* valuesName, GLenum valuesEnum) {
+    auto appendEnumArray = [&](const char* key, GLenum countEnum, GLenum valuesEnum) {
         GLint count = 0;
         clearGlErrors();
         glGetIntegerv(countEnum, &count);
         const GLenum countError = glGetError();
-        const GLenum normalizedCountError = countError == GL_NO_ERROR && count >= 0 && count < 65536 ? GL_NO_ERROR : countError == GL_NO_ERROR ? GL_INVALID_VALUE : countError;
-        diagnostic(countName, normalizedCountError);
         std::vector<GLint> values;
         GLenum valueError = GL_NO_ERROR;
-        if (normalizedCountError == GL_NO_ERROR) {
+        if (countError == GL_NO_ERROR && count >= 0 && count < 65536) {
             values.resize(static_cast<size_t>(count));
             if (count > 0) {
                 clearGlErrors();
                 glGetIntegerv(valuesEnum, values.data());
                 valueError = glGetError();
                 if (valueError != GL_NO_ERROR) values.clear();
-                diagnostic(valuesName, valueError);
-            } else {
-                if (activeDiagnostics) activeDiagnostics->push_back({valuesName, "Not applicable", "Count is zero"});
             }
-        } else {
-            if (activeDiagnostics) activeDiagnostics->push_back({valuesName, "Unavailable", std::string(countName) + " unavailable"});
-            valueError = normalizedCountError;
+        } else if (countError == GL_NO_ERROR) {
+            valueError = GL_INVALID_VALUE;
         }
-        diagnostic(key, normalizedCountError != GL_NO_ERROR ? normalizedCountError : valueError);
+        diagnostic(key, countError != GL_NO_ERROR ? countError : valueError);
         o << ",\"" << key << "\":[";
         for (size_t i = 0; i < values.size(); ++i) {
             if (i) o << ',';
@@ -761,9 +736,9 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
         o << ']';
     };
 
-    appendEnumArray("shaderBinaryFormats", "GL_NUM_SHADER_BINARY_FORMATS", GL_NUM_SHADER_BINARY_FORMATS, "GL_SHADER_BINARY_FORMATS", GL_SHADER_BINARY_FORMATS);
+    appendEnumArray("shaderBinaryFormats", GL_NUM_SHADER_BINARY_FORMATS, GL_SHADER_BINARY_FORMATS);
     if (glCode >= 300 || hasExt(glExt, "GL_OES_get_program_binary")) {
-        appendEnumArray("programBinaryFormats", "GL_NUM_PROGRAM_BINARY_FORMATS", GL_NUM_PROGRAM_BINARY_FORMATS, "GL_PROGRAM_BINARY_FORMATS", GL_PROGRAM_BINARY_FORMATS);
+        appendEnumArray("programBinaryFormats", GL_NUM_PROGRAM_BINARY_FORMATS, GL_PROGRAM_BINARY_FORMATS);
     } else {
         diagnostics.push_back({"programBinaryFormats", "Not applicable", "Requires OpenGL ES 3.0 or GL_OES_get_program_binary"});
         o << ",\"programBinaryFormats\":[]";
@@ -773,26 +748,20 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     clearGlErrors();
     glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &nfmt);
     const GLenum compressedCountError = glGetError();
-    const GLenum normalizedCompressedCountError = compressedCountError == GL_NO_ERROR && nfmt >= 0 && nfmt < 65536 ? GL_NO_ERROR : compressedCountError == GL_NO_ERROR ? GL_INVALID_VALUE : compressedCountError;
-    diagnostic("GL_NUM_COMPRESSED_TEXTURE_FORMATS", normalizedCompressedCountError);
     std::vector<GLint> fmts;
     GLenum compressedValuesError = GL_NO_ERROR;
-    if (normalizedCompressedCountError == GL_NO_ERROR) {
+    if (compressedCountError == GL_NO_ERROR && nfmt >= 0 && nfmt < 65536) {
         fmts.resize(static_cast<size_t>(nfmt));
         if (nfmt > 0) {
             clearGlErrors();
             glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS, fmts.data());
             compressedValuesError = glGetError();
             if (compressedValuesError != GL_NO_ERROR) fmts.clear();
-            diagnostic("GL_COMPRESSED_TEXTURE_FORMATS", compressedValuesError);
-        } else {
-            if (activeDiagnostics) activeDiagnostics->push_back({"GL_COMPRESSED_TEXTURE_FORMATS", "Not applicable", "Count is zero"});
         }
-    } else {
-        if (activeDiagnostics) activeDiagnostics->push_back({"GL_COMPRESSED_TEXTURE_FORMATS", "Unavailable", "GL_NUM_COMPRESSED_TEXTURE_FORMATS unavailable"});
-        compressedValuesError = normalizedCompressedCountError;
+    } else if (compressedCountError == GL_NO_ERROR) {
+        compressedValuesError = GL_INVALID_VALUE;
     }
-    diagnostic("compressedFormats", normalizedCompressedCountError != GL_NO_ERROR ? normalizedCompressedCountError : compressedValuesError);
+    diagnostic("compressedFormats", compressedCountError != GL_NO_ERROR ? compressedCountError : compressedValuesError);
     o << ",\"compressedFormats\":[";
     for (size_t i = 0; i < fmts.size(); ++i) {
         if (i) o << ',';
