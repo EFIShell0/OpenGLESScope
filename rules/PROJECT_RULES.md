@@ -359,3 +359,13 @@
 - UI, TXT, HTML and Database reports must continue to expose limits, exact GL/EGL extension datasets, compressed texture formats, shader/program binary formats, shader precision, query diagnostics, EGL Configs and Android Display/HDR evidence without silently dropping collected technical data.
 - Native EGL/OpenGL ES probing must continue to release the current context, surface, context and display resources on all normal completion paths; service worker shutdown, isolated process behavior, 8 MiB result bound and 20-second timeout remain mandatory.
 - Release metadata, README, Fastlane changelog and static audit identities must agree on 0.3.3 / 303.
+
+
+## Release 0.3.4
+
+- Application version is 0.3.4 with versionCode 304.
+- Query diagnostic names in a complete report are canonical and unique.
+- Repeated internal reads of the same named query must not create duplicate diagnostic entries.
+- If repeated reads disagree, the single canonical diagnostic must preserve the conservative unavailable/inconsistent result rather than hide the conflict.
+- Count and array enumeration evidence remain distinct by their actual GL query names.
+- Database submission must pass the strict duplicate-diagnostic rejection contract.

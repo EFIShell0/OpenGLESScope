@@ -209,7 +209,7 @@ struct QueryDiagnosticNative { std::string name; std::string status; std::string
 static thread_local std::vector<QueryDiagnosticNative>* activeDiagnostics = nullptr;
 
 static std::string glErrorHex(GLenum error) { std::ostringstream o; o << "0x" << std::uppercase << std::hex << static_cast<unsigned int>(error); return o.str(); }
-static void diagnostic(const char* name, GLenum error) { if (activeDiagnostics) activeDiagnostics->push_back({name, error == GL_NO_ERROR ? "Available" : "Unavailable", error == GL_NO_ERROR ? "" : std::string("GL error ") + glErrorHex(error)}); }
+static void diagnostic(const char* name, GLenum error) { if (!activeDiagnostics) return; const std::string status = error == GL_NO_ERROR ? "Available" : "Unavailable"; const std::string detail = error == GL_NO_ERROR ? "" : std::string("GL error ") + glErrorHex(error); auto it = std::find_if(activeDiagnostics->begin(), activeDiagnostics->end(), [&](const QueryDiagnosticNative& x) { return x.name == name; }); if (it == activeDiagnostics->end()) { activeDiagnostics->push_back({name, status, detail}); return; } if (it->status == "Available" && status == "Available") return; if (it->status != status || it->detail != detail) { it->status = "Unavailable"; it->detail = detail.empty() ? "Repeated query produced inconsistent runtime evidence" : detail; } }
 
 static const char* queryGlString(GLenum name, const char* diagnosticName) {
     clearGlErrors();

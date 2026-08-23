@@ -2,7 +2,7 @@
 
 **OpenGLESScope** is an advanced OpenGL ES, EGL, and Android display/HDR capability inspection and reporting tool for Android. It queries the active system graphics implementation directly and presents runtime GPU information, OpenGL ES versions, core capability state, implementation limits, extensions, compressed texture formats, shader and program binary formats, shader precision, EGL runtime information, EGL configurations, Android display modes, HDR capabilities, and query diagnostics.
 
-**Current version: 0.3.3**
+**Current version: 0.3.4**
 
 This app supports **Obtainium**. Identifying the storage links of Obtainium is sufficient.
 

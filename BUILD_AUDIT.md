@@ -1,7 +1,7 @@
-# OpenGLESScope 0.3.3 Build Audit
+# OpenGLESScope 0.3.4 Build Audit
 
-- Application version: 0.3.3
-- versionCode: 303
+- Application version: 0.3.4
+- versionCode: 304
 - Audit date: 2026-08-23
 - OpenGL ES core baseline: 3.2; GLSL ES baseline: 3.20; EGL baseline: 1.5.
 - CapsViewer public core capability floor remains covered for OpenGL ES 2.0/3.0/3.1/3.2.

@@ -1,3 +1,10 @@
+# 0.3.4
+
+- Fixed duplicate query-diagnostic records introduced by 0.3.3 when count queries were reused by Limits and runtime-format enumeration.
+- Canonical diagnostic names are now unique; repeated internal reads merge into one conservative evidence record instead of producing duplicate names rejected by Database validation.
+- Preserves separate count and array diagnostics for extension, compressed texture, shader binary and program binary enumeration.
+- Restores OpenGLESScope Database complete-report submission compatibility.
+
 # 0.3.3
 
 - Completed a full rules-driven correctness, reporting, security and resource-hygiene audit.

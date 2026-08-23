@@ -10,8 +10,8 @@ native = (root / 'app/src/main/cpp/openglesscope.cpp').read_text()
 manifest = (root / 'app/src/main/AndroidManifest.xml').read_text()
 rules = (root / 'rules/PROJECT_RULES.md').read_text()
 checks = {
-    'versionName': 'val releaseVersionName = "0.3.3"' in gradle,
-    'versionCode': 'val releaseVersionCode = 303' in gradle,
+    'versionName': 'val releaseVersionName = "0.3.4"' in gradle,
+    'versionCode': 'val releaseVersionCode = 304' in gradle,
     'compileTarget37': 'compileSdk = 37' in gradle and 'targetSdk = 37' in gradle,
     'minSdk24': 'minSdk = 24' in gradle,
     'abis': all(x in gradle for x in ['arm64-v8a', 'armeabi-v7a', 'x86_64']) and 'include("x86")' not in gradle,
@@ -42,7 +42,7 @@ checks = {
     'securityPatchHtml': '"Security patch" to Build.VERSION.SECURITY_PATCH' in main,
     'expressiveHeaderOrder': 'ExpressiveIconButton(R.drawable.ic_info, "Info", onInfo)\n                ExpressiveIconButton(R.drawable.ic_settings, "Settings", onSettings)' in main,
     'headerHidesBothOnSettingsInfo': 'if (page != Page.Settings && page != Page.Info) {' in main,
-    'release303Fastlane': (root / 'fastlane/metadata/android/en-US/changelogs/303.txt').is_file(),
+    'release304Fastlane': (root / 'fastlane/metadata/android/en-US/changelogs/304.txt').is_file(),
     'material3ExpressiveDependency': 'androidx.compose.material3:material3:1.5.0-alpha26' in gradle,
     'materialExpressiveTheme': 'MaterialExpressiveTheme(' in main and 'MotionScheme.expressive()' in main,
     'shortNavigation': 'ShortNavigationBar(' in main and 'ShortNavigationBarItem(' in main,
@@ -56,8 +56,9 @@ checks = {
     'extendedCompressedEnumDecode': all(x in native for x in ['GL_COMPRESSED_RGBA_BPTC_UNORM_EXT', 'GL_COMPRESSED_RED_RGTC1_EXT', 'GL_COMPRESSED_SRGB_S3TC_DXT1_EXT']),
     'extendedProgramBinaryDecode': all(x in native for x in ['GL_PROGRAM_BINARY_FORMAT_MESA', 'GL_SMAPHS30_PROGRAM_BINARY_DMP', 'GL_DMP_PROGRAM_BINARY_DMP']),
     'huaweiCurrentRegistryBinaryDecode': all(x in native for x in ['GL_SHADER_BINARY_HUAWEI', 'GL_PROGRAM_BINARY_HUAWEI', '0x9770', '0x9771']),
-    'readmeReleaseIdentity': '# OpenGLESScope 0.3.3' in (root / 'README.md').read_text() and 'Application version 0.3.3, versionCode 303.' in (root / 'README.md').read_text(),
+    'readmeReleaseIdentity': '# OpenGLESScope 0.3.4' in (root / 'README.md').read_text() and 'Application version 0.3.4, versionCode 304.' in (root / 'README.md').read_text(),
     'granularFormatDiagnostics': all(x in native for x in ['diagnostic(countName', 'diagnostic(valuesName', 'GL_NUM_SHADER_BINARY_FORMATS', 'GL_SHADER_BINARY_FORMATS', 'GL_NUM_PROGRAM_BINARY_FORMATS', 'GL_PROGRAM_BINARY_FORMATS']),
+    'diagnosticCanonicalUpsert': 'std::find_if(activeDiagnostics->begin(), activeDiagnostics->end()' in native and 'Repeated query produced inconsistent runtime evidence' in native,
     'extensionCountDiagnostic': 'diagnostic("GL_NUM_EXTENSIONS"' in native,
     'coreVersionProvenance': 'Core version provenance' in main and 'Direct GL_MAJOR_VERSION / GL_MINOR_VERSION query' in main and 'Parsed from GL_VERSION runtime string' in main,
     'updateOptOutCancelsCalls': all(x in main for x in ['activeUpdateCheckCall?.cancel()', 'activeUpdateDownloadCall?.cancel()', 'updateDownloadJob?.cancel()']),
@@ -74,7 +75,7 @@ for forbidden in ['.gradle', 'build', '.idea', '__pycache__']:
     checks[f'noTransient:{forbidden}'] = not any(p.name == forbidden for p in root.rglob('*'))
 failed = [k for k, v in checks.items() if not v]
 if failed:
-    print('OpenGLESScope 0.3.3 audit: FAIL')
+    print('OpenGLESScope 0.3.4 audit: FAIL')
     for key in failed:
         print(key)
     sys.exit(1)
@@ -108,4 +109,4 @@ if obtainium_settings.get('apkFilterRegEx') != r'(?i).*universal.*\.apk$' or obt
 if not (root / "LICENSE").is_file():
     raise SystemExit("Missing root LICENSE")
 
-print('OpenGLESScope 0.3.3 audit: PASS')
+print('OpenGLESScope 0.3.4 audit: PASS')
