@@ -49,8 +49,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -80,20 +82,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
@@ -147,6 +157,21 @@ private val BrandSoft = ComposeColor(0xFFF06BC7)
 private val SurfaceDark = ComposeColor(0xFF120B10)
 private val SurfaceRaised = ComposeColor(0xFF1D111A)
 private val Muted = ComposeColor(0xFFA4A7AF)
+private val TextPrimary = ComposeColor(0xFFF7F2F3)
+private val TextSecondary = ComposeColor(0xFFB6ACAE)
+private val TextMuted = ComposeColor(0xFF968D8F)
+private val SurfaceLow = ComposeColor(0xFF120B10)
+private val SurfaceTonal = ComposeColor(0xFF21161E)
+private val BrandContainer = ComposeColor(0xFF3A1831)
+private val Outline = ComposeColor(0xFF51434D)
+private val OutlineVariant = ComposeColor(0xFF30272E)
+private val OpenGLESExpressiveShapes = Shapes(
+    extraSmall = RoundedCornerShape(12.dp),
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(22.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(32.dp)
+)
 
 internal data class LimitEntry(val name: String, val value: String)
 internal data class QueryDiagnostic(val name: String, val status: String, val detail: String)
@@ -603,18 +628,27 @@ private fun OpenGLESScopeApp(activity: MainActivity) {
         delay(2200)
         collectionCompleted = false
     }
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = darkColorScheme(
             background = ComposeColor.Black,
             surface = ComposeColor(0xFF101010),
-            surfaceVariant = ComposeColor(0xFF191919),
+            surfaceVariant = SurfaceTonal,
             primary = Brand,
-            onPrimary = ComposeColor.White,
-            secondary = Brand,
+            onPrimary = TextPrimary,
+            primaryContainer = BrandContainer,
+            onPrimaryContainer = TextPrimary,
+            secondary = BrandSoft,
+            onSecondary = TextPrimary,
+            secondaryContainer = ComposeColor(0xFF32202D),
+            onSecondaryContainer = TextPrimary,
             tertiary = BrandSoft,
-            onBackground = ComposeColor(0xFFF4F4F4),
-            onSurface = ComposeColor(0xFFF4F4F4)
-        )
+            onBackground = TextPrimary,
+            onSurface = TextPrimary,
+            outline = Outline,
+            outlineVariant = OutlineVariant
+        ),
+        shapes = OpenGLESExpressiveShapes,
+        motionScheme = MotionScheme.expressive()
     ) {
         BackHandler(enabled = page != Page.Overview) { page = Page.Overview }
         val configuration = LocalConfiguration.current
@@ -632,9 +666,9 @@ private fun OpenGLESScopeApp(activity: MainActivity) {
             },
             bottomBar = {
                 if (!useRail) {
-                    NavigationBar(containerColor = ComposeColor(0xFF0A0A0A), tonalElevation = 0.dp) {
+                    ShortNavigationBar(containerColor = ComposeColor(0xFF0A0A0A)) {
                         navigationItems().forEach { item ->
-                            NavigationBarItem(
+                            ShortNavigationBarItem(
                                 selected = selectedNavigationPage(page) == item.page,
                                 onClick = { page = item.page },
                                 icon = {
@@ -645,10 +679,11 @@ private fun OpenGLESScopeApp(activity: MainActivity) {
                                     )
                                 },
                                 label = { Text(item.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = ComposeColor.White,
-                                    selectedTextColor = ComposeColor.White,
-                                    indicatorColor = Brand,
+                                colors = ShortNavigationBarItemDefaults.colors(
+                                    selectedIconColor = BrandSoft,
+                                    selectedTextColorTopIconPosition = TextPrimary,
+                                    selectedTextColorStartIconPosition = TextPrimary,
+                                    selectedIndicatorColor = BrandContainer,
                                     unselectedIconColor = ComposeColor(0xFFB8B8B8),
                                     unselectedTextColor = ComposeColor(0xFFB8B8B8)
                                 )
@@ -782,7 +817,7 @@ private fun CompactNavigationRail(selectedPage: Page, onPageSelected: (Page) -> 
                 val shape = RoundedCornerShape(18.dp)
                 Card(
                     onClick = { onPageSelected(item.page) },
-                    colors = CardDefaults.cardColors(containerColor = if (selected) Brand else if (focused) ComposeColor(0xFF2B1726) else ComposeColor.Transparent),
+                    colors = CardDefaults.cardColors(containerColor = if (selected) BrandContainer else if (focused) ComposeColor(0xFF2B1726) else ComposeColor.Transparent),
                     shape = shape,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -801,11 +836,11 @@ private fun CompactNavigationRail(selectedPage: Page, onPageSelected: (Page) -> 
                             painter = painterResource(when (item.page) { Page.OpenGLES -> R.drawable.ic_opengles_gl_es; Page.EGL -> R.drawable.ic_egl_official; else -> item.icon }),
                             contentDescription = item.label,
                             modifier = Modifier.size(if (item.page == Page.OpenGLES || item.page == Page.EGL) 23.dp else 21.dp),
-                            tint = if (selected) ComposeColor.White else ComposeColor(0xFFB8B8B8)
+                            tint = if (selected) BrandSoft else ComposeColor(0xFFB8B8B8)
                         )
                         Text(
                             item.label,
-                            color = if (selected) ComposeColor.White else ComposeColor(0xFFB8B8B8),
+                            color = if (selected) TextPrimary else ComposeColor(0xFFB8B8B8),
                             fontSize = 9.sp,
                             lineHeight = 10.sp,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
@@ -825,7 +860,7 @@ private fun AppHeader(page: Page, onBack: () -> Unit, onSettings: () -> Unit, on
     TopAppBar(
         navigationIcon = {
             if (page != Page.Overview) {
-                IconButton(onClick = onBack) { Icon(painterResource(R.drawable.ic_back), contentDescription = "Back") }
+                ExpressiveIconButton(R.drawable.ic_back, "Back", onBack)
             }
         },
         title = {
@@ -841,8 +876,8 @@ private fun AppHeader(page: Page, onBack: () -> Unit, onSettings: () -> Unit, on
         },
         actions = {
             if (page != Page.Settings && page != Page.Info) {
-                IconButton(onClick = onInfo) { Icon(painterResource(R.drawable.ic_info), contentDescription = "Info") }
-                IconButton(onClick = onSettings) { Icon(painterResource(R.drawable.ic_settings), contentDescription = "Settings") }
+                ExpressiveIconButton(R.drawable.ic_info, "Info", onInfo)
+                ExpressiveIconButton(R.drawable.ic_settings, "Settings", onSettings)
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(containerColor = ComposeColor.Black)
@@ -1047,10 +1082,10 @@ private fun ExploreCard(onNavigate: (Page) -> Unit) {
         Text("Detailed OpenGL ES and EGL inspection areas", color = ComposeColor(0xFF8F8F8F), style = MaterialTheme.typography.bodySmall)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(Page.Features, Page.Limits, Page.Formats, Page.Precision, Page.Configs).forEach { page ->
-                AssistChip(
-                    onClick = { onNavigate(page) },
-                    leadingIcon = { Icon(painterResource(pageIcon(page)), contentDescription = null, modifier = Modifier.size(18.dp)) },
-                    label = { Text(page.title) }
+                ExpressiveAssistChip(
+                    label = page.title,
+                    leadingIcon = pageIcon(page),
+                    onClick = { onNavigate(page) }
                 )
             }
         }
@@ -1189,9 +1224,9 @@ private fun FormatsPage(r: GlReport) {
         item {
             CapabilitySectionCard("Formats") {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = mode == 0, onClick = { mode = 0 }, label = { Text("Texture") })
-                    FilterChip(selected = mode == 1, onClick = { mode = 1 }, label = { Text("Shader binary") })
-                    FilterChip(selected = mode == 2, onClick = { mode = 2 }, label = { Text("Program binary") })
+                    ExpressiveFilterChip(selected = mode == 0, label = "Texture", onClick = { mode = 0 })
+                    ExpressiveFilterChip(selected = mode == 1, label = "Shader binary", onClick = { mode = 1 })
+                    ExpressiveFilterChip(selected = mode == 2, label = "Program binary", onClick = { mode = 2 })
                 }
                 CapabilityKeyValue("Entries", rows.size.toString())
             }
@@ -1214,11 +1249,11 @@ private fun ExtensionsPage(r: GlReport) {
         item {
             CapabilitySectionCard("Extensions") {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = mode == 0, onClick = { mode = 0 }, label = { Text("OpenGL ES") })
-                    FilterChip(selected = mode == 1, onClick = { mode = 1 }, label = { Text("EGL display") })
-                    FilterChip(selected = mode == 2, onClick = { mode = 2 }, label = { Text("EGL client") })
+                    ExpressiveFilterChip(selected = mode == 0, label = "OpenGL ES", onClick = { mode = 0 })
+                    ExpressiveFilterChip(selected = mode == 1, label = "EGL display", onClick = { mode = 1 })
+                    ExpressiveFilterChip(selected = mode == 2, label = "EGL client", onClick = { mode = 2 })
                 }
-                OutlinedTextField(value = query, onValueChange = { query = it }, singleLine = true, shape = RoundedCornerShape(22.dp), placeholder = { Text("Search…") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None))
+                ExpressiveSearchField(value = query, onValueChange = { query = it }, placeholderText = "Search…", modifier = Modifier.fillMaxWidth().padding(top = 8.dp), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None))
                 CapabilityKeyValue("Matches", "${filtered.size} / ${rows.size}")
             }
         }
@@ -1261,7 +1296,7 @@ private fun ConfigsPage(r: GlReport) {
     LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             CapabilitySectionCard("EGL Configs") {
-                OutlinedTextField(value = query, onValueChange = { query = it }, singleLine = true, shape = RoundedCornerShape(22.dp), placeholder = { Text("Search EGL configs…") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+                ExpressiveSearchField(value = query, onValueChange = { query = it }, placeholderText = "Search EGL configs…", modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
                 CapabilityKeyValue("Matches", "${rows.size} / ${r.eglConfigs.size}")
             }
         }
@@ -1305,7 +1340,7 @@ private fun SettingsPage(activity: MainActivity) {
                         Text("Direct GitHub updates", fontWeight = FontWeight.SemiBold)
                         Text(if (activity.directUpdatesEnabled) "Enabled · update checks use the official OpenGLESScope GitHub Releases channel" else "Disabled · recommended when Obtainium manages updates", color = ComposeColor(0xFF8F8F8F), style = MaterialTheme.typography.bodySmall)
                     }
-                    Switch(checked = activity.directUpdatesEnabled, onCheckedChange = { activity.requestDirectUpdatesChanged(it) })
+                    ExpressiveSwitch(checked = activity.directUpdatesEnabled, onCheckedChange = { activity.requestDirectUpdatesChanged(it) })
                 }
                 Text("Direct GitHub updates are enabled by default so new installations receive update checks. When disabled, OpenGLESScope performs no startup update check and will not download update APKs. Obtainium can track the universal APK from the official GitHub Releases channel without enabling the built-in updater.", color = ComposeColor(0xFF777777), style = MaterialTheme.typography.bodySmall)
                 val context = androidx.compose.ui.platform.LocalContext.current
@@ -1319,15 +1354,18 @@ private fun SettingsPage(activity: MainActivity) {
 private fun DirectUpdatesConsentDialog(appName: String, releaseSource: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Enable direct GitHub updates?") },
+        shape = RoundedCornerShape(32.dp),
+        containerColor = SurfaceRaised,
+        tonalElevation = 0.dp,
+        title = { Text("Enable direct GitHub updates?", fontWeight = FontWeight.SemiBold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("$appName will check for updates and download APKs directly from $releaseSource.")
                 Text("If you use Obtainium, leave this disabled so Obtainium remains the single update manager. Enabling direct updates makes the app independently check the same official GitHub Releases source and may duplicate update notifications.", color = ComposeColor(0xFFB6ACAE), style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { Button(onClick = onConfirm) { Text("Enable direct updates") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        confirmButton = { ExpressivePrimaryButton("Enable direct updates", onConfirm) },
+        dismissButton = { ExpressiveTextButton("Cancel", onDismiss) }
     )
 }
 
@@ -1536,7 +1574,7 @@ private fun SearchRows(title: String, rows: List<Pair<String, String>>) {
     LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             CapabilitySectionCard(title) {
-                OutlinedTextField(value = query, onValueChange = { query = it }, singleLine = true, shape = RoundedCornerShape(22.dp), placeholder = { Text("Search…") }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None))
+                ExpressiveSearchField(value = query, onValueChange = { query = it }, placeholderText = "Search…", modifier = Modifier.fillMaxWidth().padding(top = 8.dp), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None))
                 CapabilityKeyValue("Matches", "${filtered.size} / ${rows.size}")
             }
         }
@@ -1561,14 +1599,19 @@ private fun UpdateStatusBanner(status: UpdateStatus, onInstall: (AppUpdate) -> U
         enter = fadeIn(animationSpec = tween(220)) + expandVertically(animationSpec = tween(220)),
         exit = fadeOut(animationSpec = tween(360)) + shrinkVertically(animationSpec = tween(360))
     ) {
-        Surface(modifier = Modifier.fillMaxWidth(), color = ComposeColor(0xFF111111), tonalElevation = 0.dp) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            color = SurfaceRaised,
+            shape = RoundedCornerShape(24.dp),
+            tonalElevation = 0.dp
+        ) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 when (status) {
-                    UpdateStatus.Checking -> { LinearProgressIndicator(Modifier.width(72.dp)); Text("Checking for updates…", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
+                    UpdateStatus.Checking -> { ExpressiveLinearProgressIndicator(Modifier.width(72.dp)); Text("Checking for updates…", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
                     UpdateStatus.UpToDate -> { CapabilityStatusBadge("UP TO DATE", true); Text("OpenGLESScope is up to date.", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
                     UpdateStatus.DirectUpdatesDisabledIntro -> { CapabilityStatusBadge("INFO", true); Text("Direct GitHub updates are currently disabled. Obtainium can manage updates externally, or direct updates can be enabled in Settings.", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
-                    is UpdateStatus.Available -> { CapabilityStatusBadge("UPDATE", true); Text("OpenGLESScope ${status.update.version} available", modifier = Modifier.weight(1f)); TextButton(onClick = { onInstall(status.update) }) { Text("Review") } }
-                    is UpdateStatus.Downloading -> { LinearProgressIndicator(Modifier.width(72.dp)); Text("Downloading update…", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
+                    is UpdateStatus.Available -> { CapabilityStatusBadge("UPDATE", true); Text("OpenGLESScope ${status.update.version} available", modifier = Modifier.weight(1f)); ExpressiveTextButton("Review") { onInstall(status.update) } }
+                    is UpdateStatus.Downloading -> { ExpressiveLinearProgressIndicator(Modifier.width(72.dp)); Text("Downloading update…", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f)) }
                     is UpdateStatus.Failed -> Text(status.message, color = ComposeColor(0xFFFF8A8A), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
                     UpdateStatus.Hidden -> Unit
                 }
@@ -1584,28 +1627,48 @@ private fun CollectionStatusBanner(collecting: Boolean, completed: Boolean) {
         enter = fadeIn(animationSpec = tween(260)) + expandVertically(animationSpec = tween(260)),
         exit = fadeOut(animationSpec = tween(420)) + shrinkVertically(animationSpec = tween(420))
     ) {
-        Surface(modifier = Modifier.fillMaxWidth(), color = ComposeColor(0xFF111111), tonalElevation = 0.dp) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            color = SurfaceRaised,
+            shape = RoundedCornerShape(24.dp),
+            tonalElevation = 0.dp
+        ) {
             Column(Modifier.fillMaxWidth()) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (collecting) {
-                        AssistChip(onClick = {}, enabled = false, label = { Text("Collecting information…") })
+                        ExpressiveAssistChip(label = "Collecting information…", leadingIcon = R.drawable.ic_action_update, enabled = false, onClick = {})
                         Text("OpenGLESScope is collecting OpenGL ES and EGL information in the background.", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     } else {
                         Surface(shape = RoundedCornerShape(50), color = ComposeColor(0xFF163D24), modifier = Modifier.size(30.dp)) {
-                            Box(contentAlignment = Alignment.Center) { Text("✓", color = ComposeColor(0xFF55D98A), fontWeight = FontWeight.Bold, fontSize = 18.sp) }
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_check),
+                                    contentDescription = null,
+                                    tint = ComposeColor(0xFF55D98A),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
                         Text("Completed", color = ComposeColor(0xFF55D98A), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         Text("OpenGL ES information updated.", color = ComposeColor(0xFF9E9E9E), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     }
                 }
-                if (collecting) LinearProgressIndicator(Modifier.fillMaxWidth())
+                if (collecting) ExpressiveLinearProgressIndicator(Modifier.fillMaxWidth())
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun LoadingView() { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Inspecting OpenGL ES…", color = ComposeColor(0xFF9E9E9E)) } }
+private fun LoadingView() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            LoadingIndicator(color = BrandSoft, modifier = Modifier.size(48.dp))
+            Text("Inspecting OpenGL ES…", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
 
 @Composable
 private fun EmptyState(message: String) { Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(message, color = ComposeColor(0xFFBDBDBD)) } }
@@ -1637,6 +1700,202 @@ private fun tvBrowseModifier(shape: RoundedCornerShape): Modifier {
         .onFocusChanged { state -> focused = state.isFocused }
         .focusable()
         .border(if (focused) 2.dp else 0.dp, if (focused) BrandSoft else ComposeColor.Transparent, shape)
+}
+
+@Composable
+private fun ExpressiveIconButton(icon: Int, contentDescription: String, onClick: () -> Unit) {
+    IconButton(
+        onClick = onClick,
+        shapes = IconButtonDefaults.shapes(
+            shape = RoundedCornerShape(18.dp),
+            pressedShape = RoundedCornerShape(24.dp)
+        ),
+        colors = IconButtonDefaults.iconButtonColors(
+            containerColor = SurfaceRaised,
+            contentColor = TextPrimary
+        ),
+        modifier = Modifier.size(48.dp)
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = contentDescription,
+            tint = TextPrimary,
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Composable
+private fun ExpressiveSearchField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    labelText: String? = null,
+    placeholderText: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        singleLine = true,
+        shape = RoundedCornerShape(22.dp),
+        leadingIcon = {
+            Icon(
+                painter = painterResource(R.drawable.ic_search),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+        },
+        label = if (labelText == null) null else { { Text(labelText) } },
+        placeholder = if (placeholderText == null) null else { { Text(placeholderText) } },
+        keyboardOptions = keyboardOptions,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            focusedContainerColor = SurfaceTonal,
+            unfocusedContainerColor = SurfaceLow,
+            cursorColor = BrandSoft,
+            focusedBorderColor = BrandSoft,
+            unfocusedBorderColor = Outline,
+            focusedLeadingIconColor = BrandSoft,
+            unfocusedLeadingIconColor = TextMuted,
+            focusedLabelColor = BrandSoft,
+            unfocusedLabelColor = TextSecondary,
+            focusedPlaceholderColor = TextSecondary,
+            unfocusedPlaceholderColor = TextMuted
+        )
+    )
+}
+
+@Composable
+private fun ExpressiveFilterChip(selected: Boolean, label: String, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        shapes = FilterChipDefaults.shapes(
+            shape = RoundedCornerShape(18.dp),
+            selectedShape = RoundedCornerShape(22.dp),
+            pressedShape = RoundedCornerShape(24.dp)
+        ),
+        label = { Text(label, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium) },
+        leadingIcon = if (selected) {
+            {
+                Icon(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        } else null,
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = SurfaceLow,
+            labelColor = TextSecondary,
+            iconColor = TextMuted,
+            selectedContainerColor = BrandContainer,
+            selectedLabelColor = TextPrimary,
+            selectedLeadingIconColor = BrandSoft
+        )
+    )
+}
+
+@Composable
+private fun ExpressiveAssistChip(
+    label: String,
+    leadingIcon: Int? = null,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    AssistChip(
+        onClick = onClick,
+        enabled = enabled,
+        shape = RoundedCornerShape(18.dp),
+        leadingIcon = if (leadingIcon == null) null else {
+            {
+                Icon(
+                    painter = painterResource(leadingIcon),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        },
+        label = { Text(label, fontWeight = FontWeight.Medium) },
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = SurfaceTonal,
+            labelColor = TextPrimary,
+            leadingIconContentColor = BrandSoft,
+            disabledContainerColor = SurfaceLow,
+            disabledLabelColor = TextMuted,
+            disabledLeadingIconContentColor = TextMuted
+        )
+    )
+}
+
+@Composable
+private fun ExpressiveSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        thumbContent = if (checked) {
+            {
+                Icon(
+                    painter = painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    tint = Brand,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        } else null,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = TextPrimary,
+            checkedTrackColor = Brand,
+            uncheckedThumbColor = TextSecondary,
+            uncheckedTrackColor = SurfaceTonal,
+            uncheckedBorderColor = Outline
+        )
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ExpressivePrimaryButton(label: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        shapes = ButtonDefaults.shapes(
+            shape = RoundedCornerShape(20.dp),
+            pressedShape = RoundedCornerShape(26.dp)
+        ),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Brand,
+            contentColor = TextPrimary
+        )
+    ) {
+        Text(label, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ExpressiveTextButton(label: String, onClick: () -> Unit) {
+    TextButton(
+        onClick = onClick,
+        shapes = ButtonDefaults.shapes(
+            shape = RoundedCornerShape(18.dp),
+            pressedShape = RoundedCornerShape(24.dp)
+        ),
+        colors = ButtonDefaults.textButtonColors(contentColor = BrandSoft)
+    ) {
+        Text(label, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun ExpressiveLinearProgressIndicator(modifier: Modifier = Modifier) {
+    LinearWavyProgressIndicator(
+        modifier = modifier.height(12.dp),
+        color = BrandSoft,
+        trackColor = ComposeColor(0xFF34212F)
+    )
 }
 
 @Composable
@@ -1710,7 +1969,7 @@ private fun ExpressiveActionButton(title: String, subtitle: String, icon: Int, m
                     Text(title, color = titleColor, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(subtitle, color = detailColor, style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
-                Surface(shape = RoundedCornerShape(999.dp), color = ComposeColor(0xFF28191F)) { Text("›", color = accent, fontSize = 23.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)) }
+                Surface(shape = RoundedCornerShape(999.dp), color = ComposeColor(0xFF28191F)) { Icon(painter = painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = accent, modifier = Modifier.padding(9.dp).size(19.dp)) }
             }
         }
     }
@@ -1775,7 +2034,9 @@ private fun MetricCard(title: String, value: String, modifier: Modifier) {
 private fun UpdateConfirmationDialog(update: AppUpdate, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = ComposeColor(0xFF121212),
+        shape = RoundedCornerShape(32.dp),
+        containerColor = SurfaceRaised,
+        tonalElevation = 0.dp,
         title = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Download OpenGLESScope ${update.version}?", fontWeight = FontWeight.SemiBold)
@@ -1799,8 +2060,8 @@ private fun UpdateConfirmationDialog(update: AppUpdate, onDismiss: () -> Unit, o
                 Text("The APK is validated for official release provenance, package identity, signing certificate, versionCode and versionName before Android's installer is opened.", color = ComposeColor(0xFF8F8F8F), style = MaterialTheme.typography.labelSmall)
             }
         },
-        confirmButton = { Button(onClick = onConfirm) { Text("Download APK") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        confirmButton = { ExpressivePrimaryButton("Download APK", onConfirm) },
+        dismissButton = { ExpressiveTextButton("Cancel", onDismiss) }
     )
 }
 

@@ -2,7 +2,7 @@
 
 **OpenGLESScope** is an advanced OpenGL ES, EGL, and Android display/HDR capability inspection and reporting tool for Android. It queries the active system graphics implementation directly and presents runtime GPU information, OpenGL ES versions, core capability state, implementation limits, extensions, compressed texture formats, shader and program binary formats, shader precision, EGL runtime information, EGL configurations, Android display modes, HDR capabilities, and query diagnostics.
 
-**Current version: 0.2.8**
+**Current version: 0.3.0**
 
 This app supports **Obtainium**. Identifying the storage links of Obtainium is sufficient.
 
@@ -38,19 +38,19 @@ Database link: https://efishell0.github.io/OpenGLESScope_database/
 # Screenshots
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/overview-4.jpg" width="200">
-  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/egl-configs-1.jpg" width="200">
-  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/opengles-1.jpg" width="200">
+  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/overview-5.jpg" width="200">
+  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/egl-configs-2.jpg" width="200">
+  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/opengles-2.jpg" width="200">
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/egl-1.jpg" width="200">
-  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/display-1.jpg" width="200">
-  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/extensions-1.jpg" width="200">
+  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/egl-2.jpg" width="200">
+  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/display-2.jpg" width="200">
+  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/extensions-2.jpg" width="200">
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/mumuplayer-2.png" width="500">
+  <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/mumuplayer-3.png" width="500">
   <img src="https://raw.githubusercontent.com/EFIShell0/OpenGLESScope/main/screenshots/database-0.2.2.png" width="500">
 </p>
 

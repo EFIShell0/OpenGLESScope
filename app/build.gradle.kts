@@ -86,8 +86,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val releaseVersionName = "0.2.8"
-val releaseVersionCode = 208
+val releaseVersionName = "0.3.0"
+val releaseVersionCode = 300
 
 android {
     namespace = "com.efishell.openglesscope"
@@ -130,7 +130,8 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.compose.ui:ui:1.12.0")
     implementation("androidx.compose.foundation:foundation:1.12.0")
-    implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("androidx.compose.animation:animation:1.12.0")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha26")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:5.3.0")

@@ -1,13 +1,12 @@
-# OpenGLESScope 0.2.8
+# OpenGLESScope 0.3.0
 
-OpenGLESScope 0.2.8 aligns the top-bar Settings and Info affordances with VulkanScope while preserving all graphics collection, reporting, update and Database behavior.
+OpenGLESScope 0.3.0 completes the application-wide Material 3 Expressive UI transition while preserving the existing OpenGLESScope visual identity and all OpenGL ES/EGL capability behavior.
 
-## Changes
-- Replaced the Settings and Info icons with the same rounded Material 3 Expressive vector assets used by VulkanScope.
-- Matched VulkanScope action order exactly: Info on the left and Settings on the right.
-- Matched VulkanScope destination behavior: neither top-bar action is shown while already inside Settings or Info.
-- Preserved Direct GitHub updates, Obtainium guidance, OpenGL ES/EGL collection, exports and Database submission unchanged.
+- Uses Material 3 Expressive theme and motion with the existing OpenGLESScope dark surfaces and official brand colors.
+- Updates portrait navigation, app-bar actions, searches, chips, switches, dialogs, update/collection banners, progress/loading indicators and shared functional icons to the same expressive component language used by VulkanScope 0.35.0.
+- Preserves the established 22 dp search-field geometry, technical card hierarchy, official OpenGL ES/EGL artwork, GPU-vendor/HDR assets and TV/landscape navigation behavior.
+- Direct GitHub updates remain enabled by default for fresh installs; Obtainium remains optional informational guidance.
+- OpenGL ES/EGL collection, Display/HDR reporting, TXT/HTML export and Database integration are unchanged.
 
-## Version
-- Version: `0.2.8`
-- versionCode: `208`
+Version: `0.3.0`
+versionCode: `300`

@@ -310,3 +310,18 @@
 - This release is UI-only for the Settings/Info top-bar affordances. OpenGL ES/EGL collection, Display/HDR semantics, report/export completeness, Database submission and update behavior must not regress.
 - Direct GitHub updates remain default-enabled for fresh installs subject to the 0.2.7 preference-preservation and update-security rules; Obtainium remains informational only and no Add to Obtainium runtime action is reintroduced.
 
+
+## Release 0.3.0 full Material 3 Expressive application parity
+- Application version is 0.3.0 with versionCode 300. Database versioning remains independent and is not changed by this visual release.
+- AndroidX Compose Material3 is 1.5.0-alpha26 and the application shell uses `MaterialExpressiveTheme` with `MotionScheme.expressive()` while retaining OpenGLESScope's established black/dark surfaces and official brand accent `#BA2A8D` with `#F06BC7` as the existing soft accent.
+- Existing OpenGLESScope visual identity, official OpenGL ES/EGL artwork, GPU-vendor logos, HDR artwork, information hierarchy, destination order, page geometry, card spacing and technical-content density remain intact; Material 3 Expressive may refine component state, shape and motion but must not redesign the product into a different visual identity.
+- Portrait primary navigation uses the Material 3 Expressive short navigation bar/item family. Selected/unselected semantics and destination ordering remain unchanged. Android TV/landscape compact navigation rail focus acquisition, bring-into-view behavior, destination order and destination semantics must not regress.
+- Top-app-bar back, Info and Settings actions use expressive icon-button shape/state behavior while preserving the 0.2.8 Info-left/Settings-right ordering, 24 dp icon geometry, 48 dp touch targets and accessibility labels.
+- Search fields retain the established OpenGLESScope 22 dp geometry required by the 0.1.19 UI rules while adopting expressive tonal containers, focus colors and the search affordance.
+- Format/extension selectors, Explore actions and collection-state chips use expressive filter/assist chip state and shape language without changing filtering semantics or technical labels.
+- The Direct GitHub updates toggle uses expressive switch state treatment while preserving the 0.2.7 default-enabled preference behavior and all update-security requirements.
+- Update confirmation, direct-update consent, update/collection banners, update actions and progress/loading indicators use expressive dialog/button/container/loading/progress language while preserving all existing actions, timing, provenance checks and user consent boundaries.
+- Remaining shared functional navigation/action vector icons use the same rounded Material 3 Expressive geometry established by VulkanScope 0.35.0. Official OpenGL ES/EGL, GPU-vendor and HDR artwork are data/brand assets and must not be redrawn as generic Material icons.
+- Experimental Material 3 Expressive APIs are opted into only at the smallest wrapper/composable scope that directly requires them.
+- OpenGL ES/EGL native collection, probe isolation/timeouts, Android Display/HDR semantics, UI/TXT/HTML completeness, Database payload/schema compatibility, Obtainium metadata, GitHub update behavior and release ABI policy are functionally unchanged by this visual release.
+- `ShortNavigationBarItemDefaults.colors` must use the Material3 1.5.0-alpha26 parameters `selectedTextColorTopIconPosition`, `selectedTextColorStartIconPosition` and `selectedIndicatorColor`; removed/legacy color parameter names are forbidden.
