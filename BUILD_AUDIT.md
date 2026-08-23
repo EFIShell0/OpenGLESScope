@@ -1,10 +1,22 @@
-# OpenGLESScope 0.3.0 Build Audit
+# OpenGLESScope 0.3.3 Build Audit
 
-- Application version: 0.3.0
-- versionCode: 300
-- UI release scope: application-wide Material 3 Expressive parity with VulkanScope 0.35.0 while retaining OpenGLESScope brand identity and established geometry.
-- Material3 dependency: 1.5.0-alpha26.
-- Database version/schema: unchanged and independently versioned.
-- Graphics collection/report/export behavior: unchanged.
+- Application version: 0.3.3
+- versionCode: 303
+- Audit date: 2026-08-23
+- OpenGL ES core baseline: 3.2; GLSL ES baseline: 3.20; EGL baseline: 1.5.
+- CapsViewer public core capability floor remains covered for OpenGL ES 2.0/3.0/3.1/3.2.
+- Runtime compressed texture, shader binary and program binary arrays remain complete-report datasets; count and value-array attempts now have separate diagnostics.
+- OpenGL ES 3.x extension enumeration now records GL_NUM_EXTENSIONS provenance separately.
+- Core-version provenance is exposed consistently in UI, TXT and HTML.
+- Current Khronos HUAWEI binary-format tokens remain symbolically decoded while unknown tokens stay raw hexadecimal.
+- Material3 dependency: 1.5.0-alpha26; Compose UI/foundation/animation: 1.12.0.
+- Android Gradle Plugin: 9.3.1; compileSdk/targetSdk: 37.
+- Database compatibility reference: OpenGLESScope Database 0.2.5; schema-v2 / technicalReport-v1 unchanged.
 - Required ABIs: arm64-v8a, armeabi-v7a, x86_64; x86 excluded.
-- Universal and ABI-specific release artifact policy remains unchanged.
+- Native EGL cleanup and probe service shutdown paths reviewed; no persistent source-level leak identified.
+- Direct updater opt-out cancellation and invalid APK cleanup are enforced.
+- APK signature compatibility uses directional signing-lineage validation on Android 9+ and exact signer equality on legacy Android.
+- Static release audit: PASS.
+- Python audit scripts: syntax PASS.
+- Kotlin source parser smoke check: no syntax diagnostics.
+- Full Gradle compilation could not run because Gradle 9.7.0 is not cached and services.gradle.org is unreachable from the build environment.

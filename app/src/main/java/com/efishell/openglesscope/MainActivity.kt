@@ -131,6 +131,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import androidx.lifecycle.lifecycleScope
 import androidx.core.content.FileProvider
+import okhttp3.Call
 import okhttp3.Dns
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -239,6 +240,9 @@ class MainActivity : ComponentActivity() {
     internal var updateStatus by mutableStateOf<UpdateStatus>(UpdateStatus.Hidden)
     internal var updateConfirmation by mutableStateOf<AppUpdate?>(null)
     private var updateCheckJob: Job? = null
+    private var updateDownloadJob: Job? = null
+    @Volatile private var activeUpdateCheckCall: Call? = null
+    @Volatile private var activeUpdateDownloadCall: Call? = null
     private var pendingUpdateApk: File? = null
     private lateinit var prefs: android.content.SharedPreferences
     internal var directUpdatesEnabled by mutableStateOf(true)
@@ -290,6 +294,14 @@ class MainActivity : ComponentActivity() {
             directUpdatesEnabled = false
             directUpdatesConsentVisible = false
             prefs.edit().putBoolean("direct_updates_enabled", false).apply()
+            updateCheckJob?.cancel()
+            updateDownloadJob?.cancel()
+            activeUpdateCheckCall?.cancel()
+            activeUpdateDownloadCall?.cancel()
+            updateCheckJob = null
+            updateDownloadJob = null
+            pendingUpdateApk?.let { runCatching { it.delete() } }
+            pendingUpdateApk = null
             updateStatus = UpdateStatus.Hidden
             updateConfirmation = null
         }
@@ -353,6 +365,11 @@ class MainActivity : ComponentActivity() {
         updateCheckJob = lifecycleScope.launch {
             if (showProgress) updateStatus = UpdateStatus.Checking
             val result = withContext(Dispatchers.IO) { fetchLatestCompatibleUpdateResult() }
+            if (!directUpdatesEnabled) {
+                updateStatus = UpdateStatus.Hidden
+                updateConfirmation = null
+                return@launch
+            }
             updateStatus = when (result) {
                 is UpdateCheckResult.Available -> UpdateStatus.Available(result.update)
                 UpdateCheckResult.UpToDate -> if (showProgress) UpdateStatus.UpToDate else UpdateStatus.Hidden
@@ -388,8 +405,11 @@ class MainActivity : ComponentActivity() {
             .header("User-Agent", "OpenGLESScope/${installedVersionName()}")
             .get()
             .build()
-        return HTTP_CLIENT.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) error("Update check failed (HTTP ${response.code}).")
+        val call = HTTP_CLIENT.newCall(request)
+        activeUpdateCheckCall = call
+        return try {
+            call.execute().use { response ->
+                if (!response.isSuccessful) error("Update check failed (HTTP ${response.code}).")
             val releases = JSONArray(readResponseTextLimited(response.body, 2 * 1024 * 1024))
             val current = installedVersionName()
             val candidates = (0 until releases.length())
@@ -418,7 +438,10 @@ class MainActivity : ComponentActivity() {
             val url = selected.optString("browser_download_url")
             val parsedUrl = url.toHttpUrlOrNull()
             if (parsedUrl == null || parsedUrl.scheme != "https" || parsedUrl.host != "github.com" || parsedUrl.username.isNotEmpty() || parsedUrl.password.isNotEmpty() || parsedUrl.query != null || parsedUrl.fragment != null || !parsedUrl.encodedPath.startsWith("/EFIShell0/OpenGLESScope/releases/download/")) error("The release APK URL is not an official OpenGLESScope GitHub release asset.")
-            AppUpdate(latest, selected.optString("name"), url, json.optString("body").trim().ifBlank { "No release notes were provided for this GitHub release." }, abi, if (exact != null) abi else "universal", current, installedVersionCode())
+                AppUpdate(latest, selected.optString("name"), url, json.optString("body").trim().ifBlank { "No release notes were provided for this GitHub release." }, abi, if (exact != null) abi else "universal", current, installedVersionCode())
+            }
+        } finally {
+            if (activeUpdateCheckCall === call) activeUpdateCheckCall = null
         }
     }
 
@@ -434,12 +457,28 @@ class MainActivity : ComponentActivity() {
     private fun isNewerVersion(candidate: String, current: String): Boolean = compareVersions(candidate, current) > 0
 
     internal fun downloadAndInstallUpdate(update: AppUpdate) {
-        if (updateStatus is UpdateStatus.Downloading) return
+        if (!directUpdatesEnabled || updateStatus is UpdateStatus.Downloading) return
         updateStatus = UpdateStatus.Downloading(update)
-        lifecycleScope.launch {
+        updateDownloadJob = lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) { downloadUpdateApk(update) }
-            result.onSuccess { apk -> updateStatus = UpdateStatus.Hidden; requestPackageInstall(apk) }
-                .onFailure { error -> updateStatus = UpdateStatus.Failed(error.message ?: "Update download failed."); kotlinx.coroutines.delay(10_000); if (updateStatus is UpdateStatus.Failed) updateStatus = UpdateStatus.Hidden }
+            result.onSuccess { apk ->
+                if (!directUpdatesEnabled) {
+                    runCatching { apk.delete() }
+                    updateStatus = UpdateStatus.Hidden
+                } else {
+                    updateStatus = UpdateStatus.Hidden
+                    requestPackageInstall(apk)
+                }
+            }.onFailure { error ->
+                if (directUpdatesEnabled) {
+                    updateStatus = UpdateStatus.Failed(error.message ?: "Update download failed.")
+                    kotlinx.coroutines.delay(10_000)
+                    if (updateStatus is UpdateStatus.Failed) updateStatus = UpdateStatus.Hidden
+                } else {
+                    updateStatus = UpdateStatus.Hidden
+                }
+            }
+            updateDownloadJob = null
         }
     }
 
@@ -451,8 +490,11 @@ class MainActivity : ComponentActivity() {
         val temp = File(updateDir, "$safeAssetName.part")
         try {
             val request = Request.Builder().url(update.downloadUrl).header("User-Agent", "OpenGLESScope/${installedVersionName()}").get().build()
-            UPDATE_DOWNLOAD_CLIENT.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) error("Update download failed (HTTP ${response.code}).")
+            val call = UPDATE_DOWNLOAD_CLIENT.newCall(request)
+            activeUpdateDownloadCall = call
+            try {
+                call.execute().use { response ->
+                    if (!response.isSuccessful) error("Update download failed (HTTP ${response.code}).")
                 val body = response.body
                 if (body.contentLength() > 256L * 1024L * 1024L) error("Update package exceeds the safety limit.")
                 body.byteStream().use { input -> FileOutputStream(temp).use { output ->
@@ -460,6 +502,9 @@ class MainActivity : ComponentActivity() {
                     while (true) { val count = input.read(buffer); if (count < 0) break; total += count; if (total > 256L * 1024L * 1024L) error("Update package exceeds the safety limit."); output.write(buffer, 0, count) }
                     output.fd.sync()
                 } }
+                }
+            } finally {
+                if (activeUpdateDownloadCall === call) activeUpdateDownloadCall = null
             }
             if (!temp.renameTo(target)) { temp.copyTo(target, overwrite = true); temp.delete() }
             val flags = if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES else {
@@ -467,41 +512,51 @@ class MainActivity : ComponentActivity() {
                 val legacy = PackageManager.GET_SIGNATURES
                 legacy
             }
-            val archive = packageManager.getPackageArchiveInfo(target.absolutePath, flags) ?: error("Downloaded file is not a valid Android package.")
-            if (archive.packageName != packageName) error("Downloaded package identity does not match OpenGLESScope.")
-            val installed = packageManager.getPackageInfo(packageName, flags)
-            if (!packageSigningCertificatesMatch(installed, archive)) error("Downloaded package signing certificate does not match the installed OpenGLESScope build.")
-            val archiveCode = if (Build.VERSION.SDK_INT >= 28) archive.longVersionCode else {
-                @Suppress("DEPRECATION")
-                val legacy = archive.versionCode.toLong()
-                legacy
+            try {
+                val archive = packageManager.getPackageArchiveInfo(target.absolutePath, flags) ?: error("Downloaded file is not a valid Android package.")
+                if (archive.packageName != packageName) error("Downloaded package identity does not match OpenGLESScope.")
+                val installed = packageManager.getPackageInfo(packageName, flags)
+                if (!packageSigningCertificatesMatch(installed, archive)) error("Downloaded package signing certificate does not match the installed OpenGLESScope build.")
+                val archiveCode = if (Build.VERSION.SDK_INT >= 28) archive.longVersionCode else {
+                    @Suppress("DEPRECATION")
+                    val legacy = archive.versionCode.toLong()
+                    legacy
+                }
+                val installedCode = if (Build.VERSION.SDK_INT >= 28) installed.longVersionCode else {
+                    @Suppress("DEPRECATION")
+                    val legacy = installed.versionCode.toLong()
+                    legacy
+                }
+                if (archiveCode <= installedCode) error("Downloaded package versionCode is not newer than the installed OpenGLESScope build.")
+                val archiveVersion = archive.versionName ?: error("Downloaded package has no version metadata.")
+                if (!isNewerVersion(archiveVersion, installedVersionName())) error("Downloaded package versionName is not newer than the installed OpenGLESScope version.")
+                target
+            } catch (error: Throwable) {
+                runCatching { target.delete() }
+                throw error
             }
-            val installedCode = if (Build.VERSION.SDK_INT >= 28) installed.longVersionCode else {
-                @Suppress("DEPRECATION")
-                val legacy = installed.versionCode.toLong()
-                legacy
-            }
-            if (archiveCode <= installedCode) error("Downloaded package versionCode is not newer than the installed OpenGLESScope build.")
-            val archiveVersion = archive.versionName ?: error("Downloaded package has no version metadata.")
-            if (!isNewerVersion(archiveVersion, installedVersionName())) error("Downloaded package versionName is not newer than the installed OpenGLESScope version.")
-            target
         } finally { if (temp.exists()) temp.delete() }
     }
 
     private fun packageSigningCertificatesMatch(installed: android.content.pm.PackageInfo, archive: android.content.pm.PackageInfo): Boolean {
-        fun certificates(info: android.content.pm.PackageInfo): Set<String> {
-            val signatures = if (Build.VERSION.SDK_INT >= 28) {
-                val signingInfo = info.signingInfo ?: return emptySet()
-                if (signingInfo.hasMultipleSigners()) signingInfo.apkContentsSigners else signingInfo.signingCertificateHistory
-            } else {
-                @Suppress("DEPRECATION")
-                val legacy = info.signatures ?: emptyArray()
-                legacy
+        fun encoded(signatures: Array<android.content.pm.Signature>): Set<String> = signatures.map { Base64.encodeToString(it.toByteArray(), Base64.NO_WRAP) }.toSet()
+        if (Build.VERSION.SDK_INT >= 28) {
+            val installedInfo = installed.signingInfo ?: return false
+            val archiveInfo = archive.signingInfo ?: return false
+            val installedCurrent = encoded(installedInfo.apkContentsSigners)
+            if (installedCurrent.isEmpty()) return false
+            if (installedInfo.hasMultipleSigners() || archiveInfo.hasMultipleSigners()) {
+                val archiveCurrent = encoded(archiveInfo.apkContentsSigners)
+                return archiveCurrent.isNotEmpty() && installedCurrent == archiveCurrent
             }
-            return signatures.map { Base64.encodeToString(it.toByteArray(), Base64.NO_WRAP) }.toSet()
+            val archiveHistory = encoded(archiveInfo.signingCertificateHistory)
+            return archiveHistory.isNotEmpty() && archiveHistory.containsAll(installedCurrent)
         }
-        val a = certificates(installed); val b = certificates(archive)
-        return a.isNotEmpty() && b.isNotEmpty() && a.intersect(b).isNotEmpty()
+        @Suppress("DEPRECATION")
+        val installedLegacy = encoded(installed.signatures ?: emptyArray())
+        @Suppress("DEPRECATION")
+        val archiveLegacy = encoded(archive.signatures ?: emptyArray())
+        return installedLegacy.isNotEmpty() && installedLegacy == archiveLegacy
     }
 
     private fun requestPackageInstall(apk: File) {
@@ -512,6 +567,14 @@ class MainActivity : ComponentActivity() {
     private fun launchPackageInstaller(apk: File) {
         val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", apk)
         startActivity(Intent(Intent.ACTION_VIEW).apply { setDataAndType(uri, "application/vnd.android.package-archive"); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK) })
+    }
+
+    override fun onDestroy() {
+        activeUpdateCheckCall?.cancel()
+        activeUpdateDownloadCall?.cancel()
+        updateCheckJob?.cancel()
+        updateDownloadJob?.cancel()
+        super.onDestroy()
     }
 
 }
@@ -570,6 +633,11 @@ private fun JSONArray?.toObjects(): List<JSONObject> = if (this == null) emptyLi
 private fun JSONObject.optNullableInt(name: String): Int? = if (isNull(name) || !has(name)) null else optInt(name)
 private fun JSONObject.optNullableString(name: String): String? = if (isNull(name) || !has(name)) null else optString(name).takeIf { it.isNotBlank() }
 private fun safeFilePart(s: String): String = s.replace(Regex("[^A-Za-z0-9._-]+"), "_").take(80).ifBlank { "device" }
+private fun coreVersionProvenance(r: GlReport): String {
+    val directMajor = r.diagnostics.any { it.name == "GL_MAJOR_VERSION" && it.status == "Available" }
+    val directMinor = r.diagnostics.any { it.name == "GL_MINOR_VERSION" && it.status == "Available" }
+    return if (directMajor && directMinor) "Direct GL_MAJOR_VERSION / GL_MINOR_VERSION query" else "Parsed from GL_VERSION runtime string"
+}
 
 private fun displayInfo(activity: Activity): DisplayInfo {
     val d = if (Build.VERSION.SDK_INT >= 30) activity.display else @Suppress("DEPRECATION") activity.windowManager.defaultDisplay
@@ -1099,8 +1167,8 @@ private fun OpenGLESPage(r: GlReport) = CapabilityListPage("OpenGL ES runtime", 
     "Renderer" to r.renderer,
     "Vendor" to r.vendor,
     "GL_VERSION" to r.glVersion,
-    "Parsed core major" to r.glMajor.toString(),
-    "Parsed core minor" to r.glMinor.toString(),
+    "Core version" to "${r.glMajor}.${r.glMinor}",
+    "Core version provenance" to coreVersionProvenance(r),
     "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion
 ))
 
@@ -2359,7 +2427,8 @@ private fun reportText(context: Context, r: GlReport, d: DisplayInfo): String = 
     appendLine("GL_RENDERER: ${r.renderer}")
     appendLine("GL_VENDOR: ${r.vendor}")
     appendLine("GL_VERSION: ${r.glVersion}")
-    appendLine("Parsed core version: ${r.glMajor}.${r.glMinor}")
+    appendLine("Core version: ${r.glMajor}.${r.glMinor}")
+    appendLine("Core version provenance: ${coreVersionProvenance(r)}")
     appendLine("GL_SHADING_LANGUAGE_VERSION: ${r.glslVersion}")
     appendLine()
     appendLine("EGL")
@@ -2453,7 +2522,7 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
     val deviceRows = rows(listOf(
         "Manufacturer" to Build.MANUFACTURER, "Model" to Build.MODEL, "Product" to Build.PRODUCT, "Android" to Build.VERSION.RELEASE, "SDK" to Build.VERSION.SDK_INT, "Security patch" to Build.VERSION.SECURITY_PATCH
     ))
-    val glRows = rows(listOf("Driver mode" to "System OpenGL ES/EGL", "Driver version" to "Unavailable (OpenGL ES does not expose a standardized driver-version query)", "GL_RENDERER" to r.renderer, "GL_VENDOR" to r.vendor, "GL_VERSION" to r.glVersion, "Parsed core version" to "${r.glMajor}.${r.glMinor}", "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion))
+    val glRows = rows(listOf("Driver mode" to "System OpenGL ES/EGL", "Driver version" to "Unavailable (OpenGL ES does not expose a standardized driver-version query)", "GL_RENDERER" to r.renderer, "GL_VENDOR" to r.vendor, "GL_VERSION" to r.glVersion, "Core version" to "${r.glMajor}.${r.glMinor}", "Core version provenance" to coreVersionProvenance(r), "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion))
     val eglRows = rows(listOf("EGL_VENDOR" to r.egl.vendor, "EGL_VERSION" to r.egl.version, "Initialized EGL version" to r.egl.initializedVersion, "EGL_CLIENT_APIS" to r.egl.clientApis))
     val displayRows = rows(listOf(
         "Display" to d.name, "Current mode ID" to (d.modeId?.toString() ?: "Unavailable"), "Current mode resolution" to if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width} × ${d.height}" else "Unavailable",
