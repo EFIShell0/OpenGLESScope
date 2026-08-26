@@ -1,0 +1,26 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.efishell.openglesscope.app-mergeReleaseResources-31:/values-v27/values-v27.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Administrator\\Desktop\\OpenGLESScope\\app\\src\\main\\res\\values-v27\\styles.xml",
+                    "from": {
+                        "startLines": "0",
+                        "startColumns": "11",
+                        "startOffsets": "11",
+                        "endColumns": "459",
+                        "endOffsets": "459"
+                    },
+                    "to": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "452",
+                        "endOffsets": "503"
+                    }
+                }
+            ]
+        }
+    ]
+}

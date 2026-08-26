@@ -1,0 +1,17 @@
+[
+{
+  "message": "Start JSON generation. Platform version: 24 min SDK version: armeabi-v7a",
+  "file": "C:\\Users\\Administrator\\Desktop\\OpenGLESScope\\app\\src\\main\\cpp\\CMakeLists.txt",
+  "tag": "release|armeabi-v7a"
+},
+{
+  "message": "JSON \u0027C:\\Users\\Administrator\\Desktop\\OpenGLESScope\\app\\.cxx\\RelWithDebInfo\\o4i683v4\\armeabi-v7a\\android_gradle_build.json\u0027 was up-to-date",
+  "file": "C:\\Users\\Administrator\\Desktop\\OpenGLESScope\\app\\src\\main\\cpp\\CMakeLists.txt",
+  "tag": "release|armeabi-v7a"
+},
+{
+  "message": "JSON generation completed without problems",
+  "file": "C:\\Users\\Administrator\\Desktop\\OpenGLESScope\\app\\src\\main\\cpp\\CMakeLists.txt",
+  "tag": "release|armeabi-v7a"
+}
+]

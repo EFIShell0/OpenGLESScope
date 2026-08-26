@@ -1,0 +1,3 @@
+ninja: Entering directory `C:\Users\Administrator\Desktop\OpenGLESScope\app\.cxx\RelWithDebInfo\o4i683v4\x86_64'
+[1/2] Building CXX object CMakeFiles/openglesscope.dir/openglesscope.cpp.o
+[2/2] Linking CXX shared library C:\Users\Administrator\Desktop\OpenGLESScope\app\build\intermediates\cxx\RelWithDebInfo\o4i683v4\obj\x86_64\libopenglesscope.so

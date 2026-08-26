@@ -1,0 +1,215 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.efishell.openglesscope"
+4    android:versionCode="702"
+5    android:versionName="0.7.2" >
+6
+7    <uses-sdk
+7-->INJECTED
+8        android:minSdkVersion="24"
+8-->INJECTED
+9        android:targetSdkVersion="37" />
+9-->INJECTED
+10
+11    <uses-permission
+11-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:2:5-108
+12        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+12-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:2:22-78
+13        android:maxSdkVersion="28" />
+13-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:2:79-105
+14    <uses-permission android:name="android.permission.INTERNET" />
+14-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:3:5-67
+14-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:3:22-64
+15    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+15-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:4:5-83
+15-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:4:22-80
+16
+17    <uses-feature
+17-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:5:5-78
+18        android:glEsVersion="0x00020000"
+18-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:5:19-51
+19        android:required="true" />
+19-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:5:52-75
+20    <uses-feature
+20-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:6:5-87
+21        android:name="android.software.leanback"
+21-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:6:19-59
+22        android:required="false" />
+22-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:6:60-84
+23    <uses-feature
+23-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:7:5-90
+24        android:name="android.hardware.touchscreen"
+24-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:7:19-62
+25        android:required="false" />
+25-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:7:63-87
+26
+27    <permission
+27-->[androidx.core:core:1.19.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\7ae56080bf03e7e99dfbd3aedf884515\transformed\core-1.19.0\AndroidManifest.xml:22:5-24:47
+28        android:name="com.efishell.openglesscope.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+28-->[androidx.core:core:1.19.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\7ae56080bf03e7e99dfbd3aedf884515\transformed\core-1.19.0\AndroidManifest.xml:23:9-81
+29        android:protectionLevel="signature" />
+29-->[androidx.core:core:1.19.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\7ae56080bf03e7e99dfbd3aedf884515\transformed\core-1.19.0\AndroidManifest.xml:24:9-44
+30
+31    <uses-permission android:name="com.efishell.openglesscope.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+31-->[androidx.core:core:1.19.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\7ae56080bf03e7e99dfbd3aedf884515\transformed\core-1.19.0\AndroidManifest.xml:26:5-97
+31-->[androidx.core:core:1.19.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\7ae56080bf03e7e99dfbd3aedf884515\transformed\core-1.19.0\AndroidManifest.xml:26:22-94
+32
+33    <application
+33-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:5-20:19
+34        android:allowBackup="false"
+34-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:161-188
+35        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+35-->[androidx.core:core:1.19.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\7ae56080bf03e7e99dfbd3aedf884515\transformed\core-1.19.0\AndroidManifest.xml:28:18-86
+36        android:banner="@drawable/tv_banner"
+36-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:253-289
+37        android:extractNativeLibs="true"
+37-->INJECTED
+38        android:icon="@mipmap/ic_launcher"
+38-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:80-114
+39        android:label="OpenGLESScope"
+39-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:50-79
+40        android:roundIcon="@mipmap/ic_launcher_round"
+40-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:115-160
+41        android:supportsRtl="true"
+41-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:226-252
+42        android:theme="@style/AppTheme"
+42-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:18-49
+43        android:usesCleartextTraffic="false" >
+43-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:8:189-225
+44        <service
+44-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:9:9-144
+45            android:name="com.efishell.openglesscope.OpenGLESProbeService"
+45-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:9:18-54
+46            android:exported="false"
+46-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:9:55-79
+47            android:process=":opengles_probe"
+47-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:9:80-113
+48            android:stopWithTask="true" />
+48-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:9:114-141
+49
+50        <activity
+50-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:10:9-16:20
+51            android:name="com.efishell.openglesscope.MainActivity"
+51-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:10:19-47
+52            android:exported="true" >
+52-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:10:48-71
+53            <intent-filter>
+53-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:11:13-15:29
+54                <action android:name="android.intent.action.MAIN" />
+54-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:12:17-69
+54-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:12:25-66
+55
+56                <category android:name="android.intent.category.LAUNCHER" />
+56-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:13:17-77
+56-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:13:27-74
+57                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+57-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:14:17-86
+57-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:14:27-83
+58            </intent-filter>
+59        </activity>
+60
+61        <provider
+61-->INJECTED
+62            android:name="androidx.core.content.FileProvider"
+62-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:17:19-68
+63            android:authorities="com.efishell.openglesscope.fileprovider"
+63-->INJECTED
+64            android:exported="false"
+64-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:17:121-145
+65            android:grantUriPermissions="true" >
+65-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:17:146-180
+66            <meta-data
+66-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:18:13-112
+67                android:name="android.support.FILE_PROVIDER_PATHS"
+67-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:18:24-74
+68                android:resource="@xml/file_paths" />
+68-->C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\AndroidManifest.xml:18:75-109
+69        </provider>
+70
+71        <uses-library
+71-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\f213eb139cfae2dc3582fc697fc5089f\transformed\window-1.5.0\AndroidManifest.xml:23:9-25:40
+72            android:name="androidx.window.extensions"
+72-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\f213eb139cfae2dc3582fc697fc5089f\transformed\window-1.5.0\AndroidManifest.xml:24:13-54
+73            android:required="false" />
+73-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\f213eb139cfae2dc3582fc697fc5089f\transformed\window-1.5.0\AndroidManifest.xml:25:13-37
+74        <uses-library
+74-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\f213eb139cfae2dc3582fc697fc5089f\transformed\window-1.5.0\AndroidManifest.xml:26:9-28:40
+75            android:name="androidx.window.sidecar"
+75-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\f213eb139cfae2dc3582fc697fc5089f\transformed\window-1.5.0\AndroidManifest.xml:27:13-51
+76            android:required="false" />
+76-->[androidx.window:window:1.5.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\f213eb139cfae2dc3582fc697fc5089f\transformed\window-1.5.0\AndroidManifest.xml:28:13-37
+77
+78        <provider
+78-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\373c860eca16af508b45a0e7264387b5\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
+79            android:name="androidx.startup.InitializationProvider"
+79-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\373c860eca16af508b45a0e7264387b5\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
+80            android:authorities="com.efishell.openglesscope.androidx-startup"
+80-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\373c860eca16af508b45a0e7264387b5\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
+81            android:exported="false" >
+81-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\373c860eca16af508b45a0e7264387b5\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
+82            <meta-data
+82-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\373c860eca16af508b45a0e7264387b5\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
+83                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+83-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\373c860eca16af508b45a0e7264387b5\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
+84                android:value="androidx.startup" />
+84-->[androidx.emoji2:emoji2:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\373c860eca16af508b45a0e7264387b5\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
+85            <meta-data
+85-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\0cf364bf700230590222d65449d59525\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:29:13-31:52
+86                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+86-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\0cf364bf700230590222d65449d59525\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:30:17-78
+87                android:value="androidx.startup" />
+87-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\0cf364bf700230590222d65449d59525\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:31:17-49
+88            <meta-data
+88-->[com.squareup.okhttp3:okhttp-android:5.3.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\9e2398e6d42d8934d295dae3b3079e7c\transformed\okhttp-release\AndroidManifest.xml:16:13-18:52
+89                android:name="okhttp3.internal.platform.PlatformInitializer"
+89-->[com.squareup.okhttp3:okhttp-android:5.3.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\9e2398e6d42d8934d295dae3b3079e7c\transformed\okhttp-release\AndroidManifest.xml:17:17-77
+90                android:value="androidx.startup" />
+90-->[com.squareup.okhttp3:okhttp-android:5.3.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\9e2398e6d42d8934d295dae3b3079e7c\transformed\okhttp-release\AndroidManifest.xml:18:17-49
+91            <meta-data
+91-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+92                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+92-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+93                android:value="androidx.startup" />
+93-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+94        </provider>
+95
+96        <receiver
+96-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+97            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+97-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+98            android:directBootAware="false"
+98-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+99            android:enabled="true"
+99-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+100            android:exported="true"
+100-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+101            android:permission="android.permission.DUMP" >
+101-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+102            <intent-filter>
+102-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+103                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+103-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+103-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+104            </intent-filter>
+105            <intent-filter>
+105-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+106                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+106-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+106-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+107            </intent-filter>
+108            <intent-filter>
+108-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+109                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+109-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+109-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+110            </intent-filter>
+111            <intent-filter>
+111-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+112                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+112-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+112-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\Administrator\.gradle\caches\9.7.1\transforms\a39c6f111935828626714a84bfb73999\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+113            </intent-filter>
+114        </receiver>
+115    </application>
+116
+117</manifest>

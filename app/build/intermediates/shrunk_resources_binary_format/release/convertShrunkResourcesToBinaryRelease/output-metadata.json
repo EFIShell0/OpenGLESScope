@@ -1,0 +1,59 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "SHRUNK_RESOURCES_BINARY_FORMAT",
+    "kind": "Directory"
+  },
+  "applicationId": "com.efishell.openglesscope",
+  "variantName": "release",
+  "elements": [
+    {
+      "type": "UNIVERSAL",
+      "filters": [],
+      "attributes": [],
+      "versionCode": 702,
+      "versionName": "0.7.2",
+      "outputFile": "shrunk-resources-binary-format-universal-release.ap_"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "arm64-v8a"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 702,
+      "versionName": "0.7.2",
+      "outputFile": "shrunk-resources-binary-format-arm64-v8a-release.ap_"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "x86_64"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 702,
+      "versionName": "0.7.2",
+      "outputFile": "shrunk-resources-binary-format-x86_64-release.ap_"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "armeabi-v7a"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 702,
+      "versionName": "0.7.2",
+      "outputFile": "shrunk-resources-binary-format-armeabi-v7a-release.ap_"
+    }
+  ],
+  "elementType": "File"
+}

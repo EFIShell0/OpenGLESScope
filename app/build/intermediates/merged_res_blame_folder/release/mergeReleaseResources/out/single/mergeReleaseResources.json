@@ -1,0 +1,238 @@
+[
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_vivante.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_vivante.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_hdr_vivid.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/hdr_vivid.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_hdr_hdr10.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/hdr_hdr10.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_features.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_features.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_intel.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_intel.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_hdr_hdr10_plus.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/hdr_hdr10_plus.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_display.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_display.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_imagination.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_imagination.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_action_update.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_action_update.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_search.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_search.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_qualcomm.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_qualcomm.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_action_html.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_action_html.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_broadcom.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_broadcom.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_arm.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_arm.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_action_text.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_action_text.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_openglesscope_logo_master.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/openglesscope_logo_master.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_openglesscope_logo_foreground.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/openglesscope_logo_foreground.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_formats.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_formats.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_hdr_hdr10_plus_advanced.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/hdr_hdr10_plus_advanced.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_action_database.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_action_database.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_hdr_dolby_vision.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/hdr_dolby_vision.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_huawei.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_huawei.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_openglesscope_logo_horizontal.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/openglesscope_logo_horizontal.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_amd.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_amd.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_action_import.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_action_import.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_home.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_home.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_tv_banner.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/tv_banner.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_chevron_right.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_chevron_right.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_check.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_check.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_queues.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_queues.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_memory.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_memory.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_back.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_back.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_nvidia.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_nvidia.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_properties.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_properties.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-xhdpi_tv_banner.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-xhdpi/tv_banner.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/xml_file_paths.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/xml/file_paths.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_hdr_dolby_vision_2.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/hdr_dolby_vision_2.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_samsung.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_samsung.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_info.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_info.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_unknown.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_unknown.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_ic_egl_official.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/ic_egl_official.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_extensions.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_extensions.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_ic_opengles_gl_es.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/ic_opengles_gl_es.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_action_github.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_action_github.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_surface.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_surface.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable_ic_settings.xml.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable/ic_settings.xml"
+    },
+    {
+        "merged": "com.efishell.openglesscope.app-release-34:/drawable-nodpi_gpu_vendor_vsi.png.flat",
+        "source": "com.efishell.openglesscope.app-main-35:/drawable-nodpi/gpu_vendor_vsi.png"
+    }
+]

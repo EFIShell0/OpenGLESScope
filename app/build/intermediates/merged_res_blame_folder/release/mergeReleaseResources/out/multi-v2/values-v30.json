@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.efishell.openglesscope.app-mergeReleaseResources-31:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\50f5e142fd1a5e7576b89ad949918e41\\transformed\\material3\\res\\values-v30\\values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        }
+    ]
+}

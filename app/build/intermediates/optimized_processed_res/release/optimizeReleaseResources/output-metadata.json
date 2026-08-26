@@ -1,0 +1,59 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "OPTIMIZED_PROCESSED_RES",
+    "kind": "Directory"
+  },
+  "applicationId": "com.efishell.openglesscope",
+  "variantName": "release",
+  "elements": [
+    {
+      "type": "UNIVERSAL",
+      "filters": [],
+      "attributes": [],
+      "versionCode": 702,
+      "versionName": "0.7.2",
+      "outputFile": "resources-universal-release-optimize.ap_"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "arm64-v8a"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 702,
+      "versionName": "0.7.2",
+      "outputFile": "resources-arm64-v8a-release-optimize.ap_"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "x86_64"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 702,
+      "versionName": "0.7.2",
+      "outputFile": "resources-x86_64-release-optimize.ap_"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "armeabi-v7a"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 702,
+      "versionName": "0.7.2",
+      "outputFile": "resources-armeabi-v7a-release-optimize.ap_"
+    }
+  ],
+  "elementType": "File"
+}

@@ -1,0 +1,9 @@
+com.efishell.openglesscope.app-pngs-0 C:\Users\Administrator\Desktop\OpenGLESScope\app\build\generated\res\pngs\release
+com.efishell.openglesscope.app-updated_navigation_xml-1 C:\Users\Administrator\Desktop\OpenGLESScope\app\build\generated\updated_navigation_xml\release
+com.efishell.openglesscope.app-packageReleaseResources-2 C:\Users\Administrator\Desktop\OpenGLESScope\app\build\intermediates\incremental\release\packageReleaseResources\merged.dir
+com.efishell.openglesscope.app-packageReleaseResources-3 C:\Users\Administrator\Desktop\OpenGLESScope\app\build\intermediates\incremental\release\packageReleaseResources\stripped.dir
+com.efishell.openglesscope.app-merged-not-compiled-resources-4 C:\Users\Administrator\Desktop\OpenGLESScope\app\build\intermediates\merged-not-compiled-resources\release
+com.efishell.openglesscope.app-release-5 C:\Users\Administrator\Desktop\OpenGLESScope\app\build\intermediates\merged_res\release\mergeReleaseResources
+com.efishell.openglesscope.app-main-6 C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\res
+com.efishell.openglesscope.app-release-7 C:\Users\Administrator\Desktop\OpenGLESScope\app\src\release\res
+gradleHome-0 C:\Users\Administrator\.gradle
