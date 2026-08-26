@@ -2,7 +2,7 @@
 
 **OpenGLESScope** is an advanced OpenGL ES, EGL, and Android display/HDR capability inspection and reporting tool for Android. It queries the active system graphics implementation directly and presents runtime GPU information, OpenGL ES versions, core capability state, implementation limits, extensions, compressed texture formats, shader and program binary formats, shader precision, EGL runtime information, EGL configurations, Android display modes, HDR capabilities, and query diagnostics.
 
-**Current version: 0.3.4**
+**Current version: 0.7.2**
 
 This app supports **Obtainium**. Identifying the storage links of Obtainium is sufficient.
 
@@ -18,16 +18,21 @@ Database link: https://efishell0.github.io/OpenGLESScope_database/
 - Direct `GL_VENDOR`, `GL_RENDERER`, `GL_VERSION`, and `GL_SHADING_LANGUAGE_VERSION` reporting
 - Complete runtime OpenGL ES extension enumeration
 - Separate EGL display and EGL client extension enumeration
-- Extensive core implementation-limit queries
-- Exact-extension-gated extension capability queries
-- Compressed texture format inspection
-- Shader binary and program binary format inspection
+- Complete 145/145 checked-in public capability-reference coverage
+- 49 additional OpenGLESScope implementation queries
+- 104 directly evaluated OpenGL ES 3.2 implementation minimum/maximum requirements
+- Exact-extension-gated implementation queries
+- Compressed texture, shader binary, and program binary format inspection
 - Vertex/fragment shader precision inspection
-- Detailed EGL configuration enumeration
+- Expanded EGL runtime/context/current-binding/pbuffer evidence
+- Detailed EGL configuration enumeration with extension-backed attributes
+- Analysis workspace with Compare, Spec minimums, Graph, Quality, Watched, Share, and isolated Tests
+- Bounded Analysis snapshots up to 8 MiB / 32,768 evidence entries
 - Android Display and HDR capability reporting
-- Explicit query diagnostics for attempted implementation queries
+- Explicit query diagnostics and exact query provenance
 - Complete TXT and self-contained HTML reports
 - Explicit complete-report submission to OpenGLESScope Database
+- Canonical Database permalink sharing and local QR generation
 - Secure GitHub-based update checking
 - Dedicated isolated native probe process
 - Android TV / D-pad navigation support
@@ -70,6 +75,7 @@ The application is organized into dedicated inspection areas:
 - Extensions
 - Precision
 - EGL Configs
+- Analysis
 - Info
 
 Status and evidence states remain semantically distinct. Missing information is never silently converted into a negative capability result.
@@ -179,6 +185,13 @@ Examples of explicitly gated implementation-query paths include applicable limit
 - `GL_NV_framebuffer_multisample`
 - `GL_IMG_multisampled_render_to_texture`
 - `GL_OES_get_program_binary`
+- `GL_KHR_shader_subgroup`
+- `GL_EXT_window_rectangles`
+- `GL_OES_viewport_array`
+- `GL_EXT_shader_pixel_local_storage`
+- `GL_EXT_shader_pixel_local_storage2`
+- `GL_OES_sample_shading`
+- `GL_EXT_sparse_texture`
 
 Extensions that expose no implementation-dependent numeric query remain represented by their exact runtime extension token rather than synthetic values.
 
@@ -258,6 +271,68 @@ Each entry preserves the implementation-reported precision/range values.
 
 The application does not infer shader precision from GPU family or OpenGL ES version tables.
 
+## Analysis
+
+OpenGLESScope includes a dedicated Analysis workspace built around the collected OpenGL ES/EGL evidence rather than inferred hardware capability.
+
+### Compare
+
+- Compares two collected snapshots without converting one-sided absence into `Unsupported`.
+- Keeps one-sided evidence as **Unknown / Not reported**.
+- Separates query diagnostics from implementation-limit totals.
+- Uses completeness-aware regression candidates so incomplete enumerations are not mislabeled as removed capabilities.
+
+### Spec minimums
+
+OpenGLESScope evaluates **104** directly queried OpenGL ES 3.2 implementation-dependent requirements.
+
+- Minimum-direction and maximum-direction requirements are handled separately.
+- Alignment limits and minimum texel-offset requirements use the correct comparison direction.
+- Missing evidence remains **Unknown** rather than being converted into an artificial failure.
+- This evaluator is an implementation-evidence tool, not a conformance test.
+
+### Graph
+
+The dependency graph maps exact runtime extensions to the implementation queries actually gated by those extensions.
+
+- Only implemented OpenGLESScope query gates are represented.
+- No capability is inferred from GPU model, vendor name, Android version, or unrelated API concepts.
+
+### Quality
+
+The Quality view summarizes explicit collection/query anomalies.
+
+It is intentionally **not** presented as a conformance score, benchmark score, driver-quality score, or hardware-quality score.
+
+### Watched evidence
+
+- Up to 256 watched evidence entries are retained.
+- Matched/Missing filtering is available.
+- Missing watched evidence remains semantically distinct from unsupported evidence.
+
+### Share
+
+- Canonical Database report permalinks can be copied/shared.
+- Local QR generation does not require an external QR or tracking service.
+- A canonical report permalink is retained only after a successful Database response returns a valid 64-hex report ID.
+
+### Isolated Tests
+
+Optional self-tests remain isolated from the main capability collector.
+
+Test results are attributed to the selected report only when the isolated probe identity matches the report's runtime `GL_VENDOR`, `GL_RENDERER`, and `GL_VERSION` evidence.
+
+### Bounded Analysis snapshots
+
+Analysis snapshots are explicitly bounded to:
+
+- **8 MiB** maximum snapshot size
+- **32,768** evidence entries
+
+Snapshots preserve applicable OpenGL ES/EGL identity, limits, extensions, formats, shader precision, EGL runtime/configuration evidence, query diagnostics, and Android Display/HDR evidence.
+
+Incomplete snapshot evidence is not silently transformed into negative capability conclusions.
+
 ## EGL
 
 EGL capability reporting is kept independent from OpenGL ES capability reporting.
@@ -270,8 +345,21 @@ OpenGLESScope can report:
 - EGL client APIs
 - EGL display extensions
 - EGL client extensions queried with `EGL_NO_DISPLAY`
+- Bound client API
+- Current context validation
+- Current display validation
+- Current draw-surface validation
+- Current read-surface validation
+- Current config ID
+- Context client type
+- Context client version
+- Render buffer
+- Collector pbuffer attributes
+- Exact unavailable/failure evidence
 - EGL configuration data
 - EGL query diagnostics
+
+Runtime identity, current binding/context evidence, and collector pbuffer evidence remain distinct.
 
 An OpenGL ES extension is never treated as an EGL extension, and an EGL extension is never treated as an OpenGL ES extension.
 
@@ -306,8 +394,11 @@ Per-config reporting can include applicable EGL 1.5 configuration attributes suc
 - Transparency attributes
 - Minimum swap interval
 - Maximum swap interval
+- `EGL_ANDROID_recordable` when `EGL_ANDROID_recordable` is advertised
+- `EGL_ANDROID_framebuffer_target` when its exact prerequisite extension is advertised
+- `EGL_COLOR_COMPONENT_TYPE_EXT` / floating-point color-component evidence when `EGL_EXT_pixel_format_float` is advertised
 
-If an individual EGL attribute query fails, the failure remains explicit evidence. OpenGLESScope does not manufacture a value to complete the table.
+If an individual EGL attribute query fails, the failure remains explicit evidence with its exact EGL error where available. OpenGLESScope does not manufacture a value to complete the table.
 
 EGL configuration attributes are implementation data and are not converted into unsupported claims about the physical Android display.
 
@@ -341,12 +432,14 @@ Implementation queries are auditable.
 
 Every attempted OpenGL ES/EGL implementation query records an explicit diagnostic state instead of silently omitting a failed query.
 
-Diagnostics distinguish conditions such as:
+Diagnostics and capability-state presentation distinguish conditions such as:
 
+- Supported
+- Unsupported
 - Available
 - Unavailable
 - Not applicable
-- Unknown
+- Unknown / not queried
 
 This is especially important for specification-level comparison because:
 
@@ -358,7 +451,7 @@ A query that is not applicable to the actual core version or exact runtime exten
 
 Native OpenGL ES/EGL collection runs outside the main UI process in the dedicated non-exported:
 
-` :opengles_probe `
+`:opengles_probe`
 
 Android process.
 
@@ -393,6 +486,7 @@ The same collected capability model is used across:
 - TXT export
 - HTML export
 - OpenGLESScope Database submission
+- Bounded Analysis snapshots
 
 Report presentation can differ by format, but capability evidence is not intentionally dropped simply to make an export smaller.
 
@@ -407,7 +501,9 @@ Reports can contain:
 
 - Application/version metadata
 - Device manufacturer/model and Android version
-- Device ABI
+- Android security patch
+- Installed application ABI
+- Android-supported device ABIs
 - OpenGL ES runtime identity
 - EGL runtime identity
 - Core capability state
@@ -419,6 +515,7 @@ Reports can contain:
 - Shader binary formats
 - Program binary formats
 - Shader precision
+- EGL runtime/current-binding/pbuffer evidence
 - EGL configurations
 - Android Display/HDR information
 - Display modes
@@ -465,8 +562,12 @@ Important submission behavior includes:
 - No silent report truncation
 - Bounded server-response parsing
 - HTTPS-only official API host
+- HTTP/HTTPS redirects are not followed for report submission
 - Canonical structured technical payload
 - Human-readable report snapshot included with the submission
+- Valid 64-hex report ID validation before a canonical permalink is retained
+- Top-level submission schema `2`
+- `technicalReport` schema `2` for the current 0.7.x report model
 
 Sensitive identifiers such as IMEI, Android ID, hardware serial numbers, MAC addresses, account data, authentication tokens, and private paths are not part of the intended report payload.
 
@@ -565,19 +666,19 @@ The build includes a release verifier that rejects unexpected ABI layouts, inclu
 
 ## Android and build baseline
 
-OpenGLESScope 0.1.19 uses the following project baseline:
+OpenGLESScope 0.7.2 uses the following project baseline:
 
 - **Minimum SDK:** Android API 24
 - **Compile SDK:** Android API 37
 - **Target SDK:** Android API 37
-- **Android Gradle Plugin:** 9.3.1
-- **Gradle:** 9.7.0
+- **Android Gradle Plugin:** 9.3.2
+- **Gradle:** 9.7.1
 - **Kotlin Compose plugin:** 2.3.21
 - **JDK:** 17+
-- **NDK:** 29.0.14206865
+- **NDK:** 29.0.14206865 (r29)
 - **CMake:** 3.22.1+
 - **Native language level:** C++20
-- **UI:** Kotlin + Jetpack Compose + Material 3
+- **UI:** Kotlin + Jetpack Compose + Material 3 Expressive
 - **Native graphics APIs:** EGL + OpenGL ES
 
 Native collector hardening includes:
@@ -637,6 +738,22 @@ The primary application/database brand accent is:
 The application does not invent a replacement OpenGL ES mark.
 
 Launcher, round launcher, adaptive launcher, Android TV banner, application shell, HTML reporting, and database presentation preserve OpenGLESScope branding while keeping capability-state colors semantically separate from brand color.
+
+## Current release contract
+
+- **OpenGLESScope version:** 0.7.2
+- **versionCode:** 702
+- **OpenGL ES engineering baseline:** 3.2
+- **GLSL ES engineering baseline:** 3.20
+- **EGL engineering baseline:** 1.5
+- **Database submission schema:** 2
+- **Database `technicalReport` schema:** 2
+- **OpenGL ES 3.2 spec minimum/maximum checks:** 104
+- **Checked-in public capability-reference coverage:** 145/145
+- **Additional OpenGLESScope implementation queries:** 49
+- **Maximum Analysis snapshot size:** 8 MiB
+- **Maximum Analysis evidence entries:** 32,768
+- **Maximum watched evidence entries:** 256
 
 ## Project principles
 

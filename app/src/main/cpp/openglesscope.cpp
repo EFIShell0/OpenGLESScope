@@ -32,6 +32,99 @@ static std::string q(const char* s) { return std::string("\"") + esc(s ? s : "")
 static std::string q(const std::string& s) { return std::string("\"") + esc(s) + "\""; }
 static std::string hexv(EGLint v) { std::ostringstream o; o << "0x" << std::uppercase << std::hex << static_cast<unsigned int>(v); return o.str(); }
 
+static constexpr GLint kMaxGlEnumerationCount = 16384;
+static constexpr EGLint kMaxEglConfigCount = 4096;
+static constexpr GLint kMaxProgramBinaryBytes = 8 * 1024 * 1024;
+static constexpr size_t kMaxRuntimeStringBytes = 1024 * 1024;
+static constexpr size_t kMaxExtensionTokenBytes = 4096;
+static constexpr GLint kMaxInfoLogBytes = 1024 * 1024;
+static constexpr EGLint EGL_RECORDABLE_ANDROID_VALUE = 0x3142;
+static constexpr EGLint EGL_FRAMEBUFFER_TARGET_ANDROID_VALUE = 0x3147;
+static constexpr EGLint EGL_COLOR_COMPONENT_TYPE_EXT_VALUE = 0x3339;
+static constexpr EGLint EGL_COLOR_COMPONENT_TYPE_FIXED_EXT_VALUE = 0x333A;
+static constexpr EGLint EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT_VALUE = 0x333B;
+
+static std::string eglErrorName(EGLint error) {
+    switch (error) {
+        case EGL_SUCCESS: return "EGL_SUCCESS";
+        case EGL_NOT_INITIALIZED: return "EGL_NOT_INITIALIZED";
+        case EGL_BAD_ACCESS: return "EGL_BAD_ACCESS";
+        case EGL_BAD_ALLOC: return "EGL_BAD_ALLOC";
+        case EGL_BAD_ATTRIBUTE: return "EGL_BAD_ATTRIBUTE";
+        case EGL_BAD_CONTEXT: return "EGL_BAD_CONTEXT";
+        case EGL_BAD_CONFIG: return "EGL_BAD_CONFIG";
+        case EGL_BAD_CURRENT_SURFACE: return "EGL_BAD_CURRENT_SURFACE";
+        case EGL_BAD_DISPLAY: return "EGL_BAD_DISPLAY";
+        case EGL_BAD_MATCH: return "EGL_BAD_MATCH";
+        case EGL_BAD_NATIVE_PIXMAP: return "EGL_BAD_NATIVE_PIXMAP";
+        case EGL_BAD_NATIVE_WINDOW: return "EGL_BAD_NATIVE_WINDOW";
+        case EGL_BAD_PARAMETER: return "EGL_BAD_PARAMETER";
+        case EGL_BAD_SURFACE: return "EGL_BAD_SURFACE";
+        default: return "EGL_ERROR";
+    }
+}
+
+static std::string eglErrorDisplay(EGLint error) { return eglErrorName(error) + " (" + hexv(error) + ")"; }
+
+static void releaseEgl(EGLDisplay d, EGLSurface surface, EGLContext context) {
+    if (d != EGL_NO_DISPLAY) {
+        eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        if (surface != EGL_NO_SURFACE) eglDestroySurface(d, surface);
+        if (context != EGL_NO_CONTEXT) eglDestroyContext(d, context);
+        eglTerminate(d);
+    }
+    eglReleaseThread();
+}
+
+struct EglAttrResult { EGLint value; bool available; EGLint error; };
+
+static EglAttrResult queryConfigAttr(EGLDisplay d, EGLConfig c, EGLint attr) {
+    eglGetError();
+    EGLint value = 0;
+    if (eglGetConfigAttrib(d, c, attr, &value) == EGL_TRUE) return {value, true, EGL_SUCCESS};
+    return {0, false, eglGetError()};
+}
+
+static EglAttrResult queryContextAttr(EGLDisplay d, EGLContext c, EGLint attr) {
+    eglGetError();
+    EGLint value = 0;
+    if (eglQueryContext(d, c, attr, &value) == EGL_TRUE) return {value, true, EGL_SUCCESS};
+    return {0, false, eglGetError()};
+}
+
+static EglAttrResult querySurfaceAttr(EGLDisplay d, EGLSurface surface, EGLint attr) {
+    eglGetError();
+    EGLint value = 0;
+    if (eglQuerySurface(d, surface, attr, &value) == EGL_TRUE) return {value, true, EGL_SUCCESS};
+    return {0, false, eglGetError()};
+}
+
+static std::string eglApiDisplay(EGLenum api) {
+    if (api == EGL_OPENGL_ES_API) return "EGL_OPENGL_ES_API (0x30A0)";
+    if (api == EGL_OPENGL_API) return "EGL_OPENGL_API (0x30A2)";
+    if (api == EGL_OPENVG_API) return "EGL_OPENVG_API (0x30A1)";
+    return hexv(static_cast<EGLint>(api));
+}
+
+static std::string eglEnumDisplay(EGLint value) {
+    if (value == EGL_BACK_BUFFER) return "EGL_BACK_BUFFER (0x3084)";
+    if (value == EGL_SINGLE_BUFFER) return "EGL_SINGLE_BUFFER (0x3085)";
+    if (value == EGL_BUFFER_PRESERVED) return "EGL_BUFFER_PRESERVED (0x3094)";
+    if (value == EGL_BUFFER_DESTROYED) return "EGL_BUFFER_DESTROYED (0x3095)";
+    if (value == EGL_NO_TEXTURE) return "EGL_NO_TEXTURE (0x305C)";
+    if (value == EGL_TEXTURE_RGB) return "EGL_TEXTURE_RGB (0x305D)";
+    if (value == EGL_TEXTURE_RGBA) return "EGL_TEXTURE_RGBA (0x305E)";
+    if (value == EGL_TEXTURE_2D) return "EGL_TEXTURE_2D (0x305F)";
+    if (value == EGL_MULTISAMPLE_RESOLVE_DEFAULT) return "EGL_MULTISAMPLE_RESOLVE_DEFAULT (0x309A)";
+    if (value == EGL_MULTISAMPLE_RESOLVE_BOX) return "EGL_MULTISAMPLE_RESOLVE_BOX (0x309B)";
+    if (value == EGL_OPENGL_ES_API) return "EGL_OPENGL_ES_API (0x30A0)";
+    if (value == EGL_OPENGL_API) return "EGL_OPENGL_API (0x30A2)";
+    if (value == EGL_OPENVG_API) return "EGL_OPENVG_API (0x30A1)";
+    if (value == EGL_COLOR_COMPONENT_TYPE_FIXED_EXT_VALUE) return "EGL_COLOR_COMPONENT_TYPE_FIXED_EXT (0x333A)";
+    if (value == EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT_VALUE) return "EGL_COLOR_COMPONENT_TYPE_FLOAT_EXT (0x333B)";
+    return hexv(value);
+}
+
 
 static std::string enumDisplay(GLint value, const std::string& category) {
     if (category == "compressedFormats") {
@@ -162,13 +255,27 @@ static std::string enumDisplay(GLint value, const std::string& category) {
     return hexv(value);
 }
 
+static size_t boundedCStringLength(const char* s) {
+    if (!s) return 0;
+    for (size_t i = 0; i <= kMaxRuntimeStringBytes; ++i) if (s[i] == '\0') return i;
+    return kMaxRuntimeStringBytes + 1;
+}
+
+static bool runtimeStringValid(const char* s) { return s != nullptr && boundedCStringLength(s) <= kMaxRuntimeStringBytes; }
+
 static std::vector<std::string> splitExt(const char* s) {
     std::vector<std::string> out;
-    if (!s) return out;
-    std::istringstream in(s);
-    std::string x;
-    while (in >> x) {
-        if (std::find(out.begin(), out.end(), x) == out.end()) out.push_back(x);
+    if (!runtimeStringValid(s)) return out;
+    const size_t length = boundedCStringLength(s);
+    size_t i = 0;
+    while (i < length) {
+        while (i < length && std::isspace(static_cast<unsigned char>(s[i]))) ++i;
+        const size_t start = i;
+        while (i < length && !std::isspace(static_cast<unsigned char>(s[i]))) ++i;
+        const size_t tokenLength = i - start;
+        if (tokenLength == 0) continue;
+        if (tokenLength > kMaxExtensionTokenBytes || out.size() >= static_cast<size_t>(kMaxGlEnumerationCount)) return {};
+        out.emplace_back(s + start, tokenLength);
     }
     return out;
 }
@@ -203,7 +310,7 @@ static std::pair<int, int> parseGlVersion(const char* s) {
 
 static int versionCode(const std::pair<int, int>& v) { return v.first * 100 + v.second * 10; }
 
-static void clearGlErrors() { while (glGetError() != GL_NO_ERROR) {} }
+static void clearGlErrors() { for (int i = 0; i < 16; ++i) { if (glGetError() == GL_NO_ERROR) return; } }
 
 struct QueryDiagnosticNative { std::string name; std::string status; std::string detail; };
 static thread_local std::vector<QueryDiagnosticNative>* activeDiagnostics = nullptr;
@@ -215,8 +322,9 @@ static const char* queryGlString(GLenum name, const char* diagnosticName) {
     clearGlErrors();
     const auto* value = reinterpret_cast<const char*>(glGetString(name));
     const GLenum error = glGetError();
-    diagnostic(diagnosticName, error == GL_NO_ERROR && value != nullptr ? GL_NO_ERROR : error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
-    return error == GL_NO_ERROR ? value : nullptr;
+    const bool valid = error == GL_NO_ERROR && runtimeStringValid(value);
+    diagnostic(diagnosticName, valid ? GL_NO_ERROR : error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
+    return valid ? value : nullptr;
 }
 
 static std::pair<int, int> runtimeGlVersion(const char* text) {
@@ -363,8 +471,8 @@ static std::vector<std::string> glExtensions(int glCode) {
         clearGlErrors();
         glGetIntegerv(GL_NUM_EXTENSIONS, &n);
         GLenum error = glGetError();
-        diagnostic("GL_NUM_EXTENSIONS", error == GL_NO_ERROR && n >= 0 && n < 65536 ? GL_NO_ERROR : error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
-        if (error != GL_NO_ERROR || n < 0 || n >= 65536) {
+        diagnostic("GL_NUM_EXTENSIONS", error == GL_NO_ERROR && n >= 0 && n <= kMaxGlEnumerationCount ? GL_NO_ERROR : error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
+        if (error != GL_NO_ERROR || n < 0 || n > kMaxGlEnumerationCount) {
             diagnostic("GL_EXTENSIONS", error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
             return out;
         }
@@ -373,19 +481,25 @@ static std::vector<std::string> glExtensions(int glCode) {
             clearGlErrors();
             const auto* extension = reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, static_cast<GLuint>(i)));
             error = glGetError();
-            if (error != GL_NO_ERROR || extension == nullptr) {
+            if (error != GL_NO_ERROR || !runtimeStringValid(extension)) {
                 out.clear();
                 diagnostic("GL_EXTENSIONS", error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
                 return out;
             }
-            if (*extension) out.emplace_back(extension);
+            const size_t extensionLength = boundedCStringLength(extension);
+            if (extensionLength > kMaxExtensionTokenBytes) {
+                out.clear();
+                diagnostic("GL_EXTENSIONS", GL_INVALID_VALUE);
+                return out;
+            }
+            if (*extension) out.emplace_back(extension, extensionLength);
         }
         diagnostic("GL_EXTENSIONS", GL_NO_ERROR);
     } else {
         clearGlErrors();
         const auto* extensionString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
         const GLenum error = glGetError();
-        if (error != GL_NO_ERROR || extensionString == nullptr) {
+        if (error != GL_NO_ERROR || !runtimeStringValid(extensionString)) {
             diagnostic("GL_EXTENSIONS", error == GL_NO_ERROR ? GL_INVALID_VALUE : error);
             return out;
         }
@@ -419,7 +533,7 @@ static bool chooseConfig(EGLDisplay d, EGLint renderableBit, EGLConfig& cfg) {
 }
 
 static EGLContext createBestContext(EGLDisplay d, EGLConfig& cfg, int eglCode, const std::vector<std::string>& displayExt) {
-    eglBindAPI(EGL_OPENGL_ES_API);
+    if (eglBindAPI(EGL_OPENGL_ES_API) != EGL_TRUE) return EGL_NO_CONTEXT;
     const bool canMinor = eglCode >= 150 || hasExt(displayExt, "EGL_KHR_create_context");
     if (canMinor && chooseConfig(d, EGL_OPENGL_ES3_BIT_KHR, cfg)) {
         const EGLint versions[][5] = {
@@ -447,46 +561,35 @@ static EGLContext createBestContext(EGLDisplay d, EGLConfig& cfg, int eglCode, c
     return EGL_NO_CONTEXT;
 }
 
-static EGLint cfgAttr(EGLDisplay d, EGLConfig c, EGLint attr, bool& ok) {
-    EGLint v = 0;
-    if (eglGetConfigAttrib(d, c, attr, &v) != EGL_TRUE) {
-        ok = false;
-        return 0;
-    }
-    ok = true;
-    return v;
-}
-
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, jobject) {
     EGLDisplay d = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (d == EGL_NO_DISPLAY) return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"EGL display unavailable\"}");
+    if (d == EGL_NO_DISPLAY) { eglReleaseThread(); return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"EGL display unavailable\"}"); }
 
     EGLint eglMajor = 0;
     EGLint eglMinor = 0;
-    if (eglInitialize(d, &eglMajor, &eglMinor) != EGL_TRUE) return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"eglInitialize failed\"}");
+    if (eglInitialize(d, &eglMajor, &eglMinor) != EGL_TRUE) { eglReleaseThread(); return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"eglInitialize failed\"}"); }
 
     EGLConfig cfg = nullptr;
-    const char* displayExtensionText = eglQueryString(d, EGL_EXTENSIONS);
+    const char* rawDisplayExtensionText = eglQueryString(d, EGL_EXTENSIONS);
+    const bool displayExtensionTextValid = runtimeStringValid(rawDisplayExtensionText);
+    const char* displayExtensionText = displayExtensionTextValid ? rawDisplayExtensionText : nullptr;
     const auto displayExt = splitExt(displayExtensionText);
     const int eglCode = eglMajor * 100 + eglMinor * 10;
     EGLContext c = createBestContext(d, cfg, eglCode, displayExt);
     if (c == EGL_NO_CONTEXT || cfg == nullptr) {
-        eglTerminate(d);
+        releaseEgl(d, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"OpenGL ES context creation failed\"}");
     }
 
     const EGLint pbAttrs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
     EGLSurface s = eglCreatePbufferSurface(d, cfg, pbAttrs);
     if (s == EGL_NO_SURFACE) {
-        eglDestroyContext(d, c);
-        eglTerminate(d);
+        releaseEgl(d, EGL_NO_SURFACE, c);
         return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"EGL pbuffer creation failed\"}");
     }
     if (eglMakeCurrent(d, s, s, c) != EGL_TRUE) {
-        eglDestroySurface(d, s);
-        eglDestroyContext(d, c);
-        eglTerminate(d);
+        releaseEgl(d, s, c);
         return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"eglMakeCurrent failed\"}");
     }
 
@@ -498,25 +601,58 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     const char* glslVersion = queryGlString(GL_SHADING_LANGUAGE_VERSION, "GL_SHADING_LANGUAGE_VERSION");
     if (glVendor == nullptr || glRenderer == nullptr || glVersion == nullptr || glslVersion == nullptr) {
         activeDiagnostics = nullptr;
-        eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        eglDestroySurface(d, s);
-        eglDestroyContext(d, c);
-        eglTerminate(d);
+        releaseEgl(d, s, c);
         return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"Required OpenGL ES identity strings were unavailable\"}");
     }
     const auto parsed = runtimeGlVersion(glVersion);
     const int glCode = versionCode(parsed);
     const auto glExt = glExtensions(glCode);
-    const char* clientExtensionText = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+    const char* rawClientExtensionText = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+    const char* clientExtensionText = runtimeStringValid(rawClientExtensionText) ? rawClientExtensionText : nullptr;
     const auto clientExt = splitExt(clientExtensionText);
-    const char* eglVendorText = eglQueryString(d, EGL_VENDOR);
-    const char* eglVersionText = eglQueryString(d, EGL_VERSION);
-    const char* eglClientApisText = eglQueryString(d, EGL_CLIENT_APIS);
-    diagnostics.push_back({"EGL_EXTENSIONS", displayExtensionText ? "Available" : "Unavailable", displayExtensionText ? "" : "eglQueryString returned null"});
-    diagnostics.push_back({"EGL_NO_DISPLAY/EGL_EXTENSIONS", clientExtensionText ? "Available" : "Unavailable", clientExtensionText ? "" : "eglQueryString returned null"});
-    diagnostics.push_back({"EGL_VENDOR", eglVendorText ? "Available" : "Unavailable", eglVendorText ? "" : "eglQueryString returned null"});
-    diagnostics.push_back({"EGL_VERSION", eglVersionText ? "Available" : "Unavailable", eglVersionText ? "" : "eglQueryString returned null"});
-    diagnostics.push_back({"EGL_CLIENT_APIS", eglClientApisText ? "Available" : "Unavailable", eglClientApisText ? "" : "eglQueryString returned null"});
+    const char* rawEglVendorText = eglQueryString(d, EGL_VENDOR);
+    const char* rawEglVersionText = eglQueryString(d, EGL_VERSION);
+    const char* rawEglClientApisText = eglQueryString(d, EGL_CLIENT_APIS);
+    const char* eglVendorText = runtimeStringValid(rawEglVendorText) ? rawEglVendorText : nullptr;
+    const char* eglVersionText = runtimeStringValid(rawEglVersionText) ? rawEglVersionText : nullptr;
+    const char* eglClientApisText = runtimeStringValid(rawEglClientApisText) ? rawEglClientApisText : nullptr;
+    auto eglStringDetail = [](const char* raw, const char* valid) { return valid ? std::string() : raw ? std::string("Runtime string exceeded the 1 MiB safety bound") : std::string("eglQueryString returned null"); };
+    diagnostics.push_back({"EGL_EXTENSIONS", displayExtensionText ? "Available" : "Unavailable", eglStringDetail(rawDisplayExtensionText, displayExtensionText)});
+    diagnostics.push_back({"EGL_NO_DISPLAY/EGL_EXTENSIONS", clientExtensionText ? "Available" : "Unavailable", eglStringDetail(rawClientExtensionText, clientExtensionText)});
+    diagnostics.push_back({"EGL_VENDOR", eglVendorText ? "Available" : "Unavailable", eglStringDetail(rawEglVendorText, eglVendorText)});
+    diagnostics.push_back({"EGL_VERSION", eglVersionText ? "Available" : "Unavailable", eglStringDetail(rawEglVersionText, eglVersionText)});
+    diagnostics.push_back({"EGL_CLIENT_APIS", eglClientApisText ? "Available" : "Unavailable", eglStringDetail(rawEglClientApisText, eglClientApisText)});
+
+    const EGLenum boundApi = eglQueryAPI();
+    const bool currentContext = eglGetCurrentContext() == c;
+    const bool currentDisplay = eglGetCurrentDisplay() == d;
+    const bool currentDrawSurface = eglGetCurrentSurface(EGL_DRAW) == s;
+    const bool currentReadSurface = eglGetCurrentSurface(EGL_READ) == s;
+    const auto contextConfigId = queryContextAttr(d, c, EGL_CONFIG_ID);
+    const auto contextClientType = queryContextAttr(d, c, EGL_CONTEXT_CLIENT_TYPE);
+    const auto contextClientVersion = queryContextAttr(d, c, EGL_CONTEXT_CLIENT_VERSION);
+    const auto contextRenderBuffer = queryContextAttr(d, c, EGL_RENDER_BUFFER);
+    const auto surfaceWidth = querySurfaceAttr(d, s, EGL_WIDTH);
+    const auto surfaceHeight = querySurfaceAttr(d, s, EGL_HEIGHT);
+    const auto surfaceRenderBuffer = querySurfaceAttr(d, s, EGL_RENDER_BUFFER);
+    const auto surfaceSwapBehavior = querySurfaceAttr(d, s, EGL_SWAP_BEHAVIOR);
+    const auto surfaceTextureFormat = querySurfaceAttr(d, s, EGL_TEXTURE_FORMAT);
+    const auto surfaceTextureTarget = querySurfaceAttr(d, s, EGL_TEXTURE_TARGET);
+    const auto surfaceMipmapTexture = querySurfaceAttr(d, s, EGL_MIPMAP_TEXTURE);
+    const auto surfaceMipmapLevel = querySurfaceAttr(d, s, EGL_MIPMAP_LEVEL);
+    const auto surfaceMultisampleResolve = eglCode >= 140 ? querySurfaceAttr(d, s, EGL_MULTISAMPLE_RESOLVE) : EglAttrResult{0, false, EGL_BAD_ATTRIBUTE};
+    const std::pair<const char*, EglAttrResult> eglRuntimeAttributes[] = {
+        {"EGL_CONFIG_ID", contextConfigId}, {"EGL_CONTEXT_CLIENT_TYPE", contextClientType}, {"EGL_CONTEXT_CLIENT_VERSION", contextClientVersion},
+        {"EGL_RENDER_BUFFER/context", contextRenderBuffer}, {"EGL_WIDTH", surfaceWidth}, {"EGL_HEIGHT", surfaceHeight},
+        {"EGL_RENDER_BUFFER/surface", surfaceRenderBuffer}, {"EGL_SWAP_BEHAVIOR", surfaceSwapBehavior}, {"EGL_TEXTURE_FORMAT", surfaceTextureFormat},
+        {"EGL_TEXTURE_TARGET", surfaceTextureTarget}, {"EGL_MIPMAP_TEXTURE", surfaceMipmapTexture}, {"EGL_MIPMAP_LEVEL", surfaceMipmapLevel},
+        {"EGL_MULTISAMPLE_RESOLVE", surfaceMultisampleResolve}
+    };
+    for (const auto& entry : eglRuntimeAttributes) {
+        diagnostics.push_back({entry.first, entry.second.available ? "Available" : eglCode < 140 && std::string(entry.first) == "EGL_MULTISAMPLE_RESOLVE" ? "Not applicable" : "Unavailable", entry.second.available ? "" : eglCode < 140 && std::string(entry.first) == "EGL_MULTISAMPLE_RESOLVE" ? "Requires EGL 1.4+" : eglErrorDisplay(entry.second.error)});
+    }
+    diagnostics.push_back({"eglQueryAPI", boundApi != EGL_NONE ? "Available" : "Unavailable", boundApi != EGL_NONE ? "" : "eglQueryAPI returned EGL_NONE"});
+    diagnostics.push_back({"EGL current bindings", currentContext && currentDisplay && currentDrawSurface && currentReadSurface ? "Available" : "Unavailable", currentContext && currentDisplay && currentDrawSurface && currentReadSurface ? "" : "The collector context/display/surface binding did not match the current EGL state"});
 
     std::ostringstream o;
     o << "{\"status\":\"available\",\"renderer\":" << q(glRenderer)
@@ -533,7 +669,33 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     appendStringArray(o, displayExt);
     o << ",\"clientExtensions\":";
     appendStringArray(o, clientExt);
-    o << "},\"extensions\":";
+    o << "},\"eglRuntime\":{\"boundApi\":" << q(eglApiDisplay(boundApi))
+      << ",\"configId\":" << (contextConfigId.available ? std::to_string(contextConfigId.value) : "null")
+      << ",\"clientType\":" << (contextClientType.available ? q(eglEnumDisplay(contextClientType.value)) : "null")
+      << ",\"clientVersion\":" << (contextClientVersion.available ? std::to_string(contextClientVersion.value) : "null")
+      << ",\"renderBuffer\":" << (contextRenderBuffer.available ? q(eglEnumDisplay(contextRenderBuffer.value)) : "null")
+      << ",\"currentContext\":" << (currentContext ? "true" : "false")
+      << ",\"currentDisplay\":" << (currentDisplay ? "true" : "false")
+      << ",\"currentDrawSurface\":" << (currentDrawSurface ? "true" : "false")
+      << ",\"currentReadSurface\":" << (currentReadSurface ? "true" : "false")
+      << ",\"surfaceWidth\":" << (surfaceWidth.available ? std::to_string(surfaceWidth.value) : "null")
+      << ",\"surfaceHeight\":" << (surfaceHeight.available ? std::to_string(surfaceHeight.value) : "null")
+      << ",\"surfaceRenderBuffer\":" << (surfaceRenderBuffer.available ? q(eglEnumDisplay(surfaceRenderBuffer.value)) : "null")
+      << ",\"surfaceSwapBehavior\":" << (surfaceSwapBehavior.available ? q(eglEnumDisplay(surfaceSwapBehavior.value)) : "null")
+      << ",\"surfaceTextureFormat\":" << (surfaceTextureFormat.available ? q(eglEnumDisplay(surfaceTextureFormat.value)) : "null")
+      << ",\"surfaceTextureTarget\":" << (surfaceTextureTarget.available ? q(eglEnumDisplay(surfaceTextureTarget.value)) : "null")
+      << ",\"surfaceMipmapTexture\":" << (surfaceMipmapTexture.available ? std::to_string(surfaceMipmapTexture.value) : "null")
+      << ",\"surfaceMipmapLevel\":" << (surfaceMipmapLevel.available ? std::to_string(surfaceMipmapLevel.value) : "null")
+      << ",\"surfaceMultisampleResolve\":" << (surfaceMultisampleResolve.available ? q(eglEnumDisplay(surfaceMultisampleResolve.value)) : "null")
+      << ",\"unavailableAttributes\":[";
+    bool eglRuntimeFailureFirst = true;
+    for (const auto& entry : eglRuntimeAttributes) {
+        if (entry.second.available || (eglCode < 140 && std::string(entry.first) == "EGL_MULTISAMPLE_RESOLVE")) continue;
+        if (!eglRuntimeFailureFirst) o << ',';
+        eglRuntimeFailureFirst = false;
+        o << "{\"name\":" << q(entry.first) << ",\"error\":" << q(eglErrorDisplay(entry.second.error)) << '}';
+    }
+    o << "]},\"extensions\":";
     appendStringArray(o, glExt);
 
     o << ",\"limits\":[";
@@ -583,6 +745,36 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     if (glCode < 300 && hasExt(glExt, "GL_NV_framebuffer_multisample")) addLimit(o, first, "GL_MAX_SAMPLES_NV", 0x8D57);
     if (glCode < 300 && hasExt(glExt, "GL_IMG_multisampled_render_to_texture")) addLimit(o, first, "GL_MAX_SAMPLES_IMG", 0x9135);
     if (glCode < 300 && hasExt(glExt, "GL_OES_get_program_binary")) addLimit(o, first, "GL_NUM_PROGRAM_BINARY_FORMATS", 0x87FE);
+    if (hasExt(glExt, "GL_KHR_shader_subgroup")) {
+        addLimit(o, first, "GL_SUBGROUP_SIZE_KHR", 0x9532);
+        addHexLimit(o, first, "GL_SUBGROUP_SUPPORTED_STAGES_KHR", 0x9533);
+        addHexLimit(o, first, "GL_SUBGROUP_SUPPORTED_FEATURES_KHR", 0x9534);
+        addBooleanLimit(o, first, "GL_SUBGROUP_QUAD_ALL_STAGES_KHR", 0x9535);
+    }
+    if (hasExt(glExt, "GL_EXT_window_rectangles")) {
+        addLimit(o, first, "GL_MAX_WINDOW_RECTANGLES_EXT", 0x8F14);
+    }
+    if (hasExt(glExt, "GL_OES_viewport_array")) {
+        addLimit(o, first, "GL_MAX_VIEWPORTS_OES", 0x825B);
+        addLimit(o, first, "GL_VIEWPORT_SUBPIXEL_BITS_OES", 0x825C);
+        addFloatLimit2(o, first, "GL_VIEWPORT_BOUNDS_RANGE_OES", 0x825D);
+        addHexLimit(o, first, "GL_VIEWPORT_INDEX_PROVOKING_VERTEX_OES", 0x825F);
+    }
+    if (hasExt(glExt, "GL_EXT_shader_pixel_local_storage")) {
+        addLimit(o, first, "GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_FAST_SIZE_EXT", 0x8F63);
+        addLimit(o, first, "GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_SIZE_EXT", 0x8F67);
+    }
+    if (hasExt(glExt, "GL_EXT_shader_pixel_local_storage2")) {
+        addLimit(o, first, "GL_MAX_SHADER_COMBINED_LOCAL_STORAGE_FAST_SIZE_EXT", 0x9650);
+        addLimit(o, first, "GL_MAX_SHADER_COMBINED_LOCAL_STORAGE_SIZE_EXT", 0x9651);
+    }
+    if (glCode < 320 && hasExt(glExt, "GL_OES_sample_shading")) addFloatLimit(o, first, "GL_MIN_SAMPLE_SHADING_VALUE_OES", 0x8C37);
+    if (hasExt(glExt, "GL_EXT_sparse_texture")) {
+        addLimit(o, first, "GL_MAX_SPARSE_TEXTURE_SIZE_EXT", 0x9198);
+        addLimit(o, first, "GL_MAX_SPARSE_3D_TEXTURE_SIZE_EXT", 0x9199);
+        addLimit(o, first, "GL_MAX_SPARSE_ARRAY_TEXTURE_LAYERS_EXT", 0x919A);
+        addBooleanLimit(o, first, "GL_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS_EXT", 0x91A9);
+    }
     addLimit(o, first, "GL_MAX_VERTEX_ATTRIBS", GL_MAX_VERTEX_ATTRIBS);
     addLimit(o, first, "GL_MAX_VERTEX_UNIFORM_VECTORS", GL_MAX_VERTEX_UNIFORM_VECTORS);
     addLimit(o, first, "GL_MAX_FRAGMENT_UNIFORM_VECTORS", GL_MAX_FRAGMENT_UNIFORM_VECTORS);
@@ -733,7 +925,7 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
         clearGlErrors();
         glGetIntegerv(countEnum, &count);
         const GLenum countError = glGetError();
-        const GLenum normalizedCountError = countError == GL_NO_ERROR && count >= 0 && count < 65536 ? GL_NO_ERROR : countError == GL_NO_ERROR ? GL_INVALID_VALUE : countError;
+        const GLenum normalizedCountError = countError == GL_NO_ERROR && count >= 0 && count <= kMaxGlEnumerationCount ? GL_NO_ERROR : countError == GL_NO_ERROR ? GL_INVALID_VALUE : countError;
         diagnostic(countName, normalizedCountError);
         std::vector<GLint> values;
         GLenum valueError = GL_NO_ERROR;
@@ -773,7 +965,7 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     clearGlErrors();
     glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &nfmt);
     const GLenum compressedCountError = glGetError();
-    const GLenum normalizedCompressedCountError = compressedCountError == GL_NO_ERROR && nfmt >= 0 && nfmt < 65536 ? GL_NO_ERROR : compressedCountError == GL_NO_ERROR ? GL_INVALID_VALUE : compressedCountError;
+    const GLenum normalizedCompressedCountError = compressedCountError == GL_NO_ERROR && nfmt >= 0 && nfmt <= kMaxGlEnumerationCount ? GL_NO_ERROR : compressedCountError == GL_NO_ERROR ? GL_INVALID_VALUE : compressedCountError;
     diagnostic("GL_NUM_COMPRESSED_TEXTURE_FORMATS", normalizedCompressedCountError);
     std::vector<GLint> fmts;
     GLenum compressedValuesError = GL_NO_ERROR;
@@ -833,108 +1025,292 @@ Java_com_efishell_openglesscope_OpenGLESProbeService_nativeCollect(JNIEnv* env, 
     activeDiagnostics = nullptr;
 
     EGLint totalConfigs = 0;
-    if (eglGetConfigs(d, nullptr, 0, &totalConfigs) != EGL_TRUE || totalConfigs <= 0 || totalConfigs > 65536) {
-        eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        eglDestroySurface(d, s);
-        eglDestroyContext(d, c);
-        eglTerminate(d);
-        return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"EGL configuration enumeration failed\"}");
+    if (eglGetConfigs(d, nullptr, 0, &totalConfigs) != EGL_TRUE || totalConfigs <= 0 || totalConfigs > kMaxEglConfigCount) {
+        releaseEgl(d, s, c);
+        return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"EGL configuration enumeration failed or exceeded the 4096-entry safety bound\"}");
     }
-    std::vector<EGLConfig> configs(static_cast<size_t>(totalConfigs));
-    if (eglGetConfigs(d, configs.data(), totalConfigs, &totalConfigs) != EGL_TRUE || totalConfigs <= 0) {
-        eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        eglDestroySurface(d, s);
-        eglDestroyContext(d, c);
-        eglTerminate(d);
-        return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"EGL configuration data could not be read\"}");
+    const EGLint configCapacity = totalConfigs;
+    std::vector<EGLConfig> configs(static_cast<size_t>(configCapacity));
+    if (eglGetConfigs(d, configs.data(), configCapacity, &totalConfigs) != EGL_TRUE || totalConfigs <= 0 || totalConfigs > configCapacity || totalConfigs > kMaxEglConfigCount) {
+        releaseEgl(d, s, c);
+        return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"EGL configuration data could not be read safely\"}");
     }
     o << ",\"eglConfigs\":[";
     bool configFirst = true;
     for (EGLint i = 0; i < totalConfigs; ++i) {
         const EGLConfig ec = configs[static_cast<size_t>(i)];
-        bool ok = false;
-        const EGLint id = cfgAttr(d, ec, EGL_CONFIG_ID, ok);
-        if (!ok) {
-            eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-            eglDestroySurface(d, s);
-            eglDestroyContext(d, c);
-            eglTerminate(d);
+        const auto idResult = queryConfigAttr(d, ec, EGL_CONFIG_ID);
+        if (!idResult.available) {
+            releaseEgl(d, s, c);
             return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"An EGL configuration could not be identified\"}");
         }
-        auto required = [&](EGLint attr) { bool good = false; const EGLint v = cfgAttr(d, ec, attr, good); return std::pair<EGLint, bool>{v, good}; };
-        const auto red = required(EGL_RED_SIZE);
-        const auto green = required(EGL_GREEN_SIZE);
-        const auto blue = required(EGL_BLUE_SIZE);
-        const auto alpha = required(EGL_ALPHA_SIZE);
-        const auto depth = required(EGL_DEPTH_SIZE);
-        const auto stencil = required(EGL_STENCIL_SIZE);
-        const auto sampleBuffers = required(EGL_SAMPLE_BUFFERS);
-        const auto samples = required(EGL_SAMPLES);
-        const auto surfaceType = required(EGL_SURFACE_TYPE);
-        const auto renderableType = required(EGL_RENDERABLE_TYPE);
-        const auto conformant = required(EGL_CONFORMANT);
-        const auto caveat = required(EGL_CONFIG_CAVEAT);
-        const auto colorBufferType = required(EGL_COLOR_BUFFER_TYPE);
-        const auto level = required(EGL_LEVEL);
-        const auto nativeRenderable = required(EGL_NATIVE_RENDERABLE);
-        const auto nativeVisualId = required(EGL_NATIVE_VISUAL_ID);
-        const auto minSwap = required(EGL_MIN_SWAP_INTERVAL);
-        const auto maxSwap = required(EGL_MAX_SWAP_INTERVAL);
-        const auto bufferSize = required(EGL_BUFFER_SIZE);
-        const auto luminanceSize = required(EGL_LUMINANCE_SIZE);
-        const auto alphaMaskSize = required(EGL_ALPHA_MASK_SIZE);
-        const auto bindRgb = required(EGL_BIND_TO_TEXTURE_RGB);
-        const auto bindRgba = required(EGL_BIND_TO_TEXTURE_RGBA);
-        const auto maxPbufferWidth = required(EGL_MAX_PBUFFER_WIDTH);
-        const auto maxPbufferHeight = required(EGL_MAX_PBUFFER_HEIGHT);
-        const auto maxPbufferPixels = required(EGL_MAX_PBUFFER_PIXELS);
-        const auto nativeVisualType = required(EGL_NATIVE_VISUAL_TYPE);
-        const auto transparentType = required(EGL_TRANSPARENT_TYPE);
-        const auto transparentRed = required(EGL_TRANSPARENT_RED_VALUE);
-        const auto transparentGreen = required(EGL_TRANSPARENT_GREEN_VALUE);
-        const auto transparentBlue = required(EGL_TRANSPARENT_BLUE_VALUE);
+        const EGLint id = idResult.value;
+        const std::pair<const char*, EglAttrResult> attrs[] = {
+            {"red", queryConfigAttr(d, ec, EGL_RED_SIZE)}, {"green", queryConfigAttr(d, ec, EGL_GREEN_SIZE)}, {"blue", queryConfigAttr(d, ec, EGL_BLUE_SIZE)},
+            {"alpha", queryConfigAttr(d, ec, EGL_ALPHA_SIZE)}, {"depth", queryConfigAttr(d, ec, EGL_DEPTH_SIZE)}, {"stencil", queryConfigAttr(d, ec, EGL_STENCIL_SIZE)},
+            {"sampleBuffers", queryConfigAttr(d, ec, EGL_SAMPLE_BUFFERS)}, {"samples", queryConfigAttr(d, ec, EGL_SAMPLES)}, {"surfaceType", queryConfigAttr(d, ec, EGL_SURFACE_TYPE)},
+            {"renderableType", queryConfigAttr(d, ec, EGL_RENDERABLE_TYPE)}, {"conformant", queryConfigAttr(d, ec, EGL_CONFORMANT)}, {"configCaveat", queryConfigAttr(d, ec, EGL_CONFIG_CAVEAT)},
+            {"colorBufferType", queryConfigAttr(d, ec, EGL_COLOR_BUFFER_TYPE)}, {"level", queryConfigAttr(d, ec, EGL_LEVEL)}, {"nativeRenderable", queryConfigAttr(d, ec, EGL_NATIVE_RENDERABLE)},
+            {"nativeVisualId", queryConfigAttr(d, ec, EGL_NATIVE_VISUAL_ID)}, {"minSwapInterval", queryConfigAttr(d, ec, EGL_MIN_SWAP_INTERVAL)}, {"maxSwapInterval", queryConfigAttr(d, ec, EGL_MAX_SWAP_INTERVAL)},
+            {"bufferSize", queryConfigAttr(d, ec, EGL_BUFFER_SIZE)}, {"luminanceSize", queryConfigAttr(d, ec, EGL_LUMINANCE_SIZE)}, {"alphaMaskSize", queryConfigAttr(d, ec, EGL_ALPHA_MASK_SIZE)},
+            {"bindToTextureRgb", queryConfigAttr(d, ec, EGL_BIND_TO_TEXTURE_RGB)}, {"bindToTextureRgba", queryConfigAttr(d, ec, EGL_BIND_TO_TEXTURE_RGBA)},
+            {"maxPbufferWidth", queryConfigAttr(d, ec, EGL_MAX_PBUFFER_WIDTH)}, {"maxPbufferHeight", queryConfigAttr(d, ec, EGL_MAX_PBUFFER_HEIGHT)}, {"maxPbufferPixels", queryConfigAttr(d, ec, EGL_MAX_PBUFFER_PIXELS)},
+            {"nativeVisualType", queryConfigAttr(d, ec, EGL_NATIVE_VISUAL_TYPE)}, {"transparentType", queryConfigAttr(d, ec, EGL_TRANSPARENT_TYPE)},
+            {"transparentRed", queryConfigAttr(d, ec, EGL_TRANSPARENT_RED_VALUE)}, {"transparentGreen", queryConfigAttr(d, ec, EGL_TRANSPARENT_GREEN_VALUE)}, {"transparentBlue", queryConfigAttr(d, ec, EGL_TRANSPARENT_BLUE_VALUE)}
+        };
+        auto attr = [&](const char* name) -> EglAttrResult { for (const auto& item : attrs) if (std::string(item.first) == name) return item.second; return {0, false, EGL_BAD_ATTRIBUTE}; };
+        const auto red = attr("red"), green = attr("green"), blue = attr("blue"), alpha = attr("alpha"), depth = attr("depth"), stencil = attr("stencil");
+        const auto sampleBuffers = attr("sampleBuffers"), samples = attr("samples"), surfaceType = attr("surfaceType"), renderableType = attr("renderableType"), conformant = attr("conformant");
+        const auto caveat = attr("configCaveat"), colorBufferType = attr("colorBufferType"), level = attr("level"), nativeRenderable = attr("nativeRenderable"), nativeVisualId = attr("nativeVisualId");
+        const auto minSwap = attr("minSwapInterval"), maxSwap = attr("maxSwapInterval"), bufferSize = attr("bufferSize"), luminanceSize = attr("luminanceSize"), alphaMaskSize = attr("alphaMaskSize");
+        const auto bindRgb = attr("bindToTextureRgb"), bindRgba = attr("bindToTextureRgba"), maxPbufferWidth = attr("maxPbufferWidth"), maxPbufferHeight = attr("maxPbufferHeight"), maxPbufferPixels = attr("maxPbufferPixels");
+        const auto nativeVisualType = attr("nativeVisualType"), transparentType = attr("transparentType"), transparentRed = attr("transparentRed"), transparentGreen = attr("transparentGreen"), transparentBlue = attr("transparentBlue");
+        const bool hasRecordable = hasExt(displayExt, "EGL_ANDROID_recordable");
+        const bool hasFramebufferTarget = hasExt(displayExt, "EGL_ANDROID_framebuffer_target");
+        const bool hasFloatComponents = hasExt(displayExt, "EGL_EXT_pixel_format_float");
+        const auto recordable = hasRecordable ? queryConfigAttr(d, ec, EGL_RECORDABLE_ANDROID_VALUE) : EglAttrResult{0, false, EGL_SUCCESS};
+        const auto framebufferTarget = hasFramebufferTarget ? queryConfigAttr(d, ec, EGL_FRAMEBUFFER_TARGET_ANDROID_VALUE) : EglAttrResult{0, false, EGL_SUCCESS};
+        const auto colorComponentType = hasFloatComponents ? queryConfigAttr(d, ec, EGL_COLOR_COMPONENT_TYPE_EXT_VALUE) : EglAttrResult{0, false, EGL_SUCCESS};
         if (!configFirst) o << ',';
         configFirst = false;
         o << "{\"id\":" << id
-          << ",\"red\":" << (red.second ? std::to_string(red.first) : "null")
-          << ",\"green\":" << (green.second ? std::to_string(green.first) : "null")
-          << ",\"blue\":" << (blue.second ? std::to_string(blue.first) : "null")
-          << ",\"alpha\":" << (alpha.second ? std::to_string(alpha.first) : "null")
-          << ",\"depth\":" << (depth.second ? std::to_string(depth.first) : "null")
-          << ",\"stencil\":" << (stencil.second ? std::to_string(stencil.first) : "null")
-          << ",\"sampleBuffers\":" << (sampleBuffers.second ? std::to_string(sampleBuffers.first) : "null")
-          << ",\"samples\":" << (samples.second ? std::to_string(samples.first) : "null")
-          << ",\"surfaceType\":" << (surfaceType.second ? q(hexv(surfaceType.first)) : "null")
-          << ",\"renderableType\":" << (renderableType.second ? q(hexv(renderableType.first)) : "null")
-          << ",\"conformant\":" << (conformant.second ? q(hexv(conformant.first)) : "null")
-          << ",\"configCaveat\":" << (caveat.second ? q(hexv(caveat.first)) : "null")
-          << ",\"colorBufferType\":" << (colorBufferType.second ? q(hexv(colorBufferType.first)) : "null")
-          << ",\"level\":" << (level.second ? std::to_string(level.first) : "null")
-          << ",\"nativeRenderable\":" << (nativeRenderable.second ? std::to_string(nativeRenderable.first) : "null")
-          << ",\"nativeVisualId\":" << (nativeVisualId.second ? std::to_string(nativeVisualId.first) : "null")
-          << ",\"minSwapInterval\":" << (minSwap.second ? std::to_string(minSwap.first) : "null")
-          << ",\"maxSwapInterval\":" << (maxSwap.second ? std::to_string(maxSwap.first) : "null")
-          << ",\"bufferSize\":" << (bufferSize.second ? std::to_string(bufferSize.first) : "null")
-          << ",\"luminanceSize\":" << (luminanceSize.second ? std::to_string(luminanceSize.first) : "null")
-          << ",\"alphaMaskSize\":" << (alphaMaskSize.second ? std::to_string(alphaMaskSize.first) : "null")
-          << ",\"bindToTextureRgb\":" << (bindRgb.second ? std::to_string(bindRgb.first) : "null")
-          << ",\"bindToTextureRgba\":" << (bindRgba.second ? std::to_string(bindRgba.first) : "null")
-          << ",\"maxPbufferWidth\":" << (maxPbufferWidth.second ? std::to_string(maxPbufferWidth.first) : "null")
-          << ",\"maxPbufferHeight\":" << (maxPbufferHeight.second ? std::to_string(maxPbufferHeight.first) : "null")
-          << ",\"maxPbufferPixels\":" << (maxPbufferPixels.second ? std::to_string(maxPbufferPixels.first) : "null")
-          << ",\"nativeVisualType\":" << (nativeVisualType.second ? std::to_string(nativeVisualType.first) : "null")
-          << ",\"transparentType\":" << (transparentType.second ? q(hexv(transparentType.first)) : "null")
-          << ",\"transparentRed\":" << (transparentRed.second ? std::to_string(transparentRed.first) : "null")
-          << ",\"transparentGreen\":" << (transparentGreen.second ? std::to_string(transparentGreen.first) : "null")
-          << ",\"transparentBlue\":" << (transparentBlue.second ? std::to_string(transparentBlue.first) : "null")
-          << '}';
+          << ",\"red\":" << (red.available ? std::to_string(red.value) : "null")
+          << ",\"green\":" << (green.available ? std::to_string(green.value) : "null")
+          << ",\"blue\":" << (blue.available ? std::to_string(blue.value) : "null")
+          << ",\"alpha\":" << (alpha.available ? std::to_string(alpha.value) : "null")
+          << ",\"depth\":" << (depth.available ? std::to_string(depth.value) : "null")
+          << ",\"stencil\":" << (stencil.available ? std::to_string(stencil.value) : "null")
+          << ",\"sampleBuffers\":" << (sampleBuffers.available ? std::to_string(sampleBuffers.value) : "null")
+          << ",\"samples\":" << (samples.available ? std::to_string(samples.value) : "null")
+          << ",\"surfaceType\":" << (surfaceType.available ? q(hexv(surfaceType.value)) : "null")
+          << ",\"renderableType\":" << (renderableType.available ? q(hexv(renderableType.value)) : "null")
+          << ",\"conformant\":" << (conformant.available ? q(hexv(conformant.value)) : "null")
+          << ",\"configCaveat\":" << (caveat.available ? q(hexv(caveat.value)) : "null")
+          << ",\"colorBufferType\":" << (colorBufferType.available ? q(hexv(colorBufferType.value)) : "null")
+          << ",\"level\":" << (level.available ? std::to_string(level.value) : "null")
+          << ",\"nativeRenderable\":" << (nativeRenderable.available ? std::to_string(nativeRenderable.value) : "null")
+          << ",\"nativeVisualId\":" << (nativeVisualId.available ? std::to_string(nativeVisualId.value) : "null")
+          << ",\"minSwapInterval\":" << (minSwap.available ? std::to_string(minSwap.value) : "null")
+          << ",\"maxSwapInterval\":" << (maxSwap.available ? std::to_string(maxSwap.value) : "null")
+          << ",\"bufferSize\":" << (bufferSize.available ? std::to_string(bufferSize.value) : "null")
+          << ",\"luminanceSize\":" << (luminanceSize.available ? std::to_string(luminanceSize.value) : "null")
+          << ",\"alphaMaskSize\":" << (alphaMaskSize.available ? std::to_string(alphaMaskSize.value) : "null")
+          << ",\"bindToTextureRgb\":" << (bindRgb.available ? std::to_string(bindRgb.value) : "null")
+          << ",\"bindToTextureRgba\":" << (bindRgba.available ? std::to_string(bindRgba.value) : "null")
+          << ",\"maxPbufferWidth\":" << (maxPbufferWidth.available ? std::to_string(maxPbufferWidth.value) : "null")
+          << ",\"maxPbufferHeight\":" << (maxPbufferHeight.available ? std::to_string(maxPbufferHeight.value) : "null")
+          << ",\"maxPbufferPixels\":" << (maxPbufferPixels.available ? std::to_string(maxPbufferPixels.value) : "null")
+          << ",\"nativeVisualType\":" << (nativeVisualType.available ? std::to_string(nativeVisualType.value) : "null")
+          << ",\"transparentType\":" << (transparentType.available ? q(hexv(transparentType.value)) : "null")
+          << ",\"transparentRed\":" << (transparentRed.available ? std::to_string(transparentRed.value) : "null")
+          << ",\"transparentGreen\":" << (transparentGreen.available ? std::to_string(transparentGreen.value) : "null")
+          << ",\"transparentBlue\":" << (transparentBlue.available ? std::to_string(transparentBlue.value) : "null")
+          << ",\"recordableAndroid\":" << (hasRecordable && recordable.available ? std::to_string(recordable.value) : "null")
+          << ",\"framebufferTargetAndroid\":" << (hasFramebufferTarget && framebufferTarget.available ? std::to_string(framebufferTarget.value) : "null")
+          << ",\"colorComponentTypeExt\":" << (hasFloatComponents && colorComponentType.available ? q(eglEnumDisplay(colorComponentType.value)) : "null")
+          << ",\"unavailableAttributes\":[";
+        bool unavailableFirst = true;
+        for (const auto& item : attrs) {
+            if (item.second.available) continue;
+            if (!unavailableFirst) o << ',';
+            unavailableFirst = false;
+            o << "{\"name\":" << q(item.first) << ",\"error\":" << q(eglErrorDisplay(item.second.error)) << '}';
+        }
+        const std::pair<const char*, EglAttrResult> extensionAttrs[] = {{"EGL_RECORDABLE_ANDROID", recordable}, {"EGL_FRAMEBUFFER_TARGET_ANDROID", framebufferTarget}, {"EGL_COLOR_COMPONENT_TYPE_EXT", colorComponentType}};
+        const bool extensionApplies[] = {hasRecordable, hasFramebufferTarget, hasFloatComponents};
+        for (size_t extensionIndex = 0; extensionIndex < 3; ++extensionIndex) {
+            if (!extensionApplies[extensionIndex] || extensionAttrs[extensionIndex].second.available) continue;
+            if (!unavailableFirst) o << ',';
+            unavailableFirst = false;
+            o << "{\"name\":" << q(extensionAttrs[extensionIndex].first) << ",\"error\":" << q(eglErrorDisplay(extensionAttrs[extensionIndex].second.error)) << '}';
+        }
+        o << "]}";
     }
     o << "]}";
 
-    eglMakeCurrent(d, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroySurface(d, s);
-    eglDestroyContext(d, c);
-    eglTerminate(d);
+    releaseEgl(d, s, c);
     const std::string result = o.str();
     return env->NewStringUTF(result.c_str());
+}
+
+static std::string shaderInfoLog(GLuint shader) {
+    GLint length = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+    if (length <= 1) return "";
+    if (length > kMaxInfoLogBytes) return "Shader info log exceeded the 1 MiB safety bound";
+    std::vector<char> text(static_cast<size_t>(length));
+    glGetShaderInfoLog(shader, length, nullptr, text.data());
+    return std::string(text.data());
+}
+
+static std::string programInfoLog(GLuint program) {
+    GLint length = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+    if (length <= 1) return "";
+    if (length > kMaxInfoLogBytes) return "Program info log exceeded the 1 MiB safety bound";
+    std::vector<char> text(static_cast<size_t>(length));
+    glGetProgramInfoLog(program, length, nullptr, text.data());
+    return std::string(text.data());
+}
+
+
+static thread_local bool selfTestDebugCallbackSeen = false;
+static void selfTestDebugCallback(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, const void*) { selfTestDebugCallbackSeen = true; }
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_efishell_openglesscope_OpenGLESProbeService_nativeSelfTest(JNIEnv* env, jobject) {
+    EGLDisplay d = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (d == EGL_NO_DISPLAY) { eglReleaseThread(); return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"EGL display unavailable\",\"tests\":[]}"); }
+    EGLint eglMajor = 0;
+    EGLint eglMinor = 0;
+    if (eglInitialize(d, &eglMajor, &eglMinor) != EGL_TRUE) { eglReleaseThread(); return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"eglInitialize failed\",\"tests\":[]}"); }
+    EGLConfig cfg = nullptr;
+    const auto displayExt = splitExt(eglQueryString(d, EGL_EXTENSIONS));
+    EGLContext c = createBestContext(d, cfg, eglMajor * 100 + eglMinor * 10, displayExt);
+    if (c == EGL_NO_CONTEXT || cfg == nullptr) {
+        releaseEgl(d, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"OpenGL ES context creation failed\",\"tests\":[]}");
+    }
+    const EGLint pbAttrs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
+    EGLSurface surface = eglCreatePbufferSurface(d, cfg, pbAttrs);
+    if (surface == EGL_NO_SURFACE || eglMakeCurrent(d, surface, surface, c) != EGL_TRUE) {
+        releaseEgl(d, surface, c);
+        return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"OpenGL ES self-test context could not be made current\",\"tests\":[]}");
+    }
+    const char* vendorText = queryGlString(GL_VENDOR, "GL_VENDOR");
+    const char* rendererText = queryGlString(GL_RENDERER, "GL_RENDERER");
+    const char* versionText = queryGlString(GL_VERSION, "GL_VERSION");
+    if (!vendorText || !rendererText || !versionText) {
+        releaseEgl(d, surface, c);
+        return env->NewStringUTF("{\"status\":\"unavailable\",\"reason\":\"Self-test OpenGL ES identity strings were unavailable\",\"tests\":[]}");
+    }
+    const std::string runtimeVendor = vendorText;
+    const std::string runtimeRenderer = rendererText;
+    const std::string runtimeVersion = versionText;
+    const auto parsed = runtimeGlVersion(versionText);
+    const int glCode = versionCode(parsed);
+    const auto extensions = glExtensions(glCode);
+    auto hasExt = [&](const char* name) { return std::find(extensions.begin(), extensions.end(), name) != extensions.end(); };
+    std::vector<std::string> tests;
+    const char* vertexSource = "attribute vec4 aPosition; void main(){gl_Position=aPosition;}";
+    const char* fragmentSource = "precision mediump float; void main(){gl_FragColor=vec4(1.0,0.0,1.0,1.0);}";
+    GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    if (vertex == 0 || fragment == 0) {
+        if (vertex != 0) glDeleteShader(vertex);
+        if (fragment != 0) glDeleteShader(fragment);
+        releaseEgl(d, surface, c);
+        return env->NewStringUTF("{\"status\":\"completed_with_failures\",\"reason\":\"Shader object creation failed\",\"tests\":[{\"name\":\"Shader object creation\",\"status\":\"FAIL\",\"detail\":\"glCreateShader returned zero\"}]}");
+    }
+    glShaderSource(vertex, 1, &vertexSource, nullptr);
+    glShaderSource(fragment, 1, &fragmentSource, nullptr);
+    glCompileShader(vertex);
+    glCompileShader(fragment);
+    GLint vertexOk = GL_FALSE;
+    GLint fragmentOk = GL_FALSE;
+    glGetShaderiv(vertex, GL_COMPILE_STATUS, &vertexOk);
+    glGetShaderiv(fragment, GL_COMPILE_STATUS, &fragmentOk);
+    tests.push_back(std::string("{\"name\":\"Minimal vertex shader compile\",\"status\":") + q(vertexOk == GL_TRUE ? "PASS" : "FAIL") + ",\"detail\":" + q(shaderInfoLog(vertex)) + "}");
+    tests.push_back(std::string("{\"name\":\"Minimal fragment shader compile\",\"status\":") + q(fragmentOk == GL_TRUE ? "PASS" : "FAIL") + ",\"detail\":" + q(shaderInfoLog(fragment)) + "}");
+    GLuint program = glCreateProgram();
+    if (program == 0) {
+        glDeleteShader(vertex);
+        glDeleteShader(fragment);
+        releaseEgl(d, surface, c);
+        return env->NewStringUTF("{\"status\":\"completed_with_failures\",\"reason\":\"Program object creation failed\",\"tests\":[{\"name\":\"Program object creation\",\"status\":\"FAIL\",\"detail\":\"glCreateProgram returned zero\"}]}");
+    }
+    if (vertexOk == GL_TRUE && fragmentOk == GL_TRUE) {
+        glAttachShader(program, vertex);
+        glAttachShader(program, fragment);
+        if (glCode >= 300) glProgramParameteri(program, GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL_TRUE);
+        glLinkProgram(program);
+    }
+    GLint linkOk = GL_FALSE;
+    glGetProgramiv(program, GL_LINK_STATUS, &linkOk);
+    tests.push_back(std::string("{\"name\":\"Minimal program link\",\"status\":") + q(linkOk == GL_TRUE ? "PASS" : "FAIL") + ",\"detail\":" + q(programInfoLog(program)) + "}");
+    if (linkOk == GL_TRUE && (glCode >= 300 || hasExt("GL_OES_get_program_binary"))) {
+        GLint length = 0;
+        glGetProgramiv(program, GL_PROGRAM_BINARY_LENGTH, &length);
+        if (length > 0 && length <= kMaxProgramBinaryBytes) {
+            std::vector<unsigned char> binary(static_cast<size_t>(length));
+            GLsizei written = 0;
+            GLenum format = 0;
+            bool roundTripAttempted = false;
+            bool roundTripPassed = false;
+            std::string detail;
+            if (glCode >= 300) {
+                glGetProgramBinary(program, length, &written, &format, binary.data());
+                if (written > 0 && written <= length) {
+                    GLuint restored = glCreateProgram();
+                    if (restored != 0) glProgramBinary(restored, format, binary.data(), written);
+                    GLint restoredOk = GL_FALSE;
+                    if (restored != 0) glGetProgramiv(restored, GL_LINK_STATUS, &restoredOk);
+                    roundTripAttempted = true;
+                    roundTripPassed = restoredOk == GL_TRUE;
+                    detail = restored != 0 ? programInfoLog(restored) : "glCreateProgram returned zero";
+                    if (restored != 0) glDeleteProgram(restored);
+                }
+            } else {
+                using GetProgramBinaryOES = void (*)(GLuint, GLsizei, GLsizei*, GLenum*, void*);
+                using ProgramBinaryOES = void (*)(GLuint, GLenum, const void*, GLint);
+                auto getBinary = reinterpret_cast<GetProgramBinaryOES>(eglGetProcAddress("glGetProgramBinaryOES"));
+                auto setBinary = reinterpret_cast<ProgramBinaryOES>(eglGetProcAddress("glProgramBinaryOES"));
+                if (getBinary && setBinary) {
+                    getBinary(program, length, &written, &format, binary.data());
+                    if (written > 0 && written <= length) {
+                        GLuint restored = glCreateProgram();
+                        if (restored != 0) setBinary(restored, format, binary.data(), written);
+                        GLint restoredOk = GL_FALSE;
+                        if (restored != 0) glGetProgramiv(restored, GL_LINK_STATUS, &restoredOk);
+                        roundTripAttempted = true;
+                        roundTripPassed = restoredOk == GL_TRUE;
+                        detail = restored != 0 ? programInfoLog(restored) : "glCreateProgram returned zero";
+                        if (restored != 0) glDeleteProgram(restored);
+                    }
+                }
+            }
+            tests.push_back(std::string("{\"name\":\"Program binary round-trip\",\"status\":") + q(roundTripAttempted ? (roundTripPassed ? "PASS" : "FAIL") : "UNAVAILABLE") + ",\"detail\":" + q(detail) + "}");
+        } else {
+            tests.push_back("{\"name\":\"Program binary round-trip\",\"status\":\"UNAVAILABLE\",\"detail\":\"Program binary length was unavailable or exceeded the 8 MiB self-test bound.\"}");
+        }
+    } else {
+        tests.push_back("{\"name\":\"Program binary round-trip\",\"status\":\"NOT_APPLICABLE\",\"detail\":\"Program-binary runtime evidence is not available.\"}");
+    }
+    if (hasExt("GL_KHR_debug") || glCode >= 320) {
+        using DebugCallback = void (*)(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*, const void*);
+        using DebugMessageCallback = void (*)(DebugCallback, const void*);
+        using DebugMessageInsert = void (*)(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar*);
+        auto callback = reinterpret_cast<DebugMessageCallback>(eglGetProcAddress(hasExt("GL_KHR_debug") ? "glDebugMessageCallbackKHR" : "glDebugMessageCallback"));
+        if (!callback) callback = reinterpret_cast<DebugMessageCallback>(eglGetProcAddress("glDebugMessageCallback"));
+        auto insert = reinterpret_cast<DebugMessageInsert>(eglGetProcAddress(hasExt("GL_KHR_debug") ? "glDebugMessageInsertKHR" : "glDebugMessageInsert"));
+        if (!insert) insert = reinterpret_cast<DebugMessageInsert>(eglGetProcAddress("glDebugMessageInsert"));
+        if (callback && insert) {
+            clearGlErrors();
+            selfTestDebugCallbackSeen = false;
+            callback(selfTestDebugCallback, nullptr);
+            glEnable(GL_DEBUG_OUTPUT);
+            glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+            const char message[] = "OpenGLESScope self-test";
+            insert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 1, GL_DEBUG_SEVERITY_NOTIFICATION, static_cast<GLsizei>(sizeof(message) - 1), message);
+            const GLenum error = glGetError();
+            const bool passed = error == GL_NO_ERROR && selfTestDebugCallbackSeen;
+            tests.push_back(std::string("{\"name\":\"KHR_debug callback and insertion\",\"status\":") + q(passed ? "PASS" : "FAIL") + ",\"detail\":" + q(passed ? "Debug callback observed the inserted application message." : error == GL_NO_ERROR ? "Debug insertion completed but the callback was not observed." : "Debug callback/insertion generated a GL error.") + "}");
+            callback(nullptr, nullptr);
+        } else {
+            tests.push_back("{\"name\":\"KHR_debug callback and insertion\",\"status\":\"UNAVAILABLE\",\"detail\":\"The required debug callback or insertion entry point was unavailable.\"}");
+        }
+    } else {
+        tests.push_back("{\"name\":\"KHR_debug message insertion\",\"status\":\"NOT_APPLICABLE\",\"detail\":\"GL_KHR_debug is not exposed by this runtime.\"}");
+    }
+    glDeleteProgram(program);
+    glDeleteShader(vertex);
+    glDeleteShader(fragment);
+    releaseEgl(d, surface, c);
+    bool anyFail = false;
+    for (const auto& test : tests) if (test.find("\"status\":\"FAIL\"") != std::string::npos) anyFail = true;
+    std::ostringstream out;
+    out << "{\"status\":" << q(anyFail ? "completed_with_failures" : "completed") << ",\"vendor\":" << q(runtimeVendor) << ",\"renderer\":" << q(runtimeRenderer) << ",\"runtimeVersion\":" << q(runtimeVersion) << ",\"tests\":[";
+    for (size_t i = 0; i < tests.size(); ++i) { if (i) out << ','; out << tests[i]; }
+    out << "]}";
+    return env->NewStringUTF(out.str().c_str());
 }

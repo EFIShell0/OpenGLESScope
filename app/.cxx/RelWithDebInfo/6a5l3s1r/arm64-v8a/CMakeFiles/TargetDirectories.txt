@@ -1,0 +1,3 @@
+C:/Users/Administrator/Desktop/OpenGLESScope/app/.cxx/RelWithDebInfo/6a5l3s1r/arm64-v8a/CMakeFiles/openglesscope.dir
+C:/Users/Administrator/Desktop/OpenGLESScope/app/.cxx/RelWithDebInfo/6a5l3s1r/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/Administrator/Desktop/OpenGLESScope/app/.cxx/RelWithDebInfo/6a5l3s1r/arm64-v8a/CMakeFiles/rebuild_cache.dir

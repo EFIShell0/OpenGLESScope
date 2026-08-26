@@ -4,10 +4,9 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
+import android.system.Os
 import java.io.File
 import java.io.FileOutputStream
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.locks.ReentrantLock
@@ -19,11 +18,13 @@ class OpenGLESProbeService : Service() {
         private val PROCESS_NATIVE_PROBE_LOCK = ReentrantLock(true)
         const val EXTRA_RESULT_PATH = "result_path"
         const val ACTION_ABORT = "com.efishell.openglesscope.action.ABORT_PROBE"
+        const val EXTRA_SELF_TEST = "self_test"
     }
 
     private val worker: ExecutorService = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "OpenGLESProbeWorker") }
 
     external fun nativeCollect(): String
+    external fun nativeSelfTest(): String
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_ABORT) {
@@ -31,6 +32,7 @@ class OpenGLESProbeService : Service() {
             return START_NOT_STICKY
         }
         val resultPath = intent?.getStringExtra(EXTRA_RESULT_PATH)
+        val selfTest = intent?.getBooleanExtra(EXTRA_SELF_TEST, false) == true
         if (resultPath.isNullOrBlank()) {
             stopSelfResult(startId)
             return START_NOT_STICKY
@@ -44,7 +46,7 @@ class OpenGLESProbeService : Service() {
         worker.execute {
             try {
                 System.loadLibrary("openglesscope")
-                val result = PROCESS_NATIVE_PROBE_LOCK.withLock { nativeCollect() }
+                val result = PROCESS_NATIVE_PROBE_LOCK.withLock { if (selfTest) nativeSelfTest() else nativeCollect() }
                 val encodedSize = result.toByteArray(Charsets.UTF_8).size
                 if (encodedSize > 8 * 1024 * 1024) {
                     writeResult(requestedResult, JSONObject().put("status", "unavailable").put("reason", "OpenGL ES probe result exceeded the 8 MiB safety limit").toString())
@@ -70,11 +72,7 @@ class OpenGLESProbeService : Service() {
                 output.write(text.toByteArray(Charsets.UTF_8))
                 output.fd.sync()
             }
-            try {
-                Files.move(temp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
-            } catch (error: java.nio.file.AtomicMoveNotSupportedException) {
-                Files.move(temp.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            }
+            Os.rename(temp.absolutePath, file.absolutePath)
         }.onFailure { error ->
             runCatching { File(file.parentFile, file.name + ".tmp").delete() }
             Log.e("OpenGLESProbeWork", "Unable to publish OpenGL ES probe result", error)

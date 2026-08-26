@@ -1,22 +1,23 @@
-# OpenGLESScope 0.3.4 Build Audit
+# OpenGLESScope 0.7.2 Build / Release Audit
 
-- Application version: 0.3.4
-- versionCode: 304
-- Audit date: 2026-08-23
-- OpenGL ES core baseline: 3.2; GLSL ES baseline: 3.20; EGL baseline: 1.5.
-- CapsViewer public core capability floor remains covered for OpenGL ES 2.0/3.0/3.1/3.2.
-- Runtime compressed texture, shader binary and program binary arrays remain complete-report datasets; count and value-array attempts now have separate diagnostics.
-- OpenGL ES 3.x extension enumeration now records GL_NUM_EXTENSIONS provenance separately.
-- Core-version provenance is exposed consistently in UI, TXT and HTML.
-- Current Khronos HUAWEI binary-format tokens remain symbolically decoded while unknown tokens stay raw hexadecimal.
-- Material3 dependency: 1.5.0-alpha26; Compose UI/foundation/animation: 1.12.0.
-- Android Gradle Plugin: 9.3.1; compileSdk/targetSdk: 37.
-- Database compatibility reference: OpenGLESScope Database 0.2.5; schema-v2 / technicalReport-v1 unchanged.
-- Required ABIs: arm64-v8a, armeabi-v7a, x86_64; x86 excluded.
-- Native EGL cleanup and probe service shutdown paths reviewed; no persistent source-level leak identified.
-- Direct updater opt-out cancellation and invalid APK cleanup are enforced.
-- APK signature compatibility uses directional signing-lineage validation on Android 9+ and exact signer equality on legacy Android.
-- Static release audit: PASS.
-- Python audit scripts: syntax PASS.
-- Kotlin source parser smoke check: no syntax diagnostics.
-- Full Gradle compilation could not run because Gradle 9.7.0 is not cached and services.gradle.org is unreachable from the build environment.
+- Version: 0.7.2
+- versionCode: 702
+- Compile / target API: 37
+- Minimum API: 24
+- Android Gradle Plugin: 9.3.2
+- Gradle wrapper: 9.7.1
+- NDK: 29.0.14206865
+- Release ABIs: arm64-v8a, armeabi-v7a, x86_64
+- Submission schema: 2
+- technicalReport schema: 2
+- Companion Database: 0.7.3
+
+The 0.7.2 release verifier gates complete EGL Analysis evidence, OpenGL ES/EGL query-graph parity, searchable formats/precision, separated limit/diagnostic accounting, expanded Android provenance, application ABI submission metadata, clean source-archive policy and the Material 3 Expressive opt-in required by the Analysis loading indicator.
+
+## User build regression reproduced from evidence
+
+The reported release build completed native CMake work for arm64-v8a, armeabi-v7a and x86_64 and reached `:app:compileReleaseKotlin`, where `MainActivity.kt` failed because `LoadingIndicator()` is an experimental Material 3 Expressive API. The Analysis composable now carries `@OptIn(ExperimentalMaterial3ExpressiveApi::class)`, matching the shared application implementation pattern. No capability/evidence behavior was changed by this fix.
+
+## Build attempt in the release environment
+
+A real `./gradlew :app:assembleRelease --no-daemon` attempt was made after the source correction. The wrapper could not obtain Gradle 9.7.1 because `services.gradle.org` could not be resolved (`java.net.UnknownHostException`). The Android compile phase therefore could not be re-run in this isolated environment and no local full APK PASS is claimed here. Source release verification and archive hygiene passed independently.

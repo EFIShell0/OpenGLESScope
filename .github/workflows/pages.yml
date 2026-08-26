@@ -1,0 +1,79 @@
+name: Deploy OpenGLESScope Database
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Confirm 0.7.5 source files
+        run: |
+          python tools/audit_database.py --version
+          python tools/repair_repository.py --check
+      - name: Build static index
+        run: python tools/build_index.py
+      - name: Audit tracked source checkout
+        run: python tools/audit_database.py --source-tree .
+      - name: Test source/artifact audit boundaries
+        run: python tools/test_audit_hygiene.py
+      - name: Check frontend JavaScript syntax
+        run: node --check assets/app.v075.js
+      - name: Test hash routes
+        run: node tools/test_routes.mjs
+      - name: Test compare semantics
+        run: node tools/test_compare_contract.mjs
+      - name: Test Statistics and filter contract
+        run: node tools/test_statistics_filters.mjs
+      - name: Test shared UI parity
+        run: node tools/test_ui_parity.mjs
+      - name: Check Worker JavaScript syntax
+        run: node --check worker/src/index.js
+      - name: Test Worker contract
+        run: node worker/tests/contract.mjs
+      - name: Stage allow-listed Pages artifact
+        run: python tools/build_pages_artifact.py _site
+      - name: Audit staged Pages artifact
+        run: python tools/audit_database.py --artifact-tree _site
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+          include-hidden-files: true
+
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

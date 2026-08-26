@@ -86,8 +86,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val releaseVersionName = "0.3.4"
-val releaseVersionCode = 304
+val releaseVersionName = "0.7.2"
+val releaseVersionCode = 702
 
 android {
     namespace = "com.efishell.openglesscope"
@@ -135,6 +135,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:5.3.0")
+    implementation("com.google.zxing:core:3.5.4")
 }
 
 androidComponents {

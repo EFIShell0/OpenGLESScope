@@ -119,6 +119,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -177,6 +178,14 @@ private val OpenGLESExpressiveShapes = Shapes(
 internal data class LimitEntry(val name: String, val value: String)
 internal data class QueryDiagnostic(val name: String, val status: String, val detail: String)
 internal data class PrecisionEntry(val shader: String, val type: String, val rangeMin: Int, val rangeMax: Int, val precision: Int)
+internal data class EglUnavailableAttribute(val name: String, val error: String)
+internal data class EglRuntimeInfo(
+    val boundApi: String, val configId: Int?, val clientType: String?, val clientVersion: Int?, val renderBuffer: String?,
+    val currentContext: Boolean, val currentDisplay: Boolean, val currentDrawSurface: Boolean, val currentReadSurface: Boolean,
+    val surfaceWidth: Int?, val surfaceHeight: Int?, val surfaceRenderBuffer: String?, val surfaceSwapBehavior: String?,
+    val surfaceTextureFormat: String?, val surfaceTextureTarget: String?, val surfaceMipmapTexture: Int?, val surfaceMipmapLevel: Int?,
+    val surfaceMultisampleResolve: String?, val unavailableAttributes: List<EglUnavailableAttribute>
+)
 internal data class EglConfigEntry(
     val id: Int,
     val red: Int?, val green: Int?, val blue: Int?, val alpha: Int?,
@@ -188,7 +197,9 @@ internal data class EglConfigEntry(
     val bindToTextureRgb: Int?, val bindToTextureRgba: Int?,
     val maxPbufferWidth: Int?, val maxPbufferHeight: Int?, val maxPbufferPixels: Int?,
     val nativeVisualType: Int?, val transparentType: String?,
-    val transparentRed: Int?, val transparentGreen: Int?, val transparentBlue: Int?
+    val transparentRed: Int?, val transparentGreen: Int?, val transparentBlue: Int?,
+    val recordableAndroid: Int?, val framebufferTargetAndroid: Int?, val colorComponentTypeExt: String?,
+    val unavailableAttributes: List<EglUnavailableAttribute>
 )
 internal data class EglInfo(val vendor: String, val version: String, val initializedVersion: String, val clientApis: String, val extensions: List<String>, val clientExtensions: List<String>)
 internal data class GlReport(
@@ -201,6 +212,7 @@ internal data class GlReport(
     val glMinor: Int,
     val glslVersion: String,
     val egl: EglInfo,
+    val eglRuntime: EglRuntimeInfo,
     val extensions: List<String>,
     val limits: List<LimitEntry>,
     val compressedFormats: List<String>,
@@ -213,7 +225,7 @@ internal data class GlReport(
 internal data class DisplayInfo(val name: String, val modeId: Int?, val width: Int?, val height: Int?, val refreshRate: Float?, val supportedModes: List<String>, val hdrTypes: List<String>, val desiredMaxLuminance: Float?, val desiredMaxAverageLuminance: Float?, val desiredMinLuminance: Float?, val wideColor: Boolean?)
 private enum class EvidenceState { Supported, Unsupported, Unknown }
 private enum class Page(val title: String) {
-    Overview("Overview"), OpenGLES("OpenGL ES"), Display("Display & HDR"), EGL("EGL"), Features("Features"), Limits("Limits"), Formats("Formats"), Extensions("Extensions"), Precision("Precision"), Configs("EGL Configs"), Settings("Settings"), Info("Info")
+    Overview("Overview"), OpenGLES("OpenGL ES"), Display("Display & HDR"), EGL("EGL"), Features("Features"), Limits("Limits"), Formats("Formats"), Extensions("Extensions"), Precision("Precision"), Configs("EGL Configs"), Analysis("Analysis"), Settings("Settings"), Info("Info")
 }
 
 internal data class AppUpdate(
@@ -577,15 +589,59 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
+
+    internal suspend fun runOpenGlesSelfTests(expected: GlReport): String = withContext(Dispatchers.IO) {
+        val probeDir = File(cacheDir, "probe").canonicalFile.apply { mkdirs() }
+        val resultFile = File(probeDir, "opengles-selftest-${System.nanoTime()}.json").canonicalFile
+        if (resultFile.parentFile != probeDir) return@withContext JSONObject().put("status", "unavailable").put("reason", "Self-test result path validation failed").toString()
+        runCatching { resultFile.delete() }
+        val intent = Intent(this@MainActivity, OpenGLESProbeService::class.java)
+            .putExtra(OpenGLESProbeService.EXTRA_RESULT_PATH, resultFile.absolutePath)
+            .putExtra(OpenGLESProbeService.EXTRA_SELF_TEST, true)
+        if (!runCatching { startService(intent) }.isSuccess) return@withContext JSONObject().put("status", "unavailable").put("reason", "OpenGL ES self-test service could not be started").toString()
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(20)
+        try {
+            while (System.nanoTime() < deadline) {
+                if (resultFile.isFile && resultFile.length() > 0L) {
+                    if (resultFile.length() > 1024L * 1024L) return@withContext JSONObject().put("status", "unavailable").put("reason", "Self-test result exceeded 1 MiB").toString()
+                    val raw = resultFile.readText(Charsets.UTF_8)
+                    val parsed = runCatching { JSONObject(raw) }.getOrNull() ?: return@withContext JSONObject().put("status", "unavailable").put("reason", "Self-test result JSON was invalid").toString()
+                    if (parsed.optString("status").startsWith("completed")) {
+                        val sameVendor = parsed.optString("vendor") == expected.vendor
+                        val sameRenderer = parsed.optString("renderer") == expected.renderer
+                        val sameVersion = parsed.optString("runtimeVersion") == expected.glVersion
+                        if (!sameVendor || !sameRenderer || !sameVersion) {
+                            return@withContext JSONObject()
+                                .put("status", "unavailable")
+                                .put("reason", "Isolated OpenGL ES runtime identity did not match the selected report; test attribution was refused")
+                                .put("vendor", parsed.optString("vendor", "Unknown"))
+                                .put("renderer", parsed.optString("renderer", "Unknown"))
+                                .put("runtimeVersion", parsed.optString("runtimeVersion", "Unknown"))
+                                .put("tests", JSONArray())
+                                .toString()
+                        }
+                    }
+                    return@withContext raw
+                }
+                delay(50L)
+            }
+            stopOpenGlesProbeProcess()
+            JSONObject().put("status", "unavailable").put("reason", "OpenGL ES self-test timed out").toString()
+        } finally {
+            runCatching { resultFile.delete() }
+        }
+    }
 }
 
 private fun parseReport(raw: String): GlReport {
     return try {
         val o = JSONObject(raw)
         val eglObj = o.optJSONObject("egl") ?: JSONObject()
-        val requiredTopLevel = listOf("renderer", "vendor", "glVersion", "glMajor", "glMinor", "glslVersion", "egl", "extensions", "limits", "compressedFormats", "shaderBinaryFormats", "programBinaryFormats", "precision", "eglConfigs", "diagnostics")
+        val eglRuntimeObj = o.optJSONObject("eglRuntime") ?: JSONObject()
+        val requiredTopLevel = listOf("renderer", "vendor", "glVersion", "glMajor", "glMinor", "glslVersion", "egl", "eglRuntime", "extensions", "limits", "compressedFormats", "shaderBinaryFormats", "programBinaryFormats", "precision", "eglConfigs", "diagnostics")
         val requiredEgl = listOf("vendor", "version", "initializedVersion", "clientApis", "extensions", "clientExtensions")
-        val completeSnapshot = requiredTopLevel.all { o.has(it) } && requiredEgl.all { eglObj.has(it) }
+        val requiredEglRuntime = listOf("boundApi", "configId", "clientType", "clientVersion", "renderBuffer", "currentContext", "currentDisplay", "currentDrawSurface", "currentReadSurface", "surfaceWidth", "surfaceHeight", "surfaceRenderBuffer", "surfaceSwapBehavior", "surfaceTextureFormat", "surfaceTextureTarget", "surfaceMipmapTexture", "surfaceMipmapLevel", "surfaceMultisampleResolve", "unavailableAttributes")
+        val completeSnapshot = requiredTopLevel.all { o.has(it) } && o.optJSONObject("egl") != null && o.optJSONObject("eglRuntime") != null && requiredEgl.all { eglObj.has(it) } && requiredEglRuntime.all { eglRuntimeObj.has(it) }
         val available = o.optString("status") == "available" && completeSnapshot
         val limits = o.optJSONArray("limits").toObjects().map { x -> LimitEntry(x.optString("name", "Unknown"), x.optString("value", "Unknown")) }
         val precision = o.optJSONArray("precision").toObjects().map { x -> PrecisionEntry(x.optString("shader"), x.optString("type"), x.optInt("rangeMin"), x.optInt("rangeMax"), x.optInt("precision")) }
@@ -601,7 +657,9 @@ private fun parseReport(raw: String): GlReport {
                 x.optNullableInt("bindToTextureRgb"), x.optNullableInt("bindToTextureRgba"),
                 x.optNullableInt("maxPbufferWidth"), x.optNullableInt("maxPbufferHeight"), x.optNullableInt("maxPbufferPixels"),
                 x.optNullableInt("nativeVisualType"), x.optNullableString("transparentType"),
-                x.optNullableInt("transparentRed"), x.optNullableInt("transparentGreen"), x.optNullableInt("transparentBlue")
+                x.optNullableInt("transparentRed"), x.optNullableInt("transparentGreen"), x.optNullableInt("transparentBlue"),
+                x.optNullableInt("recordableAndroid"), x.optNullableInt("framebufferTargetAndroid"), x.optNullableString("colorComponentTypeExt"),
+                x.optJSONArray("unavailableAttributes").toObjects().map { a -> EglUnavailableAttribute(a.optString("name", "Unknown"), a.optString("error", "Unknown EGL error")) }
             )
         }
         GlReport(
@@ -614,6 +672,13 @@ private fun parseReport(raw: String): GlReport {
             o.optInt("glMinor"),
             o.optString("glslVersion", "Unknown"),
             EglInfo(eglObj.optString("vendor", "Unknown"), eglObj.optString("version", "Unknown"), eglObj.optString("initializedVersion", "Unknown"), eglObj.optString("clientApis", "Unknown"), eglObj.optJSONArray("extensions").toStrings(), eglObj.optJSONArray("clientExtensions").toStrings()),
+            EglRuntimeInfo(
+                eglRuntimeObj.optString("boundApi", "Unknown"), eglRuntimeObj.optNullableInt("configId"), eglRuntimeObj.optNullableString("clientType"), eglRuntimeObj.optNullableInt("clientVersion"), eglRuntimeObj.optNullableString("renderBuffer"),
+                eglRuntimeObj.optBoolean("currentContext", false), eglRuntimeObj.optBoolean("currentDisplay", false), eglRuntimeObj.optBoolean("currentDrawSurface", false), eglRuntimeObj.optBoolean("currentReadSurface", false),
+                eglRuntimeObj.optNullableInt("surfaceWidth"), eglRuntimeObj.optNullableInt("surfaceHeight"), eglRuntimeObj.optNullableString("surfaceRenderBuffer"), eglRuntimeObj.optNullableString("surfaceSwapBehavior"),
+                eglRuntimeObj.optNullableString("surfaceTextureFormat"), eglRuntimeObj.optNullableString("surfaceTextureTarget"), eglRuntimeObj.optNullableInt("surfaceMipmapTexture"), eglRuntimeObj.optNullableInt("surfaceMipmapLevel"), eglRuntimeObj.optNullableString("surfaceMultisampleResolve"),
+                eglRuntimeObj.optJSONArray("unavailableAttributes").toObjects().map { a -> EglUnavailableAttribute(a.optString("name", "Unknown"), a.optString("error", "Unknown EGL error")) }
+            ),
             o.optJSONArray("extensions").toStrings(),
             limits,
             o.optJSONArray("compressedFormats").toStrings(),
@@ -624,7 +689,7 @@ private fun parseReport(raw: String): GlReport {
             diagnostics
         )
     } catch (e: Exception) {
-        GlReport(false, e.message ?: "OpenGL ES report parsing failed", "Unknown", "Unknown", "Unknown", 0, 0, "Unknown", EglInfo("Unknown", "Unknown", "Unknown", "Unknown", emptyList(), emptyList()), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList())
+        GlReport(false, e.message ?: "OpenGL ES report parsing failed", "Unknown", "Unknown", "Unknown", 0, 0, "Unknown", EglInfo("Unknown", "Unknown", "Unknown", "Unknown", emptyList(), emptyList()), EglRuntimeInfo("Unknown", null, null, null, null, false, false, false, false, null, null, null, null, null, null, null, null, null, emptyList()), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList())
     }
 }
 
@@ -821,7 +886,7 @@ private fun OpenGLESScopeApp(activity: MainActivity) {
 private data class NavigationItem(val page: Page, val label: String, val icon: Int)
 
 private fun selectedNavigationPage(page: Page): Page = when (page) {
-    Page.Features, Page.Limits, Page.Formats, Page.Precision, Page.Configs, Page.Settings, Page.Info -> Page.Overview
+    Page.Features, Page.Limits, Page.Formats, Page.Precision, Page.Configs, Page.Analysis, Page.Settings, Page.Info -> Page.Overview
     else -> page
 }
 
@@ -844,8 +909,9 @@ private fun pageTransitionIndex(page: Page): Int = when (page) {
     Page.Formats -> 7
     Page.Precision -> 8
     Page.Configs -> 9
-    Page.Settings -> 10
-    Page.Info -> 11
+    Page.Analysis -> 10
+    Page.Settings -> 11
+    Page.Info -> 12
 }
 
 private fun pageIcon(page: Page): Int = when (page) {
@@ -859,6 +925,7 @@ private fun pageIcon(page: Page): Int = when (page) {
     Page.Extensions -> R.drawable.ic_extensions
     Page.Precision -> R.drawable.ic_features
     Page.Configs -> R.drawable.ic_surface
+    Page.Analysis -> R.drawable.ic_properties
     Page.Settings -> R.drawable.ic_settings
     Page.Info -> R.drawable.ic_info
 }
@@ -955,7 +1022,7 @@ private fun AppHeader(page: Page, onBack: () -> Unit, onSettings: () -> Unit, on
 @Composable
 private fun PageContent(activity: MainActivity, page: Page, report: GlReport, display: DisplayInfo, collectionReady: Boolean, onNavigate: (Page) -> Unit) {
     val requiresGraphicsReport = when (page) {
-        Page.OpenGLES, Page.EGL, Page.Features, Page.Limits, Page.Formats, Page.Extensions, Page.Precision, Page.Configs -> true
+        Page.OpenGLES, Page.EGL, Page.Features, Page.Limits, Page.Formats, Page.Extensions, Page.Precision, Page.Configs, Page.Analysis -> true
         else -> false
     }
     if (requiresGraphicsReport && !report.available) {
@@ -973,6 +1040,7 @@ private fun PageContent(activity: MainActivity, page: Page, report: GlReport, di
         Page.Extensions -> ExtensionsPage(report)
         Page.Precision -> PrecisionPage(report)
         Page.Configs -> ConfigsPage(report)
+        Page.Analysis -> AnalysisPage(activity, report, display)
         Page.Settings -> SettingsPage(activity)
         Page.Info -> InfoPage(activity, report, display, collectionReady)
     }
@@ -1035,6 +1103,9 @@ private fun OverviewPage(report: GlReport, display: DisplayInfo, navigate: (Page
                         QuickAccessCard("Precision", Page.Precision, navigate, Modifier.weight(1f))
                         QuickAccessCard("EGL Configs", Page.Configs, navigate, Modifier.weight(1f))
                     }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        QuickAccessCard("Analysis", Page.Analysis, navigate, Modifier.weight(1f))
+                    }
                 }
             }
         }
@@ -1055,6 +1126,20 @@ private fun OverviewPage(report: GlReport, display: DisplayInfo, navigate: (Page
                         "Unknown" to report.diagnostics.count { it.status == "Unknown" }
                     ).filter { it.second > 0 }.joinToString(" / ") { "${it.second} ${it.first.lowercase()}" }
                 )
+            }
+        }
+        item {
+            CapabilitySectionCard("Operating system") {
+                CapabilityKeyValue("Architecture", System.getProperty("os.arch")?.ifBlank { "Unavailable" } ?: "Unavailable")
+                CapabilityKeyValue("Android", Build.VERSION.RELEASE.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Codename", Build.VERSION.CODENAME.ifBlank { "Unavailable" })
+                CapabilityKeyValue("SDK", Build.VERSION.SDK_INT.toString())
+                CapabilityKeyValue("Build ID", Build.ID.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Incremental", Build.VERSION.INCREMENTAL.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Security patch", Build.VERSION.SECURITY_PATCH.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Manufacturer", Build.MANUFACTURER.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Model", Build.MODEL.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Hardware", Build.HARDWARE.ifBlank { "Unavailable" })
             }
         }
     }
@@ -1081,7 +1166,9 @@ private fun HeroCard(report: GlReport) {
 @Composable
 private fun VendorLogo(vendor: String, renderer: String, modifier: Modifier = Modifier) {
     val text = "$vendor $renderer".lowercase()
+    val implementationLayer = listOf("angle", "swiftshader", "mesa", "turnip", "freedreno", "panfrost", "zink", "llvmpipe", "virgl", "software rasterizer").any { it in text }
     val icon = when {
+        implementationLayer -> R.drawable.gpu_vendor_unknown
         "qualcomm" in text || "adreno" in text -> R.drawable.gpu_vendor_qualcomm
         "arm" in text || "mali" in text -> R.drawable.gpu_vendor_arm
         "imagination" in text || "powervr" in text -> R.drawable.gpu_vendor_imagination
@@ -1099,6 +1186,12 @@ private fun VendorLogo(vendor: String, renderer: String, modifier: Modifier = Mo
         Image(
             painter = painterResource(icon),
             contentDescription = when {
+                implementationLayer -> "Graphics implementation layer"
+                "digital media professionals" in text || "dmp" in text -> "Digital Media Professionals"
+                "think silicon" in text || "thinksilicon" in text -> "Think Silicon"
+                "vmware" in text -> "VMware"
+                "microsoft" in text -> "Microsoft"
+                "apple" in text -> "Apple"
                 "qualcomm" in text || "adreno" in text -> "Qualcomm"
                 "arm" in text || "mali" in text -> "Arm"
                 "imagination" in text || "powervr" in text -> "Imagination Technologies"
@@ -1240,14 +1333,55 @@ private fun HdrTypeCard(type: String) {
 }
 
 @Composable
-private fun EglPage(r: GlReport) = CapabilityListPage("EGL runtime", listOf(
-    "EGL_VENDOR" to r.egl.vendor,
-    "EGL_VERSION" to r.egl.version,
-    "Initialized EGL version" to r.egl.initializedVersion,
-    "EGL_CLIENT_APIS" to r.egl.clientApis,
-    "Display extensions" to r.egl.extensions.size.toString(),
-    "Client extensions" to r.egl.clientExtensions.size.toString()
-))
+private fun EglPage(r: GlReport) {
+    LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item {
+            CapabilitySectionCard("EGL identity") {
+                CapabilityKeyValue("EGL_VENDOR", r.egl.vendor)
+                CapabilityKeyValue("EGL_VERSION", r.egl.version)
+                CapabilityKeyValue("Initialized EGL version", r.egl.initializedVersion)
+                CapabilityKeyValue("EGL_CLIENT_APIS", r.egl.clientApis)
+                CapabilityKeyValue("Display extensions", r.egl.extensions.size.toString())
+                CapabilityKeyValue("Client extensions", r.egl.clientExtensions.size.toString())
+            }
+        }
+        item {
+            CapabilitySectionCard("Current EGL binding and context") {
+                CapabilityKeyValue("Bound client API", r.eglRuntime.boundApi)
+                CapabilityKeyValue("Current config ID", r.eglRuntime.configId?.toString() ?: "Unavailable")
+                CapabilityKeyValue("Context client type", r.eglRuntime.clientType ?: "Unavailable")
+                CapabilityKeyValue("Context client version", r.eglRuntime.clientVersion?.toString() ?: "Unavailable")
+                CapabilityKeyValue("Context render buffer", r.eglRuntime.renderBuffer ?: "Unavailable")
+                CapabilityKeyValue("Current context", if (r.eglRuntime.currentContext) "Available" else "Unavailable")
+                CapabilityKeyValue("Current display", if (r.eglRuntime.currentDisplay) "Available" else "Unavailable")
+                CapabilityKeyValue("Current draw surface", if (r.eglRuntime.currentDrawSurface) "Available" else "Unavailable")
+                CapabilityKeyValue("Current read surface", if (r.eglRuntime.currentReadSurface) "Available" else "Unavailable")
+            }
+        }
+        item {
+            CapabilitySectionCard("Collector pbuffer") {
+                CapabilityKeyValue("Size", if (r.eglRuntime.surfaceWidth != null && r.eglRuntime.surfaceHeight != null) "${r.eglRuntime.surfaceWidth} × ${r.eglRuntime.surfaceHeight}" else "Unavailable")
+                CapabilityKeyValue("Render buffer", r.eglRuntime.surfaceRenderBuffer ?: "Unavailable")
+                CapabilityKeyValue("Swap behavior", r.eglRuntime.surfaceSwapBehavior ?: "Unavailable")
+                CapabilityKeyValue("Texture format", r.eglRuntime.surfaceTextureFormat ?: "Unavailable")
+                CapabilityKeyValue("Texture target", r.eglRuntime.surfaceTextureTarget ?: "Unavailable")
+                CapabilityKeyValue("Mipmap texture", r.eglRuntime.surfaceMipmapTexture?.toString() ?: "Unavailable")
+                CapabilityKeyValue("Mipmap level", r.eglRuntime.surfaceMipmapLevel?.toString() ?: "Unavailable")
+                CapabilityKeyValue("Multisample resolve", r.eglRuntime.surfaceMultisampleResolve ?: "Not applicable / unavailable")
+            }
+        }
+        item {
+            CapabilitySectionCard("EGL runtime query failures") {
+                CapabilityKeyValue("Unavailable attributes", r.eglRuntime.unavailableAttributes.size.toString())
+                if (r.eglRuntime.unavailableAttributes.isEmpty()) {
+                    Text("No explicit EGL runtime attribute failure was recorded.", color = TextMuted, style = MaterialTheme.typography.bodySmall)
+                } else {
+                    r.eglRuntime.unavailableAttributes.forEach { CapabilityKeyValue(it.name, it.error) }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun FeaturesPage(r: GlReport) {
@@ -1278,16 +1412,41 @@ private fun extensionState(name: String, extensions: List<String>, diagnostics: 
 }
 
 @Composable
-private fun LimitsPage(r: GlReport) = SearchRows("OpenGL ES limits", r.limits.map { it.name to it.value } + r.diagnostics.map { "Query · ${it.name}" to if (it.detail.isBlank()) it.status else "${it.status} · ${it.detail}" })
+private fun LimitsPage(r: GlReport) {
+    var mode by remember { mutableStateOf(0) }
+    var query by remember { mutableStateOf("") }
+    val rows = if (mode == 0) r.limits.map { it.name to it.value } else r.diagnostics.map { it.name to if (it.detail.isBlank()) it.status else "${it.status} · ${it.detail}" }
+    val filtered = remember(rows, query) { if (query.isBlank()) rows else rows.filter { it.first.contains(query, true) || it.second.contains(query, true) } }
+    LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item {
+            CapabilitySectionCard(if (mode == 0) "OpenGL ES limits" else "Query diagnostics") {
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ExpressiveFilterChip(selected = mode == 0, label = "Limits", onClick = { mode = 0 })
+                    ExpressiveFilterChip(selected = mode == 1, label = "Diagnostics", onClick = { mode = 1 })
+                }
+                ExpressiveSearchField(value = query, onValueChange = { query = it }, placeholderText = if (mode == 0) "Search limits…" else "Search diagnostics…", modifier = Modifier.fillMaxWidth().padding(top = 8.dp), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None))
+                CapabilityKeyValue("Matches", "${filtered.size} / ${rows.size}")
+                if (mode == 0) Text("Implementation limits and query diagnostics are counted separately so diagnostic evidence never inflates the implementation-limit total.", color = TextMuted, style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        items(filtered, key = { "${mode}|${it.first}" }) { (name, value) -> CapabilityItemCard { CapabilityKeyValue(name, value) } }
+    }
+}
 
 @Composable
 private fun FormatsPage(r: GlReport) {
     var mode by remember { mutableStateOf(0) }
+    var selected by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var query by remember { mutableStateOf("") }
+    val category = when (mode) { 0 -> "Compressed texture format"; 1 -> "Shader binary format"; else -> "Program binary format" }
+    val queryName = when (mode) { 0 -> "GL_COMPRESSED_TEXTURE_FORMATS"; 1 -> "GL_SHADER_BINARY_FORMATS"; else -> "GL_PROGRAM_BINARY_FORMATS" }
     val rows = when (mode) {
         0 -> r.compressedFormats.mapIndexed { i, v -> "Compressed format ${i + 1}" to v }
         1 -> r.shaderBinaryFormats.mapIndexed { i, v -> "Shader binary ${i + 1}" to v }
         else -> r.programBinaryFormats.mapIndexed { i, v -> "Program binary ${i + 1}" to v }
     }
+    val diagnostic = r.diagnostics.firstOrNull { it.name == queryName }
+    val filtered = remember(rows, query) { if (query.isBlank()) rows else rows.filter { it.first.contains(query, true) || it.second.contains(query, true) } }
     LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             CapabilitySectionCard("Formats") {
@@ -1296,21 +1455,47 @@ private fun FormatsPage(r: GlReport) {
                     ExpressiveFilterChip(selected = mode == 1, label = "Shader binary", onClick = { mode = 1 })
                     ExpressiveFilterChip(selected = mode == 2, label = "Program binary", onClick = { mode = 2 })
                 }
-                CapabilityKeyValue("Entries", rows.size.toString())
+                ExpressiveSearchField(value = query, onValueChange = { query = it }, placeholderText = "Search formats…", modifier = Modifier.fillMaxWidth().padding(top = 8.dp), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None))
+                CapabilityKeyValue("Matches", "${filtered.size} / ${rows.size}")
+                CapabilityKeyValue("Enumeration query", queryName)
+                CapabilityKeyValue("Query evidence", diagnostic?.status ?: "Unknown")
+                if (!diagnostic?.detail.isNullOrBlank()) CapabilityKeyValue("Query diagnostic", diagnostic!!.detail)
+                Text("Select an entry for canonical/raw evidence details.", color = TextMuted, style = MaterialTheme.typography.bodySmall)
             }
         }
-        items(rows, key = { it.first }) { (a, b) -> CapabilityItemCard { CapabilityKeyValue(a, b) } }
+        items(filtered, key = { it.first }) { row ->
+            Card(onClick = { selected = row }, colors = CardDefaults.cardColors(containerColor = SurfaceRaised), shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(14.dp)) { CapabilityKeyValue(row.first, row.second) }
+            }
+        }
+    }
+    selected?.let { row ->
+        AlertDialog(
+            onDismissRequest = { selected = null },
+            title = { Text(category) },
+            text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CapabilityKeyValue("Runtime value", row.second)
+                CapabilityKeyValue("Query", queryName)
+                CapabilityKeyValue("Evidence", diagnostic?.status ?: "Unknown")
+                if (!diagnostic?.detail.isNullOrBlank()) CapabilityKeyValue("Diagnostic", diagnostic!!.detail)
+                Text("Known registered values are shown as canonical symbolic name plus raw hexadecimal value. Unknown future values remain raw evidence.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+            } },
+            confirmButton = { ExpressiveTextButton("Close") { selected = null } }
+        )
     }
 }
 
 @Composable
 private fun ExtensionsPage(r: GlReport) {
+    val uriHandler = LocalUriHandler.current
     var mode by remember { mutableStateOf(0) }
+    var selected by remember { mutableStateOf<String?>(null) }
     val rows = when (mode) {
         0 -> r.extensions
         1 -> r.egl.extensions
         else -> r.egl.clientExtensions
     }
+    val scopeName = when (mode) { 0 -> "OpenGL ES runtime"; 1 -> "EGL display runtime"; else -> "EGL client runtime" }
     var query by remember { mutableStateOf("") }
     val filtered = remember(rows, query) { if (query.isBlank()) rows else rows.filter { it.contains(query, true) } }
     LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1323,17 +1508,56 @@ private fun ExtensionsPage(r: GlReport) {
                 }
                 ExpressiveSearchField(value = query, onValueChange = { query = it }, placeholderText = "Search…", modifier = Modifier.fillMaxWidth().padding(top = 8.dp), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None))
                 CapabilityKeyValue("Matches", "${filtered.size} / ${rows.size}")
+                Text("Select an exact runtime token for offline registry/provenance details.", color = TextMuted, style = MaterialTheme.typography.bodySmall)
             }
         }
-        items(filtered) { ext -> CapabilityItemCard { Text(ext, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall) } }
+        items(filtered, key = { it }) { ext ->
+            Card(onClick = { selected = ext }, colors = CardDefaults.cardColors(containerColor = SurfaceRaised), shape = RoundedCornerShape(22.dp), modifier = Modifier.fillMaxWidth()) {
+                Text(ext, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(14.dp))
+            }
+        }
+    }
+    selected?.let { ext ->
+        val diagnostic = r.diagnostics.firstOrNull { it.name.contains(ext, true) }
+        AlertDialog(
+            onDismissRequest = { selected = null },
+            title = { Text(ext, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.titleMedium) },
+            text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CapabilityKeyValue("Scope", scopeName)
+                CapabilityKeyValue("Namespace", extensionNamespace(ext))
+                CapabilityKeyValue("Runtime evidence", "Exact token enumerated")
+                CapabilityKeyValue("Registry baseline", if (mode == 0) "Khronos OpenGL ES registry · ES 3.2 baseline" else "Khronos EGL registry · EGL 1.5 baseline")
+                val queryGates = QUERY_DEPENDENCIES[ext].orEmpty()
+                CapabilityKeyValue("Implemented query gates", if (queryGates.isEmpty()) "No dedicated implementation-dependent query gate" else queryGates.joinToString(" · "))
+                queryGates.forEach { gate ->
+                    val gateEvidence = r.diagnostics.firstOrNull { it.name == gate }
+                    if (gateEvidence != null) CapabilityKeyValue(gate, if (gateEvidence.detail.isBlank()) gateEvidence.status else "${gateEvidence.status} · ${gateEvidence.detail}")
+                }
+                diagnostic?.let { CapabilityKeyValue("Related query", if (it.detail.isBlank()) it.status else "${it.status} · ${it.detail}") }
+                Text("Promotion, dependency or feature state is not inferred from this token alone; exact runtime queries remain authoritative.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+            } },
+            dismissButton = {
+                extensionRegistryUrl(ext)?.let { url -> ExpressiveTextButton("Khronos spec") { uriHandler.openUri(url) } }
+            },
+            confirmButton = { ExpressiveTextButton("Close") { selected = null } }
+        )
     }
 }
 
 @Composable
 private fun PrecisionPage(r: GlReport) {
+    var query by remember { mutableStateOf("") }
+    val rows = remember(r.precision, query) {
+        if (query.isBlank()) r.precision else r.precision.filter { listOf(it.shader, it.type, it.rangeMin, it.rangeMax, it.precision).joinToString(" ").contains(query, true) }
+    }
     LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        item { CapabilitySectionCard("Shader precision") { CapabilityKeyValue("Entries", r.precision.size.toString()) } }
-        items(r.precision, key = { "${it.shader}|${it.type}" }) { p ->
+        item {
+            CapabilitySectionCard("Shader precision") {
+                ExpressiveSearchField(value = query, onValueChange = { query = it }, placeholderText = "Search shader precision…", modifier = Modifier.fillMaxWidth().padding(top = 8.dp), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None))
+                CapabilityKeyValue("Matches", "${rows.size} / ${r.precision.size}")
+            }
+        }
+        items(rows, key = { "${it.shader}|${it.type}" }) { p ->
             CapabilityItemCard {
                 CapabilityKeyValue("Shader", p.shader)
                 CapabilityKeyValue("Type", p.type)
@@ -1357,7 +1581,8 @@ private fun ConfigsPage(r: GlReport) {
                 c.nativeRenderable, c.nativeVisualId, c.minSwapInterval, c.maxSwapInterval, c.bufferSize,
                 c.luminanceSize, c.alphaMaskSize, c.bindToTextureRgb, c.bindToTextureRgba, c.maxPbufferWidth,
                 c.maxPbufferHeight, c.maxPbufferPixels, c.nativeVisualType, c.transparentType, c.transparentRed,
-                c.transparentGreen, c.transparentBlue
+                c.transparentGreen, c.transparentBlue, c.recordableAndroid, c.framebufferTargetAndroid, c.colorComponentTypeExt,
+                c.unavailableAttributes.joinToString(" ") { "${it.name} ${it.error}" }
             ).joinToString(" ") { it?.toString().orEmpty() }.contains(query, true)
         }
     }
@@ -1391,6 +1616,10 @@ private fun ConfigsPage(r: GlReport) {
                 CapabilityKeyValue("Native visual type", c.nativeVisualType?.toString() ?: "Unavailable")
                 CapabilityKeyValue("Transparency type", c.transparentType ?: "Unavailable")
                 CapabilityKeyValue("Transparent RGB", "${c.transparentRed ?: "?"} / ${c.transparentGreen ?: "?"} / ${c.transparentBlue ?: "?"}")
+                CapabilityKeyValue("EGL_ANDROID_recordable", c.recordableAndroid?.let { eglBooleanLabel(it) } ?: "Not applicable / unavailable")
+                CapabilityKeyValue("EGL_ANDROID_framebuffer_target", c.framebufferTargetAndroid?.let { eglBooleanLabel(it) } ?: "Not applicable / unavailable")
+                CapabilityKeyValue("EGL_EXT_pixel_format_float", c.colorComponentTypeExt ?: "Not applicable / unavailable")
+                if (c.unavailableAttributes.isNotEmpty()) CapabilityKeyValue("Unavailable attributes", c.unavailableAttributes.joinToString(" · ") { "${it.name}: ${it.error}" })
                 CapabilityKeyValue("Level", c.level?.toString() ?: "Unavailable")
                 CapabilityKeyValue("Swap interval", "${c.minSwapInterval ?: "?"} … ${c.maxSwapInterval ?: "?"}")
             }
@@ -1417,6 +1646,685 @@ private fun SettingsPage(activity: MainActivity) {
     }
 }
 
+
+
+
+private const val ANALYSIS_MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024
+private const val ANALYSIS_MAX_ENTRIES = 32768
+private const val ANALYSIS_MAX_KEY_LENGTH = 1024
+private const val ANALYSIS_MAX_VALUE_LENGTH = 16384
+private const val ANALYSIS_MAX_WATCHED = 256
+
+private fun readBoundedAnalysisBytes(input: java.io.InputStream, maxBytes: Int): ByteArray {
+    val out = java.io.ByteArrayOutputStream(minOf(maxBytes, 64 * 1024))
+    val buffer = ByteArray(8192)
+    var total = 0
+    while (true) {
+        val read = input.read(buffer)
+        if (read < 0) break
+        if (read == 0) continue
+        total += read
+        if (total > maxBytes) error("Snapshot exceeds ${maxBytes / (1024 * 1024)} MiB")
+        out.write(buffer, 0, read)
+    }
+    return out.toByteArray()
+}
+
+private data class AnalysisDiffRow(val key: String, val baseline: String?, val current: String?, val state: String, val kind: String)
+private data class GlMinimum(val name: String, val threshold: Double, val display: String, val direction: String)
+
+private val OPENGL_ES_32_MINIMUMS = listOf(
+    GlMinimum("GL_SUBPIXEL_BITS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_ELEMENT_INDEX", 16777215.0, "≥ 16,777,215", "minimum"),
+    GlMinimum("GL_MAX_3D_TEXTURE_SIZE", 256.0, "≥ 256", "minimum"),
+    GlMinimum("GL_MAX_TEXTURE_SIZE", 2048.0, "≥ 2048", "minimum"),
+    GlMinimum("GL_MAX_ARRAY_TEXTURE_LAYERS", 256.0, "≥ 256", "minimum"),
+    GlMinimum("GL_MAX_TEXTURE_LOD_BIAS", 2.0, "≥ 2.0", "minimum"),
+    GlMinimum("GL_MAX_CUBE_MAP_TEXTURE_SIZE", 2048.0, "≥ 2048", "minimum"),
+    GlMinimum("GL_MAX_RENDERBUFFER_SIZE", 2048.0, "≥ 2048", "minimum"),
+    GlMinimum("GL_MAX_DRAW_BUFFERS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_FRAMEBUFFER_WIDTH", 2048.0, "≥ 2048", "minimum"),
+    GlMinimum("GL_MAX_FRAMEBUFFER_HEIGHT", 2048.0, "≥ 2048", "minimum"),
+    GlMinimum("GL_MAX_FRAMEBUFFER_LAYERS", 256.0, "≥ 256", "minimum"),
+    GlMinimum("GL_MAX_FRAMEBUFFER_SAMPLES", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_COLOR_ATTACHMENTS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_FRAGMENT_INTERPOLATION_OFFSET_BITS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_SAMPLES", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_SAMPLE_MASK_WORDS", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_COLOR_TEXTURE_SAMPLES", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_DEPTH_TEXTURE_SAMPLES", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_INTEGER_SAMPLES", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_VERTEX_ATTRIB_RELATIVE_OFFSET", 2047.0, "≥ 2047", "minimum"),
+    GlMinimum("GL_MAX_VERTEX_ATTRIB_BINDINGS", 16.0, "≥ 16", "minimum"),
+    GlMinimum("GL_MAX_VERTEX_ATTRIB_STRIDE", 2048.0, "≥ 2048", "minimum"),
+    GlMinimum("GL_MAX_TEXTURE_BUFFER_SIZE", 65536.0, "≥ 65,536", "minimum"),
+    GlMinimum("GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT", 256.0, "≤ 256", "maximum"),
+    GlMinimum("GL_MAX_VERTEX_ATTRIBS", 16.0, "≥ 16", "minimum"),
+    GlMinimum("GL_MAX_VERTEX_UNIFORM_COMPONENTS", 1024.0, "≥ 1024", "minimum"),
+    GlMinimum("GL_MAX_VERTEX_UNIFORM_VECTORS", 256.0, "≥ 256", "minimum"),
+    GlMinimum("GL_MAX_VERTEX_UNIFORM_BLOCKS", 12.0, "≥ 12", "minimum"),
+    GlMinimum("GL_MAX_VERTEX_OUTPUT_COMPONENTS", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS", 16.0, "≥ 16", "minimum"),
+    GlMinimum("GL_MAX_TESS_GEN_LEVEL", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_PATCH_VERTICES", 32.0, "≥ 32", "minimum"),
+    GlMinimum("GL_MAX_TESS_CONTROL_UNIFORM_COMPONENTS", 1024.0, "≥ 1024", "minimum"),
+    GlMinimum("GL_MAX_TESS_CONTROL_TEXTURE_IMAGE_UNITS", 16.0, "≥ 16", "minimum"),
+    GlMinimum("GL_MAX_TESS_CONTROL_OUTPUT_COMPONENTS", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_TESS_PATCH_COMPONENTS", 120.0, "≥ 120", "minimum"),
+    GlMinimum("GL_MAX_TESS_CONTROL_TOTAL_OUTPUT_COMPONENTS", 2048.0, "≥ 2048", "minimum"),
+    GlMinimum("GL_MAX_TESS_CONTROL_INPUT_COMPONENTS", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_TESS_EVALUATION_UNIFORM_COMPONENTS", 1024.0, "≥ 1024", "minimum"),
+    GlMinimum("GL_MAX_TESS_EVALUATION_TEXTURE_IMAGE_UNITS", 16.0, "≥ 16", "minimum"),
+    GlMinimum("GL_MAX_TESS_EVALUATION_OUTPUT_COMPONENTS", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_TESS_EVALUATION_INPUT_COMPONENTS", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_TESS_EVALUATION_UNIFORM_BLOCKS", 12.0, "≥ 12", "minimum"),
+    GlMinimum("GL_MAX_GEOMETRY_UNIFORM_COMPONENTS", 1024.0, "≥ 1024", "minimum"),
+    GlMinimum("GL_MAX_GEOMETRY_UNIFORM_BLOCKS", 12.0, "≥ 12", "minimum"),
+    GlMinimum("GL_MAX_GEOMETRY_INPUT_COMPONENTS", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_GEOMETRY_OUTPUT_COMPONENTS", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_GEOMETRY_OUTPUT_VERTICES", 256.0, "≥ 256", "minimum"),
+    GlMinimum("GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS", 1024.0, "≥ 1024", "minimum"),
+    GlMinimum("GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS", 16.0, "≥ 16", "minimum"),
+    GlMinimum("GL_MAX_GEOMETRY_SHADER_INVOCATIONS", 32.0, "≥ 32", "minimum"),
+    GlMinimum("GL_MAX_FRAGMENT_UNIFORM_COMPONENTS", 1024.0, "≥ 1024", "minimum"),
+    GlMinimum("GL_MAX_FRAGMENT_UNIFORM_VECTORS", 256.0, "≥ 256", "minimum"),
+    GlMinimum("GL_MAX_FRAGMENT_UNIFORM_BLOCKS", 12.0, "≥ 12", "minimum"),
+    GlMinimum("GL_MAX_FRAGMENT_INPUT_COMPONENTS", 60.0, "≥ 60", "minimum"),
+    GlMinimum("GL_MAX_TEXTURE_IMAGE_UNITS", 16.0, "≥ 16", "minimum"),
+    GlMinimum("GL_MAX_FRAGMENT_ATOMIC_COUNTER_BUFFERS", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_FRAGMENT_ATOMIC_COUNTERS", 8.0, "≥ 8", "minimum"),
+    GlMinimum("GL_MAX_FRAGMENT_SHADER_STORAGE_BLOCKS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MIN_PROGRAM_TEXEL_OFFSET", -8.0, "≤ -8", "maximum"),
+    GlMinimum("GL_MAX_PROGRAM_TEXEL_OFFSET", 7.0, "≥ 7", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_WORK_GROUP_COUNT[0]", 65535.0, "≥ 65,535", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_WORK_GROUP_COUNT[1]", 65535.0, "≥ 65,535", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_WORK_GROUP_COUNT[2]", 65535.0, "≥ 65,535", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_WORK_GROUP_SIZE[0]", 128.0, "≥ 128", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_WORK_GROUP_SIZE[1]", 128.0, "≥ 128", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_WORK_GROUP_SIZE[2]", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS", 128.0, "≥ 128", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_UNIFORM_BLOCKS", 12.0, "≥ 12", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_TEXTURE_IMAGE_UNITS", 16.0, "≥ 16", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_SHARED_MEMORY_SIZE", 16384.0, "≥ 16,384", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_UNIFORM_COMPONENTS", 1024.0, "≥ 1024", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_ATOMIC_COUNTERS", 8.0, "≥ 8", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_SHADER_STORAGE_BLOCKS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_UNIFORM_BUFFER_BINDINGS", 72.0, "≥ 72", "minimum"),
+    GlMinimum("GL_MAX_UNIFORM_BLOCK_SIZE", 16384.0, "≥ 16,384", "minimum"),
+    GlMinimum("GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT", 256.0, "≤ 256", "maximum"),
+    GlMinimum("GL_MAX_COMBINED_UNIFORM_BLOCKS", 60.0, "≥ 60", "minimum"),
+    GlMinimum("GL_MAX_VARYING_COMPONENTS", 60.0, "≥ 60", "minimum"),
+    GlMinimum("GL_MAX_VARYING_VECTORS", 15.0, "≥ 15", "minimum"),
+    GlMinimum("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS", 96.0, "≥ 96", "minimum"),
+    GlMinimum("GL_MAX_COMBINED_SHADER_OUTPUT_RESOURCES", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_UNIFORM_LOCATIONS", 1024.0, "≥ 1024", "minimum"),
+    GlMinimum("GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_ATOMIC_COUNTER_BUFFER_SIZE", 32.0, "≥ 32", "minimum"),
+    GlMinimum("GL_MAX_COMBINED_ATOMIC_COUNTER_BUFFERS", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_COMBINED_ATOMIC_COUNTERS", 8.0, "≥ 8", "minimum"),
+    GlMinimum("GL_MAX_IMAGE_UNITS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_FRAGMENT_IMAGE_UNIFORMS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_COMPUTE_IMAGE_UNIFORMS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_COMBINED_IMAGE_UNIFORMS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_SHADER_STORAGE_BLOCK_SIZE", 134217728.0, "≥ 134,217,728", "minimum"),
+    GlMinimum("GL_MAX_COMBINED_SHADER_STORAGE_BLOCKS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT", 256.0, "≤ 256", "maximum"),
+    GlMinimum("GL_MAX_DEBUG_MESSAGE_LENGTH", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_DEBUG_LOGGED_MESSAGES", 1.0, "≥ 1", "minimum"),
+    GlMinimum("GL_MAX_DEBUG_GROUP_STACK_DEPTH", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_LABEL_LENGTH", 256.0, "≥ 256", "minimum"),
+    GlMinimum("GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS", 64.0, "≥ 64", "minimum"),
+    GlMinimum("GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS", 4.0, "≥ 4", "minimum"),
+    GlMinimum("GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS", 4.0, "≥ 4", "minimum")
+)
+
+private val GL_QUERY_DEPENDENCIES = linkedMapOf(
+    "GL_EXT_texture_filter_anisotropic" to listOf("GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT"),
+    "GL_KHR_debug" to listOf("GL_MAX_DEBUG_MESSAGE_LENGTH", "GL_MAX_DEBUG_LOGGED_MESSAGES", "GL_MAX_DEBUG_GROUP_STACK_DEPTH", "GL_MAX_LABEL_LENGTH"),
+    "GL_EXT_disjoint_timer_query" to listOf("GL_TIME_ELAPSED_EXT_QUERY_COUNTER_BITS", "GL_TIMESTAMP_EXT_QUERY_COUNTER_BITS"),
+    "GL_EXT_blend_func_extended" to listOf("GL_MAX_DUAL_SOURCE_DRAW_BUFFERS_EXT"),
+    "GL_OVR_multiview" to listOf("GL_MAX_VIEWS_OVR"),
+    "GL_OVR_multiview2" to listOf("GL_MAX_VIEWS_OVR"),
+    "GL_EXT_multiview_draw_buffers" to listOf("GL_MAX_MULTIVIEW_BUFFERS_EXT"),
+    "GL_EXT_texture_buffer" to listOf("GL_MAX_TEXTURE_BUFFER_SIZE_EXT", "GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT_EXT"),
+    "GL_EXT_clip_cull_distance" to listOf("GL_MAX_CLIP_DISTANCES_EXT", "GL_MAX_CULL_DISTANCES_EXT", "GL_MAX_COMBINED_CLIP_AND_CULL_DISTANCES_EXT"),
+    "GL_EXT_draw_buffers" to listOf("GL_MAX_DRAW_BUFFERS_EXT", "GL_MAX_COLOR_ATTACHMENTS_EXT"),
+    "GL_NV_draw_buffers" to listOf("GL_MAX_DRAW_BUFFERS_NV"),
+    "GL_EXT_multisampled_render_to_texture" to listOf("GL_MAX_SAMPLES_EXT"),
+    "GL_NV_framebuffer_multisample" to listOf("GL_MAX_SAMPLES_NV"),
+    "GL_IMG_multisampled_render_to_texture" to listOf("GL_MAX_SAMPLES_IMG"),
+    "GL_KHR_shader_subgroup" to listOf("GL_SUBGROUP_SIZE_KHR", "GL_SUBGROUP_SUPPORTED_STAGES_KHR", "GL_SUBGROUP_SUPPORTED_FEATURES_KHR", "GL_SUBGROUP_QUAD_ALL_STAGES_KHR"),
+    "GL_EXT_window_rectangles" to listOf("GL_MAX_WINDOW_RECTANGLES_EXT"),
+    "GL_OES_viewport_array" to listOf("GL_MAX_VIEWPORTS_OES", "GL_VIEWPORT_SUBPIXEL_BITS_OES", "GL_VIEWPORT_BOUNDS_RANGE_OES", "GL_VIEWPORT_INDEX_PROVOKING_VERTEX_OES"),
+    "GL_EXT_shader_pixel_local_storage" to listOf("GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_FAST_SIZE_EXT", "GL_MAX_SHADER_PIXEL_LOCAL_STORAGE_SIZE_EXT"),
+    "GL_EXT_shader_pixel_local_storage2" to listOf("GL_MAX_SHADER_COMBINED_LOCAL_STORAGE_FAST_SIZE_EXT", "GL_MAX_SHADER_COMBINED_LOCAL_STORAGE_SIZE_EXT"),
+    "GL_OES_sample_shading" to listOf("GL_MIN_SAMPLE_SHADING_VALUE_OES"),
+    "GL_EXT_sparse_texture" to listOf("GL_MAX_SPARSE_TEXTURE_SIZE_EXT", "GL_MAX_SPARSE_3D_TEXTURE_SIZE_EXT", "GL_MAX_SPARSE_ARRAY_TEXTURE_LAYERS_EXT", "GL_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS_EXT"),
+    "GL_OES_get_program_binary" to listOf("GL_NUM_PROGRAM_BINARY_FORMATS", "GL_PROGRAM_BINARY_FORMATS")
+)
+
+private val EGL_QUERY_DEPENDENCIES = linkedMapOf(
+    "EGL_KHR_create_context" to listOf("EGL_CONTEXT_CLIENT_TYPE", "EGL_CONTEXT_CLIENT_VERSION", "EGL_RENDER_BUFFER/context"),
+    "EGL_ANDROID_recordable" to listOf("EGL_RECORDABLE_ANDROID"),
+    "EGL_ANDROID_framebuffer_target" to listOf("EGL_FRAMEBUFFER_TARGET_ANDROID"),
+    "EGL_EXT_pixel_format_float" to listOf("EGL_COLOR_COMPONENT_TYPE_EXT")
+)
+
+private val QUERY_DEPENDENCIES = linkedMapOf<String, List<String>>().apply {
+    putAll(GL_QUERY_DEPENDENCIES)
+    putAll(EGL_QUERY_DEPENDENCIES)
+}
+
+private fun eglConfigAnalysisValue(c: EglConfigEntry): String = listOf(
+    "red=${c.red}", "green=${c.green}", "blue=${c.blue}", "alpha=${c.alpha}", "depth=${c.depth}", "stencil=${c.stencil}",
+    "sampleBuffers=${c.sampleBuffers}", "samples=${c.samples}", "surfaceType=${c.surfaceType}", "renderableType=${c.renderableType}",
+    "conformant=${c.conformant}", "configCaveat=${c.configCaveat}", "colorBufferType=${c.colorBufferType}", "level=${c.level}",
+    "nativeRenderable=${c.nativeRenderable}", "nativeVisualId=${c.nativeVisualId}", "minSwapInterval=${c.minSwapInterval}",
+    "maxSwapInterval=${c.maxSwapInterval}", "bufferSize=${c.bufferSize}", "luminanceSize=${c.luminanceSize}", "alphaMaskSize=${c.alphaMaskSize}",
+    "bindToTextureRgb=${c.bindToTextureRgb}", "bindToTextureRgba=${c.bindToTextureRgba}", "maxPbufferWidth=${c.maxPbufferWidth}",
+    "maxPbufferHeight=${c.maxPbufferHeight}", "maxPbufferPixels=${c.maxPbufferPixels}", "nativeVisualType=${c.nativeVisualType}",
+    "transparentType=${c.transparentType}", "transparentRed=${c.transparentRed}", "transparentGreen=${c.transparentGreen}", "transparentBlue=${c.transparentBlue}",
+    "recordableAndroid=${c.recordableAndroid}", "framebufferTargetAndroid=${c.framebufferTargetAndroid}", "colorComponentTypeExt=${c.colorComponentTypeExt}",
+    "unavailableAttributes=${c.unavailableAttributes.joinToString("|") { "${it.name}:${it.error}" }}"
+).joinToString(", ")
+
+private fun glAnalysisEntries(report: GlReport, display: DisplayInfo): LinkedHashMap<String, String> = linkedMapOf<String, String>().apply {
+    put("identity/applicationVersion", BuildConfig.VERSION_NAME)
+    put("identity/renderer", report.renderer)
+    put("identity/vendor", report.vendor)
+    put("identity/glVersion", report.glVersion)
+    put("identity/glCoreVersion", "${report.glMajor}.${report.glMinor}")
+    put("identity/glslVersion", report.glslVersion)
+    put("identity/eglVendor", report.egl.vendor)
+    put("identity/eglVersion", report.egl.version)
+    put("identity/eglInitializedVersion", report.egl.initializedVersion)
+    put("identity/eglClientApis", report.egl.clientApis)
+    put("identity/androidSecurityPatch", Build.VERSION.SECURITY_PATCH.ifBlank { "Unavailable" })
+    put("identity/androidSdk", Build.VERSION.SDK_INT.toString())
+    put("identity/androidRelease", Build.VERSION.RELEASE.ifBlank { "Unavailable" })
+    put("identity/deviceManufacturer", Build.MANUFACTURER.ifBlank { "Unavailable" })
+    put("identity/deviceModel", Build.MODEL.ifBlank { "Unavailable" })
+    put("egl-runtime/boundApi", report.eglRuntime.boundApi)
+    put("egl-runtime/configId", report.eglRuntime.configId?.toString() ?: "Unavailable")
+    put("egl-runtime/clientType", report.eglRuntime.clientType ?: "Unavailable")
+    put("egl-runtime/clientVersion", report.eglRuntime.clientVersion?.toString() ?: "Unavailable")
+    put("egl-runtime/renderBuffer", report.eglRuntime.renderBuffer ?: "Unavailable")
+    put("egl-runtime/currentContext", report.eglRuntime.currentContext.toString())
+    put("egl-runtime/currentDisplay", report.eglRuntime.currentDisplay.toString())
+    put("egl-runtime/currentDrawSurface", report.eglRuntime.currentDrawSurface.toString())
+    put("egl-runtime/currentReadSurface", report.eglRuntime.currentReadSurface.toString())
+    put("egl-runtime/surfaceSize", if (report.eglRuntime.surfaceWidth != null && report.eglRuntime.surfaceHeight != null) "${report.eglRuntime.surfaceWidth}x${report.eglRuntime.surfaceHeight}" else "Unavailable")
+    put("egl-runtime/surfaceRenderBuffer", report.eglRuntime.surfaceRenderBuffer ?: "Unavailable")
+    put("egl-runtime/surfaceSwapBehavior", report.eglRuntime.surfaceSwapBehavior ?: "Unavailable")
+    put("egl-runtime/surfaceTextureFormat", report.eglRuntime.surfaceTextureFormat ?: "Unavailable")
+    put("egl-runtime/surfaceTextureTarget", report.eglRuntime.surfaceTextureTarget ?: "Unavailable")
+    put("egl-runtime/surfaceMipmapTexture", report.eglRuntime.surfaceMipmapTexture?.toString() ?: "Unavailable")
+    put("egl-runtime/surfaceMipmapLevel", report.eglRuntime.surfaceMipmapLevel?.toString() ?: "Unavailable")
+    put("egl-runtime/surfaceMultisampleResolve", report.eglRuntime.surfaceMultisampleResolve ?: "Unavailable")
+    report.eglRuntime.unavailableAttributes.forEach { put("egl-runtime/unavailable/${it.name}", it.error) }
+    report.limits.forEach { put("limit/${it.name}", it.value) }
+    report.extensions.forEach { put("extension/gl/$it", "present") }
+    report.egl.extensions.forEach { put("extension/egl-display/$it", "present") }
+    report.egl.clientExtensions.forEach { put("extension/egl-client/$it", "present") }
+    report.compressedFormats.forEach { put("format/compressed/$it", "present") }
+    report.shaderBinaryFormats.forEach { put("format/shader-binary/$it", "present") }
+    report.programBinaryFormats.forEach { put("format/program-binary/$it", "present") }
+    report.precision.forEach { put("precision/${it.shader}/${it.type}", "range=${it.rangeMin}..${it.rangeMax}, precision=${it.precision}") }
+    report.eglConfigs.forEach { put("eglconfig/${it.id}", eglConfigAnalysisValue(it)) }
+    report.diagnostics.forEach { put("query/${it.name}", "${it.status}${it.detail.takeIf { d -> d.isNotBlank() }?.let { d -> " · $d" } ?: ""}") }
+    put("display/name", display.name)
+    put("display/modeId", display.modeId?.toString() ?: "Unavailable")
+    put("display/resolution", if (display.width != null && display.height != null) "${display.width}x${display.height}" else "Unavailable")
+    put("display/refreshRate", display.refreshRate?.toString() ?: "Unavailable")
+    put("display/wideColor", display.wideColor?.toString() ?: "Unavailable")
+    display.supportedModes.forEachIndexed { index, value -> put("display/mode/$index", value) }
+    display.hdrTypes.forEach { put("display/hdr/$it", "present") }
+    put("display/desiredMaxLuminance", display.desiredMaxLuminance?.toString() ?: "Unavailable")
+    put("display/desiredMaxAverageLuminance", display.desiredMaxAverageLuminance?.toString() ?: "Unavailable")
+    put("display/desiredMinLuminance", display.desiredMinLuminance?.toString() ?: "Unavailable")
+}
+
+private fun glAnalysisSnapshot(report: GlReport, display: DisplayInfo): JSONObject = JSONObject()
+    .put("schema", "OpenGLESScopeAnalysisSnapshot1")
+    .put("applicationVersion", BuildConfig.VERSION_NAME)
+    .put("entries", JSONObject().apply { glAnalysisEntries(report, display).forEach { (key, value) -> put(key, value) } })
+
+private fun jsonStrings(array: JSONArray?): List<String> = buildList {
+    if (array != null) for (i in 0 until array.length()) add(array.optString(i))
+}
+
+private fun flattenLegacyGlSnapshot(snapshot: JSONObject): LinkedHashMap<String, String> = linkedMapOf<String, String>().apply {
+    listOf("renderer", "vendor", "glVersion", "glslVersion", "eglVendor", "eglVersion", "eglInitializedVersion").forEach { key -> put("identity/$key", snapshot.optString(key, "Unavailable")) }
+    val limits = snapshot.optJSONObject("limits") ?: JSONObject()
+    limits.keys().forEach { key -> put("limit/$key", limits.optString(key)) }
+    jsonStrings(snapshot.optJSONArray("extensions")).forEach { put("extension/gl/$it", "present") }
+    jsonStrings(snapshot.optJSONArray("eglExtensions")).forEach { put("extension/egl-display/$it", "present") }
+    jsonStrings(snapshot.optJSONArray("eglClientExtensions")).forEach { put("extension/egl-client/$it", "present") }
+    jsonStrings(snapshot.optJSONArray("compressedFormats")).forEach { put("format/compressed/$it", "present") }
+    jsonStrings(snapshot.optJSONArray("shaderBinaryFormats")).forEach { put("format/shader-binary/$it", "present") }
+    jsonStrings(snapshot.optJSONArray("programBinaryFormats")).forEach { put("format/program-binary/$it", "present") }
+    val diagnostics = snapshot.optJSONObject("diagnostics") ?: JSONObject()
+    diagnostics.keys().forEach { key ->
+        val item = diagnostics.optJSONObject(key)
+        put("query/$key", if (item == null) diagnostics.optString(key) else "${item.optString("status")}${item.optString("detail").takeIf { d -> d.isNotBlank() }?.let { d -> " · $d" } ?: ""}")
+    }
+    val display = snapshot.optJSONObject("display")
+    if (display != null) {
+        listOf("name", "resolution", "refreshRate", "wideColor").forEach { key -> put("display/$key", display.optString(key, "Unavailable")) }
+        jsonStrings(display.optJSONArray("hdrTypes")).forEach { put("display/hdr/$it", "present") }
+    }
+}
+
+private fun validateGlAnalysisSnapshot(snapshot: JSONObject): JSONObject {
+    if (snapshot.optString("schema") != "OpenGLESScopeAnalysisSnapshot1") error("Unsupported OpenGLESScope analysis snapshot")
+    val applicationVersion = snapshot.optString("applicationVersion", "Unknown")
+    if (applicationVersion.length > 64) error("Snapshot application version is invalid")
+    val entries = snapshot.optJSONObject("entries") ?: JSONObject().apply { flattenLegacyGlSnapshot(snapshot).forEach { (key, value) -> put(key, value) } }
+    val keys = entries.keys().asSequence().toList()
+    if (keys.size > ANALYSIS_MAX_ENTRIES) error("Snapshot contains too many evidence entries")
+    keys.forEach { key ->
+        if (key.isBlank() || key.length > ANALYSIS_MAX_KEY_LENGTH) error("Snapshot contains an invalid evidence key")
+        val value = entries.opt(key)
+        if (value !is String || value.length > ANALYSIS_MAX_VALUE_LENGTH) error("Snapshot contains an invalid evidence value")
+    }
+    return JSONObject().put("schema", "OpenGLESScopeAnalysisSnapshot1").put("applicationVersion", applicationVersion).put("entries", entries)
+}
+
+private fun flattenGlSnapshot(snapshot: JSONObject): Map<String, String> {
+    val validated = validateGlAnalysisSnapshot(snapshot)
+    val entries = validated.getJSONObject("entries")
+    return linkedMapOf<String, String>().apply { entries.keys().forEach { key -> put(key, entries.getString(key)) } }
+}
+
+private fun numericAnalysisValue(value: String?): Double? = value?.trim()?.takeIf { it.matches(Regex("-?\\d+(?:\\.\\d+)?")) }?.toDoubleOrNull()
+
+private fun analysisKind(key: String): String = key.substringBefore('/').ifBlank { "other" }
+
+private fun queryAvailable(now: Map<String, String>, name: String): Boolean = now["query/$name"]?.startsWith("Available", true) == true
+
+private fun removalHasCompleteEvidence(key: String, now: Map<String, String>): Boolean = when {
+    key.startsWith("extension/gl/") -> queryAvailable(now, "GL_EXTENSIONS")
+    key.startsWith("extension/egl-display/") -> queryAvailable(now, "EGL_EXTENSIONS")
+    key.startsWith("extension/egl-client/") -> queryAvailable(now, "EGL_NO_DISPLAY/EGL_EXTENSIONS")
+    key.startsWith("format/compressed/") -> queryAvailable(now, "compressedFormats")
+    key.startsWith("format/shader-binary/") -> queryAvailable(now, "GL_SHADER_BINARY_FORMATS")
+    key.startsWith("format/program-binary/") -> queryAvailable(now, "GL_PROGRAM_BINARY_FORMATS") || now["query/programBinaryFormats"]?.startsWith("Not applicable", true) == true
+    else -> false
+}
+
+private fun scalarLimitRegression(key: String, before: String?, after: String?): Boolean {
+    if (!key.startsWith("limit/")) return false
+    val a = numericAnalysisValue(before) ?: return false
+    val b = numericAnalysisValue(after) ?: return false
+    val name = key.removePrefix("limit/")
+    return when {
+        name in setOf("GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT", "GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT", "GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT", "GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT_EXT") -> b > a
+        name.startsWith("GL_MAX_") -> b < a
+        else -> false
+    }
+}
+
+private fun glSnapshotDiff(baseline: JSONObject, current: JSONObject): List<AnalysisDiffRow> {
+    val old = flattenGlSnapshot(baseline)
+    val now = flattenGlSnapshot(current)
+    return (old.keys + now.keys).toSortedSet().map { key ->
+        val before = old[key]
+        val after = now[key]
+        val state = when {
+            before == null -> "Added"
+            after == null && removalHasCompleteEvidence(key, now) -> "Removed · regression candidate"
+            after == null -> "Removed · evidence incomplete"
+            before == after -> "Unchanged"
+            scalarLimitRegression(key, before, after) -> "Changed · regression candidate"
+            else -> "Changed"
+        }
+        AnalysisDiffRow(key, before, after, state, analysisKind(key))
+    }
+}
+
+private fun extensionNamespace(name: String): String {
+    val parts = name.split('_')
+    return if (parts.size >= 3) parts[1] else "Unknown"
+}
+
+private fun extensionRegistryUrl(name: String): String? {
+    val parts = name.split('_', limit = 3)
+    if (parts.size != 3) return null
+    val family = when {
+        name.startsWith("GL_") -> "OpenGL"
+        name.startsWith("EGL_") -> "EGL"
+        else -> return null
+    }
+    val namespace = parts[1]
+    return "https://registry.khronos.org/$family/extensions/$namespace/${namespace}_${parts[2]}.txt"
+}
+
+private data class GlDiagnosticScore(val score: Int?, val level: String, val factors: List<String>)
+
+private fun glDiagnosticEvidenceScore(report: GlReport): GlDiagnosticScore {
+    if (!report.available) return GlDiagnosticScore(null, "Unavailable", listOf(report.reason.ifBlank { "No completed OpenGL ES report is available" }))
+    var score = 100
+    val factors = mutableListOf<String>()
+    fun deduct(points: Int, label: String) {
+        score = (score - points).coerceAtLeast(0)
+        factors += "-$points · $label"
+    }
+    val unavailable = report.diagnostics.filter { it.status.equals("Unavailable", true) }
+    val unknown = report.diagnostics.filter { it.status.equals("Unknown", true) }
+    if (unavailable.isNotEmpty()) deduct(minOf(35, 5 + unavailable.size.coerceAtMost(6) * 5), "${unavailable.size} explicit query failure(s)")
+    if (unknown.isNotEmpty()) deduct(minOf(15, unknown.size.coerceAtMost(5) * 3), "${unknown.size} query result(s) remain Unknown")
+    listOf("GL_VENDOR", "GL_RENDERER", "GL_VERSION", "GL_SHADING_LANGUAGE_VERSION").forEach { name ->
+        val d = report.diagnostics.firstOrNull { it.name == name }
+        if (d == null || !d.status.equals("Available", true)) deduct(10, "$name runtime identity query is not Available")
+    }
+    val glEnumeration = report.diagnostics.firstOrNull { it.name == "GL_EXTENSIONS" }
+    if (glEnumeration == null || !glEnumeration.status.equals("Available", true)) deduct(10, "OpenGL ES extension enumeration is not complete/Available")
+    val eglEnumeration = report.diagnostics.firstOrNull { it.name == "EGL_EXTENSIONS" }
+    if (eglEnumeration == null || !eglEnumeration.status.equals("Available", true)) deduct(5, "EGL display extension enumeration is not Available")
+    if (!(report.eglRuntime.currentContext && report.eglRuntime.currentDisplay && report.eglRuntime.currentDrawSurface && report.eglRuntime.currentReadSurface)) deduct(10, "Current EGL context/display/surface binding evidence is incomplete")
+    if (report.eglRuntime.unavailableAttributes.isNotEmpty()) factors += "${report.eglRuntime.unavailableAttributes.size} explicit EGL runtime attribute failure(s) retained with exact EGL errors"
+    val level = when {
+        score >= 95 -> "No explicit collection anomalies"
+        score >= 80 -> "Minor explicit anomalies"
+        score >= 60 -> "Multiple explicit anomalies"
+        else -> "Severe explicit collection anomalies"
+    }
+    if (factors.isEmpty()) factors += "No explicit collection/query anomaly was recorded by OpenGLESScope"
+    return GlDiagnosticScore(score, level, factors)
+}
+
+private fun analysisQueryTokens(query: String): List<String> = Regex("\"([^\"]+)\"|\\S+").findAll(query).map { it.groups[1]?.value ?: it.value }.toList()
+
+private fun matchesGlAnalysisQuery(row: AnalysisDiffRow, query: String): Boolean {
+    if (query.isBlank()) return true
+    val extension = row.key.split('/').firstOrNull { it.startsWith("GL_") || it.startsWith("EGL_") }
+    return analysisQueryTokens(query).all { token ->
+        val split = token.split(':', limit = 2)
+        if (split.size == 1) row.key.contains(token, true) || row.state.contains(token, true) || row.baseline?.contains(token, true) == true || row.current?.contains(token, true) == true
+        else when (split[0].lowercase()) {
+            "state" -> row.state.contains(split[1], true)
+            "kind" -> row.kind.equals(split[1], true)
+            "changed" -> (row.state != "Unchanged") == split[1].equals("true", true)
+            "vendor", "namespace" -> extension?.let(::extensionNamespace)?.equals(split[1], true) == true
+            "scope" -> row.key.startsWith("extension/${split[1].lowercase()}/", true)
+            else -> row.key.contains(token, true) || row.baseline?.contains(token, true) == true || row.current?.contains(token, true) == true
+        }
+    }
+}
+
+private fun databaseReportUrl(id: String): String? = id.takeIf { it.matches(Regex("[a-f0-9]{64}")) }?.let { "${DATABASE_WEB}#reports/$it/Overview" }
+
+private fun MainActivity.shareText(text: String) {
+    startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }, "Share"))
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun AnalysisPage(activity: MainActivity, report: GlReport, display: DisplayInfo) {
+    val context = activity as Context
+    val scope = rememberCoroutineScope()
+    var mode by remember { mutableStateOf(0) }
+    var baseline by remember { mutableStateOf<JSONObject?>(null) }
+    var importStatus by remember { mutableStateOf("No baseline imported") }
+    var includeUnchanged by remember { mutableStateOf(false) }
+    var diffQuery by remember { mutableStateOf("") }
+    var diffStateFilter by remember { mutableStateOf("All") }
+    var diffKindFilter by remember { mutableStateOf("All") }
+    var minimumQuery by remember { mutableStateOf("") }
+    var minimumStateFilter by remember { mutableStateOf("All") }
+    var graphQuery by remember { mutableStateOf("") }
+    var graphRoot by remember { mutableStateOf("GL_EXT_texture_filter_anisotropic") }
+    var graphDepth by remember { mutableStateOf(2) }
+    var watchInput by remember { mutableStateOf("") }
+    var watchQuery by remember { mutableStateOf("") }
+    var watchStateFilter by remember { mutableStateOf("All") }
+    val prefs = remember { context.getSharedPreferences("analysis_tools", Context.MODE_PRIVATE) }
+    var watched by remember { mutableStateOf((prefs.getStringSet("watched", emptySet())?.toSet() ?: emptySet()).take(ANALYSIS_MAX_WATCHED).toSet()) }
+    var testResult by remember { mutableStateOf<JSONObject?>(null) }
+    var testRunning by remember { mutableStateOf(false) }
+    var exportStatus by remember { mutableStateOf("") }
+    val currentSnapshot = remember(report, display) { glAnalysisSnapshot(report, display) }
+    val currentFlat = remember(currentSnapshot) { flattenGlSnapshot(currentSnapshot) }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val bytes = context.contentResolver.openInputStream(uri)?.use { input -> readBoundedAnalysisBytes(input, ANALYSIS_MAX_SNAPSHOT_BYTES) } ?: error("Unable to read snapshot")
+                    validateGlAnalysisSnapshot(JSONObject(bytes.toString(Charsets.UTF_8)))
+                }
+            }
+            result.onSuccess {
+                baseline = it
+                importStatus = "Baseline imported · ${flattenGlSnapshot(it)["identity/renderer"] ?: "Unknown GPU"}"
+            }.onFailure { importStatus = it.message ?: "Import failed" }
+        }
+    }
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val bytes = currentSnapshot.toString(2).toByteArray(Charsets.UTF_8)
+                    if (bytes.size > ANALYSIS_MAX_SNAPSHOT_BYTES) error("Snapshot exceeds ${ANALYSIS_MAX_SNAPSHOT_BYTES / (1024 * 1024)} MiB; no evidence was truncated")
+                    context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(bytes) } ?: error("Unable to open snapshot destination")
+                }
+            }
+            exportStatus = result.fold({ "Snapshot exported" }, { it.message ?: "Snapshot export failed" })
+        }
+    }
+    LazyColumn(contentPadding = WindowInsets.navigationBars.asPaddingValues(), modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        item {
+            CapabilitySectionCard("Analysis tools") {
+                Text("Imported snapshots, comparisons, watch lists, query graphs and optional active tests stay local. They never rewrite canonical OpenGL ES/EGL capability evidence or Database submissions.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Compare", "Spec minimums", "Graph", "Quality", "Watched", "Share", "Tests").forEachIndexed { index, label -> ExpressiveFilterChip(selected = mode == index, label = label, onClick = { mode = index }) }
+                }
+            }
+        }
+        if (mode == 0) {
+            item {
+                CapabilitySectionCard("Offline report compare") {
+                    CapabilityKeyValue("Baseline", importStatus)
+                    if (exportStatus.isNotBlank()) CapabilityKeyValue("Export", exportStatus)
+                    ExpressiveActionButton("Import analysis snapshot", "Select a previously exported OpenGLESScope JSON snapshot", R.drawable.ic_action_text) { importLauncher.launch(arrayOf("application/json", "text/plain")) }
+                    ExpressiveActionButton("Export analysis snapshot", "Complete bounded local evidence snapshot for offline comparison", R.drawable.ic_action_html) { exportLauncher.launch("OpenGLESScope-${safeFilePart(report.renderer)}-analysis.json") }
+                    if (baseline != null) {
+                        ExpressiveSearchField(value = diffQuery, onValueChange = { diffQuery = it }, placeholderText = "Search diff evidence…", modifier = Modifier.fillMaxWidth())
+                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf("All", "Added", "Removed", "Changed", "Regression").forEach { value -> ExpressiveFilterChip(selected = diffStateFilter == value, label = value, onClick = { diffStateFilter = value }) }
+                        }
+                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf("All", "identity", "extension", "limit", "format", "precision", "egl-runtime", "eglconfig", "display", "query").forEach { value -> ExpressiveFilterChip(selected = diffKindFilter == value, label = value, onClick = { diffKindFilter = value }) }
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Switch(checked = includeUnchanged, onCheckedChange = { includeUnchanged = it })
+                            Text("Show unchanged", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+            }
+            val allRows = baseline?.let { glSnapshotDiff(it, currentSnapshot) }.orEmpty()
+            val rows = allRows.filter { row ->
+                (includeUnchanged || row.state != "Unchanged") &&
+                    matchesGlAnalysisQuery(row, diffQuery) &&
+                    (diffKindFilter == "All" || row.kind == diffKindFilter) &&
+                    when (diffStateFilter) {
+                        "Added" -> row.state == "Added"
+                        "Removed" -> row.state.startsWith("Removed")
+                        "Changed" -> row.state.startsWith("Changed")
+                        "Regression" -> row.state.contains("regression candidate")
+                        else -> true
+                    }
+            }
+            if (baseline != null) {
+                item { CapabilitySectionCard("Diff summary") {
+                    CapabilityKeyValue("Baseline fields", flattenGlSnapshot(baseline!!).size.toString())
+                    CapabilityKeyValue("Current fields", currentFlat.size.toString())
+                    CapabilityKeyValue("Added", allRows.count { it.state == "Added" }.toString())
+                    CapabilityKeyValue("Removed", allRows.count { it.state.startsWith("Removed") }.toString())
+                    CapabilityKeyValue("Changed", allRows.count { it.state.startsWith("Changed") }.toString())
+                    CapabilityKeyValue("Regression candidates", allRows.count { it.state.contains("regression candidate") }.toString())
+                    CapabilityKeyValue("Visible", rows.size.toString())
+                    Text("Regression candidate means the current snapshot contains enough direct enumeration evidence to justify the comparison. It is not a conformance, performance, or driver-bug verdict.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                } }
+                items(rows, key = { it.key }) { row -> CapabilityItemCard {
+                    CapabilityKeyValue(row.key, row.state)
+                    if (row.baseline != null) CapabilityKeyValue("Baseline", row.baseline)
+                    if (row.current != null) CapabilityKeyValue("Current", row.current)
+                } }
+            }
+        } else if (mode == 1) {
+            val evaluated = OPENGL_ES_32_MINIMUMS.map { requirement ->
+                val raw = report.limits.firstOrNull { it.name == requirement.name }?.value
+                val actual = numericAnalysisValue(raw)
+                val state = when {
+                    actual == null -> "UNKNOWN"
+                    requirement.direction == "minimum" && actual >= requirement.threshold -> "PASS"
+                    requirement.direction == "maximum" && actual <= requirement.threshold -> "PASS"
+                    else -> "FAIL"
+                }
+                Triple(requirement, raw, state)
+            }
+            val filtered = evaluated.filter { (requirement, raw, state) ->
+                (minimumQuery.isBlank() || requirement.name.contains(minimumQuery, true) || raw?.contains(minimumQuery, true) == true) && (minimumStateFilter == "All" || minimumStateFilter == state)
+            }
+            item { CapabilitySectionCard("OpenGL ES 3.2 minimum comparison") {
+                Text("Only values verified against the Khronos OpenGL ES 3.2 implementation-dependent-value requirements are evaluated. Missing or non-scalar runtime evidence remains UNKNOWN. This lightweight evaluator is not a conformance test.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                CapabilityKeyValue("Runtime core", "${report.glMajor}.${report.glMinor}")
+                CapabilityKeyValue("Evaluated requirements", OPENGL_ES_32_MINIMUMS.size.toString())
+                CapabilityKeyValue("PASS", evaluated.count { it.third == "PASS" }.toString())
+                CapabilityKeyValue("FAIL", evaluated.count { it.third == "FAIL" }.toString())
+                CapabilityKeyValue("UNKNOWN", evaluated.count { it.third == "UNKNOWN" }.toString())
+                ExpressiveSearchField(value = minimumQuery, onValueChange = { minimumQuery = it }, placeholderText = "Search requirements…", modifier = Modifier.fillMaxWidth())
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("All", "PASS", "FAIL", "UNKNOWN").forEach { value -> ExpressiveFilterChip(selected = minimumStateFilter == value, label = value, onClick = { minimumStateFilter = value }) }
+                }
+            } }
+            items(filtered, key = { it.first.name }) { (requirement, raw, state) ->
+                CapabilityItemCard {
+                    CapabilityKeyValue(requirement.name, state)
+                    CapabilityKeyValue("Requirement", requirement.display)
+                    CapabilityKeyValue("Runtime", raw ?: "Unavailable")
+                }
+            }
+        } else if (mode == 2) {
+            val runtimeExtensions = (report.extensions + report.egl.extensions + report.egl.clientExtensions).toSet()
+            val diagnosticByName = report.diagnostics.associateBy { it.name }
+            val graphRows = QUERY_DEPENDENCIES.entries.filter { (extension, queries) -> graphQuery.isBlank() || extension.contains(graphQuery, true) || queries.any { it.contains(graphQuery, true) } }
+            val selectedRoot = graphRoot.trim().takeIf { QUERY_DEPENDENCIES.containsKey(it) } ?: graphRows.firstOrNull()?.key
+            val selectedQueries = selectedRoot?.let { QUERY_DEPENDENCIES[it].orEmpty() }.orEmpty()
+            val visualNodes = buildList {
+                if (selectedRoot != null) {
+                    add(OpenGLESGraphNode(selectedRoot, 0, null, if (selectedRoot in runtimeExtensions) "Runtime enumerated" else "Not enumerated"))
+                    if (graphDepth >= 2) selectedQueries.forEach { query ->
+                        val diag = diagnosticByName[query]
+                        add(OpenGLESGraphNode(query, 1, selectedRoot, diag?.status ?: "Not reported"))
+                    }
+                }
+            }
+            item { CapabilitySectionCard("Runtime/query dependency graph") {
+                Text("The graph is derived from OpenGLESScope's checked-in query gates. Runtime extension presence and query evidence remain separate. No registry dependency or promotion relationship is inferred.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                ExpressiveSearchField(value = graphRoot, onValueChange = { graphRoot = it }, placeholderText = "Exact extension for visual graph…", modifier = Modifier.fillMaxWidth())
+                ExpressiveSearchField(value = graphQuery, onValueChange = { graphQuery = it }, placeholderText = "Filter query-gate catalog…", modifier = Modifier.fillMaxWidth())
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Depth", style = MaterialTheme.typography.bodySmall)
+                    (1..3).forEach { depth -> ExpressiveFilterChip(selected = graphDepth == depth, label = depth.toString(), onClick = { graphDepth = depth }) }
+                }
+                CapabilityKeyValue("Visual root", selectedRoot ?: "No exact query-gated extension selected")
+            } }
+            if (visualNodes.isNotEmpty()) item { CapabilitySectionCard("Visual query-gate graph") { OpenGLESDependencyGraph(visualNodes, Modifier.fillMaxWidth()) } }
+            items(graphRows, key = { it.key }) { (extension, queries) ->
+                CapabilityItemCard {
+                    CapabilityKeyValue(extension, if (extension in runtimeExtensions) "Runtime enumerated" else "Not enumerated")
+                    if (graphDepth >= 2) queries.forEach { query ->
+                        val diag = diagnosticByName[query]
+                        CapabilityKeyValue("↳ $query", if (diag == null) "Not reported" else diag.status)
+                        if (graphDepth >= 3 && diag?.detail?.isNotBlank() == true) CapabilityKeyValue("Evidence", diag.detail)
+                    }
+                }
+            }
+        } else if (mode == 3) {
+            val quality = glDiagnosticEvidenceScore(report)
+            item { CapabilitySectionCard("Heuristic diagnostic evidence score") {
+                CapabilityKeyValue("Score", quality.score?.let { "$it / 100" } ?: "Unavailable")
+                CapabilityKeyValue("Interpretation", quality.level)
+                Text("This heuristic is not an OpenGL ES conformance result, benchmark, performance score, driver-quality verdict or hardware-quality claim. It summarizes only explicit collection/query anomalies observed by OpenGLESScope.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+            } }
+            items(quality.factors, key = { it }) { factor -> CapabilityItemCard { Text(factor, modifier = Modifier.padding(14.dp)) } }
+        } else if (mode == 4) {
+            item { CapabilitySectionCard("Watched capabilities") {
+                CapabilityKeyValue("Stored", "${watched.size} / $ANALYSIS_MAX_WATCHED")
+                ExpressiveSearchField(value = watchInput, onValueChange = { watchInput = it }, placeholderText = "Exact extension, limit, format or evidence token…", modifier = Modifier.fillMaxWidth())
+                ExpressiveTextButton("Add to watch list") {
+                    val token = watchInput.trim()
+                    if (token.isNotEmpty() && token.length <= 256 && watched.size < ANALYSIS_MAX_WATCHED) {
+                        watched = watched + token
+                        prefs.edit().putStringSet("watched", watched).apply()
+                        watchInput = ""
+                    }
+                }
+                ExpressiveSearchField(value = watchQuery, onValueChange = { watchQuery = it }, placeholderText = "Filter watch list…", modifier = Modifier.fillMaxWidth())
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("All", "Matched", "Missing").forEach { value -> ExpressiveFilterChip(selected = watchStateFilter == value, label = value, onClick = { watchStateFilter = value }) }
+                }
+            } }
+            val watchRows = watched.sorted().map { token -> token to currentFlat.filterKeys { it.contains(token, true) } }.filter { (token, matches) ->
+                (watchQuery.isBlank() || token.contains(watchQuery, true)) && when (watchStateFilter) { "Matched" -> matches.isNotEmpty(); "Missing" -> matches.isEmpty(); else -> true }
+            }
+            items(watchRows, key = { it.first }) { (token, matches) ->
+                CapabilityItemCard {
+                    CapabilityKeyValue(token, if (matches.isEmpty()) "Missing" else "Matched · ${matches.size} evidence item(s)")
+                    matches.entries.take(10).forEach { CapabilityKeyValue(it.key, it.value) }
+                    ExpressiveTextButton("Remove") { watched = watched - token; prefs.edit().putStringSet("watched", watched).apply() }
+                }
+            }
+        } else if (mode == 5) {
+            val lastReportId = prefs.getString("last_database_report_id", "").orEmpty()
+            val permalink = databaseReportUrl(lastReportId)
+            item { CapabilitySectionCard("Database permalink") {
+                Text("Permalinks use the canonical OpenGLESScope Database hash route. A link is saved only after a successful explicit submission response returns a valid report ID.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                CapabilityKeyValue("Report ID", lastReportId.ifBlank { "No successful submission recorded" })
+                CapabilityKeyValue("Permalink", permalink ?: "Unavailable")
+                if (permalink != null) {
+                    ExpressiveActionButton("Open report", "Open the canonical Database report route", R.drawable.ic_action_database) { open(activity, permalink) }
+                    ExpressiveActionButton("Share permalink", "Share the canonical report URL using Android's local share sheet", R.drawable.ic_action_text) { activity.shareText(permalink) }
+                    ExpressiveTextButton("Copy permalink") {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                        clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("OpenGLESScope report", permalink))
+                    }
+                }
+            } }
+            if (permalink != null) item { Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { OpenGLESQrCode(permalink, Modifier.size(220.dp)) } }
+        } else {
+            item { CapabilitySectionCard("Optional active tests") {
+                Text("Tests run in the isolated probe process and are attributed to the current report only when the isolated context returns the same vendor, renderer and GL_VERSION identity. A failed test is test evidence only and is never converted into an Unsupported capability.", color = TextSecondary, style = MaterialTheme.typography.bodySmall)
+                ExpressiveActionButton("Run OpenGL ES self-tests", "Identity check, shader compile/link, program-binary round-trip when applicable, and KHR_debug insertion when available", R.drawable.ic_action_update, enabled = !testRunning) {
+                    testRunning = true
+                    scope.launch {
+                        testResult = withContext(Dispatchers.IO) { runCatching { JSONObject(activity.runOpenGlesSelfTests(report)) }.getOrElse { JSONObject().put("status", "unavailable").put("reason", it.message ?: "Self-test failed") } }
+                        testRunning = false
+                    }
+                }
+                if (testRunning) LoadingIndicator()
+            } }
+            val result = testResult
+            if (result != null) {
+                item { CapabilitySectionCard("Self-test result") {
+                    CapabilityKeyValue("Status", result.optString("status", "unknown"))
+                    result.optString("reason").takeIf { it.isNotBlank() }?.let { CapabilityKeyValue("Reason", it) }
+                    result.optString("renderer").takeIf { it.isNotBlank() }?.let { CapabilityKeyValue("Isolated renderer", it) }
+                    result.optString("runtimeVersion").takeIf { it.isNotBlank() }?.let { CapabilityKeyValue("Isolated GL_VERSION", it) }
+                } }
+                val tests = result.optJSONArray("tests")
+                if (tests != null) items((0 until tests.length()).mapNotNull { tests.optJSONObject(it) }) { test -> CapabilityItemCard {
+                    CapabilityKeyValue(test.optString("name", "Test"), test.optString("status", "unknown"))
+                    test.optString("detail").takeIf { it.isNotBlank() }?.let { CapabilityKeyValue("Detail", it) }
+                } }
+            }
+        }
+    }
+}
 
 @Composable
 private fun DirectUpdatesConsentDialog(appName: String, releaseSource: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
@@ -1526,11 +2434,20 @@ private fun InfoPage(activity: MainActivity, report: GlReport, display: DisplayI
         }
         item {
             CapabilitySectionCard("Android") {
-                CapabilityKeyValue("Manufacturer", Build.MANUFACTURER)
-                CapabilityKeyValue("Model", Build.MODEL)
-                CapabilityKeyValue("Android", Build.VERSION.RELEASE)
+                CapabilityKeyValue("Manufacturer", Build.MANUFACTURER.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Brand", Build.BRAND.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Model", Build.MODEL.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Product", Build.PRODUCT.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Device", Build.DEVICE.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Board", Build.BOARD.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Hardware", Build.HARDWARE.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Android", Build.VERSION.RELEASE.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Codename", Build.VERSION.CODENAME.ifBlank { "Unavailable" })
                 CapabilityKeyValue("SDK", Build.VERSION.SDK_INT.toString())
-                CapabilityKeyValue("Security patch", Build.VERSION.SECURITY_PATCH)
+                CapabilityKeyValue("Build ID", Build.ID.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Incremental", Build.VERSION.INCREMENTAL.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Security patch", Build.VERSION.SECURITY_PATCH.ifBlank { "Unavailable" })
+                CapabilityKeyValue("Fingerprint", Build.FINGERPRINT.ifBlank { "Unavailable" })
             }
         }
         item {
@@ -1546,7 +2463,7 @@ private fun InfoPage(activity: MainActivity, report: GlReport, display: DisplayI
                 CapabilityKeyValue("Implementation limits", report.limits.size.toString())
                 CapabilityKeyValue("Query diagnostics", report.diagnostics.size.toString())
                 CapabilityKeyValue("EGL configs", report.eglConfigs.size.toString())
-                CapabilityKeyValue("Report schema", "2 · technical report 1")
+                CapabilityKeyValue("Report schema", "2 · technical report 2")
                 Text("Capability metadata is collected directly from the active system OpenGL ES/EGL implementation. Runtime extension tokens are preserved as reported. A value is not inferred when no validated core-version or exact-extension query path exists.", color = ComposeColor(0xFF8F8F8F), style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -2183,6 +3100,13 @@ private val HTTP_CLIENT: OkHttpClient by lazy {
         .build()
 }
 
+private val DATABASE_HTTP_CLIENT: OkHttpClient by lazy {
+    HTTP_CLIENT.newBuilder()
+        .followRedirects(false)
+        .followSslRedirects(false)
+        .build()
+}
+
 private val UPDATE_DOWNLOAD_CLIENT: OkHttpClient by lazy {
     HTTP_CLIENT.newBuilder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -2242,10 +3166,11 @@ private suspend fun submitReport(context: Context, report: GlReport, display: Di
         val req = Request.Builder().url(base.newBuilder().addPathSegments("v1/reports").build()).header("Accept", "application/json")
             .post(payload.toRequestBody("application/json; charset=utf-8".toMediaType()))
             .build()
-        HTTP_CLIENT.newCall(req).execute().use { res ->
+        DATABASE_HTTP_CLIENT.newCall(req).execute().use { res ->
             val body = readResponseTextLimited(res.body, 64 * 1024)
             if (res.isSuccessful) {
                 val id = runCatching { JSONObject(body).optString("id") }.getOrDefault("")
+                if (id.matches(Regex("[a-f0-9]{64}"))) context.getSharedPreferences("analysis_tools", Context.MODE_PRIVATE).edit().putString("last_database_report_id", id).apply()
                 if (id.isBlank()) "Report submitted successfully." else "Report submitted successfully · ${id.take(12)}"
             } else {
                 val message = runCatching { JSONObject(body).optString("error") }.getOrDefault("").ifBlank { "HTTP ${res.code}" }
@@ -2271,11 +3196,13 @@ private fun submissionJson(context: Context, r: GlReport, d: DisplayInfo): JSONO
             .putNullable("maxPbufferWidth", c.maxPbufferWidth).putNullable("maxPbufferHeight", c.maxPbufferHeight).putNullable("maxPbufferPixels", c.maxPbufferPixels)
             .putNullable("nativeVisualType", c.nativeVisualType).putNullable("transparentType", c.transparentType)
             .putNullable("transparentRed", c.transparentRed).putNullable("transparentGreen", c.transparentGreen).putNullable("transparentBlue", c.transparentBlue)
+            .putNullable("recordableAndroid", c.recordableAndroid).putNullable("framebufferTargetAndroid", c.framebufferTargetAndroid).putNullable("colorComponentTypeExt", c.colorComponentTypeExt)
+            .put("unavailableAttributes", JSONArray(c.unavailableAttributes.map { JSONObject().put("name", it.name).put("error", it.error) }))
     })
     return JSONObject().apply {
         put("schemaVersion", 2)
-        put("application", JSONObject().put("name", "OpenGLESScope").put("packageName", "com.efishell.openglesscope").put("version", BuildConfig.VERSION_NAME).put("versionCode", BuildConfig.VERSION_CODE))
-        put("device", JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL).put("product", Build.PRODUCT).put("androidRelease", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT).put("securityPatch", Build.VERSION.SECURITY_PATCH))
+        put("application", JSONObject().put("name", "OpenGLESScope").put("packageName", "com.efishell.openglesscope").put("version", BuildConfig.VERSION_NAME).put("versionCode", BuildConfig.VERSION_CODE).put("applicationAbi", detectInstalledAbi(context)).put("supportedDeviceAbis", JSONArray(Build.SUPPORTED_ABIS.toList())))
+        put("device", JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL).put("product", Build.PRODUCT).put("androidRelease", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT).apply { if (Build.VERSION.SECURITY_PATCH.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) put("securityPatch", Build.VERSION.SECURITY_PATCH) })
         put("gpu", JSONObject().put("name", r.renderer).put("vendor", r.vendor))
         put("driver", JSONObject().put("mode", "System OpenGL ES/EGL").put("version", "Unavailable (OpenGL ES does not expose a standardized driver-version query)"))
         put("opengles", JSONObject().put("version", r.glVersion).put("major", r.glMajor).put("minor", r.glMinor).put("glslVersion", r.glslVersion).put("extensions", JSONArray(r.extensions)).put("extensionCount", r.extensions.size))
@@ -2283,7 +3210,13 @@ private fun submissionJson(context: Context, r: GlReport, d: DisplayInfo): JSONO
         put("display", JSONObject().put("name", d.name).putNullable("modeId", d.modeId).putNullable("width", d.width).putNullable("height", d.height).putNullable("refreshRate", d.refreshRate).put("supportedModes", JSONArray(d.supportedModes)).putNullable("wideColor", d.wideColor).put("hdrTypes", JSONArray(d.hdrTypes)).putNullable("desiredMaxLuminance", d.desiredMaxLuminance).putNullable("desiredMaxAverageLuminance", d.desiredMaxAverageLuminance).putNullable("desiredMinLuminance", d.desiredMinLuminance))
         put("collection", JSONObject().put("status", if (r.available) "available" else "unavailable").put("complete", r.available).put("source", "active Android system EGL/OpenGL ES implementation"))
         put("technicalReport", JSONObject()
-            .put("schemaVersion", 1)
+            .put("schemaVersion", 2)
+            .put("eglRuntime", JSONObject()
+                .put("boundApi", r.eglRuntime.boundApi).putNullable("configId", r.eglRuntime.configId).putNullable("clientType", r.eglRuntime.clientType).putNullable("clientVersion", r.eglRuntime.clientVersion).putNullable("renderBuffer", r.eglRuntime.renderBuffer)
+                .put("currentContext", r.eglRuntime.currentContext).put("currentDisplay", r.eglRuntime.currentDisplay).put("currentDrawSurface", r.eglRuntime.currentDrawSurface).put("currentReadSurface", r.eglRuntime.currentReadSurface)
+                .putNullable("surfaceWidth", r.eglRuntime.surfaceWidth).putNullable("surfaceHeight", r.eglRuntime.surfaceHeight).putNullable("surfaceRenderBuffer", r.eglRuntime.surfaceRenderBuffer).putNullable("surfaceSwapBehavior", r.eglRuntime.surfaceSwapBehavior)
+                .putNullable("surfaceTextureFormat", r.eglRuntime.surfaceTextureFormat).putNullable("surfaceTextureTarget", r.eglRuntime.surfaceTextureTarget).putNullable("surfaceMipmapTexture", r.eglRuntime.surfaceMipmapTexture).putNullable("surfaceMipmapLevel", r.eglRuntime.surfaceMipmapLevel).putNullable("surfaceMultisampleResolve", r.eglRuntime.surfaceMultisampleResolve)
+                .put("unavailableAttributes", JSONArray(r.eglRuntime.unavailableAttributes.map { JSONObject().put("name", it.name).put("error", it.error) })))
             .put("limits", JSONArray(r.limits.map { JSONObject().put("name", it.name).put("value", it.value) }))
             .put("extensions", JSONArray(r.extensions))
             .put("eglExtensions", JSONArray(r.egl.extensions))
@@ -2411,17 +3344,25 @@ private fun reportText(context: Context, r: GlReport, d: DisplayInfo): String = 
     appendLine("Display: ${if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width}x${d.height} @ ${d.refreshRate?.let { String.format(java.util.Locale.US, "%.2f", it) } ?: "Unavailable"} Hz" else d.name.ifBlank { "Unavailable" }}")
     appendLine("HDR types: ${d.hdrTypes.joinToString(", ").ifBlank { "Unavailable" }}")
     appendLine("Android: ${Build.MANUFACTURER} ${Build.MODEL}, ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})")
-    appendLine("Android security patch: ${Build.VERSION.SECURITY_PATCH}")
+    appendLine("Android security patch: ${Build.VERSION.SECURITY_PATCH.ifBlank { "Unavailable" }}")
     appendLine("Supported device ABIs: ${Build.SUPPORTED_ABIS.joinToString(", ")}")
     appendLine("Collection status: ${if (r.available) "Available" else "Unavailable"}")
     appendLine("Collection source: active Android system EGL/OpenGL ES implementation")
     appendLine()
     appendLine("DEVICE")
-    appendLine("Manufacturer: ${Build.MANUFACTURER}")
-    appendLine("Model: ${Build.MODEL}")
-    appendLine("Product: ${Build.PRODUCT}")
-    appendLine("Android: ${Build.VERSION.RELEASE} / API ${Build.VERSION.SDK_INT}")
-    appendLine("Security patch: ${Build.VERSION.SECURITY_PATCH}")
+    appendLine("Manufacturer: ${Build.MANUFACTURER.ifBlank { "Unavailable" }}")
+    appendLine("Brand: ${Build.BRAND.ifBlank { "Unavailable" }}")
+    appendLine("Model: ${Build.MODEL.ifBlank { "Unavailable" }}")
+    appendLine("Product: ${Build.PRODUCT.ifBlank { "Unavailable" }}")
+    appendLine("Device: ${Build.DEVICE.ifBlank { "Unavailable" }}")
+    appendLine("Board: ${Build.BOARD.ifBlank { "Unavailable" }}")
+    appendLine("Hardware: ${Build.HARDWARE.ifBlank { "Unavailable" }}")
+    appendLine("Android: ${Build.VERSION.RELEASE.ifBlank { "Unavailable" }} / API ${Build.VERSION.SDK_INT}")
+    appendLine("Codename: ${Build.VERSION.CODENAME.ifBlank { "Unavailable" }}")
+    appendLine("Build ID: ${Build.ID.ifBlank { "Unavailable" }}")
+    appendLine("Incremental: ${Build.VERSION.INCREMENTAL.ifBlank { "Unavailable" }}")
+    appendLine("Security patch: ${Build.VERSION.SECURITY_PATCH.ifBlank { "Unavailable" }}")
+    appendLine("Fingerprint: ${Build.FINGERPRINT.ifBlank { "Unavailable" }}")
     appendLine()
     appendLine("OPENGL ES")
     appendLine("GL_RENDERER: ${r.renderer}")
@@ -2436,6 +3377,14 @@ private fun reportText(context: Context, r: GlReport, d: DisplayInfo): String = 
     appendLine("EGL_VERSION: ${r.egl.version}")
     appendLine("Initialized EGL version: ${r.egl.initializedVersion}")
     appendLine("EGL_CLIENT_APIS: ${r.egl.clientApis}")
+    appendLine("Bound client API: ${r.eglRuntime.boundApi}")
+    appendLine("Current config ID: ${r.eglRuntime.configId ?: "Unavailable"}")
+    appendLine("Context client type: ${r.eglRuntime.clientType ?: "Unavailable"}")
+    appendLine("Context client version: ${r.eglRuntime.clientVersion ?: "Unavailable"}")
+    appendLine("Context render buffer: ${r.eglRuntime.renderBuffer ?: "Unavailable"}")
+    appendLine("Current EGL bindings: context=${r.eglRuntime.currentContext}, display=${r.eglRuntime.currentDisplay}, draw=${r.eglRuntime.currentDrawSurface}, read=${r.eglRuntime.currentReadSurface}")
+    appendLine("Pbuffer: ${r.eglRuntime.surfaceWidth ?: "?"}x${r.eglRuntime.surfaceHeight ?: "?"} · render=${r.eglRuntime.surfaceRenderBuffer ?: "Unavailable"} · swap=${r.eglRuntime.surfaceSwapBehavior ?: "Unavailable"} · texture=${r.eglRuntime.surfaceTextureFormat ?: "Unavailable"}/${r.eglRuntime.surfaceTextureTarget ?: "Unavailable"}")
+    if (r.eglRuntime.unavailableAttributes.isNotEmpty()) appendLine("Unavailable EGL runtime attributes: ${r.eglRuntime.unavailableAttributes.joinToString(" · ") { "${it.name}: ${it.error}" }}")
     appendLine()
     appendLine("DISPLAY & HDR")
     appendLine("Display: ${d.name}")
@@ -2520,10 +3469,23 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
         "GitHub" to "<a class=\"github-link\" href=\"https://github.com/EFIShell0\" rel=\"noopener noreferrer\">github.com/EFIShell0</a>"
     )
     val deviceRows = rows(listOf(
-        "Manufacturer" to Build.MANUFACTURER, "Model" to Build.MODEL, "Product" to Build.PRODUCT, "Android" to Build.VERSION.RELEASE, "SDK" to Build.VERSION.SDK_INT, "Security patch" to Build.VERSION.SECURITY_PATCH
+        "Manufacturer" to Build.MANUFACTURER.ifBlank { "Unavailable" }, "Brand" to Build.BRAND.ifBlank { "Unavailable" }, "Model" to Build.MODEL.ifBlank { "Unavailable" },
+        "Product" to Build.PRODUCT.ifBlank { "Unavailable" }, "Device" to Build.DEVICE.ifBlank { "Unavailable" }, "Board" to Build.BOARD.ifBlank { "Unavailable" },
+        "Hardware" to Build.HARDWARE.ifBlank { "Unavailable" }, "Android" to Build.VERSION.RELEASE.ifBlank { "Unavailable" }, "Codename" to Build.VERSION.CODENAME.ifBlank { "Unavailable" },
+        "SDK" to Build.VERSION.SDK_INT, "Build ID" to Build.ID.ifBlank { "Unavailable" }, "Incremental" to Build.VERSION.INCREMENTAL.ifBlank { "Unavailable" },
+        "Security patch" to Build.VERSION.SECURITY_PATCH.ifBlank { "Unavailable" }, "Fingerprint" to Build.FINGERPRINT.ifBlank { "Unavailable" }
     ))
     val glRows = rows(listOf("Driver mode" to "System OpenGL ES/EGL", "Driver version" to "Unavailable (OpenGL ES does not expose a standardized driver-version query)", "GL_RENDERER" to r.renderer, "GL_VENDOR" to r.vendor, "GL_VERSION" to r.glVersion, "Core version" to "${r.glMajor}.${r.glMinor}", "Core version provenance" to coreVersionProvenance(r), "GL_SHADING_LANGUAGE_VERSION" to r.glslVersion))
-    val eglRows = rows(listOf("EGL_VENDOR" to r.egl.vendor, "EGL_VERSION" to r.egl.version, "Initialized EGL version" to r.egl.initializedVersion, "EGL_CLIENT_APIS" to r.egl.clientApis))
+    val eglRows = rows(listOf(
+        "EGL_VENDOR" to r.egl.vendor, "EGL_VERSION" to r.egl.version, "Initialized EGL version" to r.egl.initializedVersion, "EGL_CLIENT_APIS" to r.egl.clientApis,
+        "Bound client API" to r.eglRuntime.boundApi, "Current config ID" to (r.eglRuntime.configId?.toString() ?: "Unavailable"), "Context client type" to (r.eglRuntime.clientType ?: "Unavailable"),
+        "Context client version" to (r.eglRuntime.clientVersion?.toString() ?: "Unavailable"), "Context render buffer" to (r.eglRuntime.renderBuffer ?: "Unavailable"),
+        "Current EGL bindings" to "context=${r.eglRuntime.currentContext}, display=${r.eglRuntime.currentDisplay}, draw=${r.eglRuntime.currentDrawSurface}, read=${r.eglRuntime.currentReadSurface}",
+        "Pbuffer size" to if (r.eglRuntime.surfaceWidth != null && r.eglRuntime.surfaceHeight != null) "${r.eglRuntime.surfaceWidth} × ${r.eglRuntime.surfaceHeight}" else "Unavailable",
+        "Pbuffer render buffer" to (r.eglRuntime.surfaceRenderBuffer ?: "Unavailable"), "Pbuffer swap behavior" to (r.eglRuntime.surfaceSwapBehavior ?: "Unavailable"),
+        "Pbuffer texture" to "${r.eglRuntime.surfaceTextureFormat ?: "Unavailable"} / ${r.eglRuntime.surfaceTextureTarget ?: "Unavailable"}",
+        "Unavailable EGL runtime attributes" to r.eglRuntime.unavailableAttributes.joinToString(" · ") { "${it.name}: ${it.error}" }.ifBlank { "None" }
+    ))
     val displayRows = rows(listOf(
         "Display" to d.name, "Current mode ID" to (d.modeId?.toString() ?: "Unavailable"), "Current mode resolution" to if ((d.width ?: 0) > 0 && (d.height ?: 0) > 0) "${d.width} × ${d.height}" else "Unavailable",
         "Refresh rate" to (d.refreshRate?.let { "$it Hz" } ?: "Unavailable"), "Supported display modes" to if (d.supportedModes.isEmpty()) "Unavailable" else d.supportedModes.joinToString(" | "),
@@ -2534,7 +3496,7 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
     val limitRows = r.limits.joinToString("") { "<tr><td class=\"code\">${e(it.name)}</td><td>${e(it.value)}</td></tr>" }
     val precisionRows = r.precision.joinToString("") { "<tr><td class=\"code\">${e(it.shader)}</td><td class=\"code\">${e(it.type)}</td><td>${e("${it.rangeMin}..${it.rangeMax}")}</td><td>${e(it.precision)}</td></tr>" }
     val diagnosticRows = r.diagnostics.joinToString("") { "<tr><td class=\"code\">${e(it.name)}</td><td>${badge(it.status)}</td><td>${e(it.detail.ifBlank { "—" })}</td></tr>" }
-    val configRows = r.eglConfigs.joinToString("") { c -> "<tr><td>${e(c.id)}</td><td>${e("${c.red ?: "?"}/${c.green ?: "?"}/${c.blue ?: "?"}/${c.alpha ?: "?"}")}</td><td>${e(c.bufferSize)}</td><td>${e(c.luminanceSize)}</td><td>${e(c.alphaMaskSize)}</td><td>${e(c.depth)}</td><td>${e(c.stencil)}</td><td>${e(c.sampleBuffers)}</td><td>${e(c.samples)}</td><td class=\"code\">${e(c.surfaceType)}</td><td class=\"code\">${e(c.renderableType)}</td><td class=\"code\">${e(c.conformant)}</td><td class=\"code\">${e(c.configCaveat)}</td><td class=\"code\">${e(c.colorBufferType)}</td><td>${e(eglBooleanLabel(c.bindToTextureRgb))}</td><td>${e(eglBooleanLabel(c.bindToTextureRgba))}</td><td>${e("${c.maxPbufferWidth ?: "?"}×${c.maxPbufferHeight ?: "?"} / ${c.maxPbufferPixels ?: "?"}")}</td><td>${e(c.level)}</td><td>${e(eglBooleanLabel(c.nativeRenderable))}</td><td>${e(c.nativeVisualId)}</td><td>${e(c.nativeVisualType)}</td><td class=\"code\">${e(c.transparentType)}</td><td>${e("${c.transparentRed ?: "?"}/${c.transparentGreen ?: "?"}/${c.transparentBlue ?: "?"}")}</td><td>${e("${c.minSwapInterval ?: "?"}..${c.maxSwapInterval ?: "?"}")}</td></tr>" }
+    val configRows = r.eglConfigs.joinToString("") { c -> "<tr><td>${e(c.id)}</td><td>${e("${c.red ?: "?"}/${c.green ?: "?"}/${c.blue ?: "?"}/${c.alpha ?: "?"}")}</td><td>${e(c.bufferSize)}</td><td>${e(c.luminanceSize)}</td><td>${e(c.alphaMaskSize)}</td><td>${e(c.depth)}</td><td>${e(c.stencil)}</td><td>${e(c.sampleBuffers)}</td><td>${e(c.samples)}</td><td class=\"code\">${e(c.surfaceType)}</td><td class=\"code\">${e(c.renderableType)}</td><td class=\"code\">${e(c.conformant)}</td><td class=\"code\">${e(c.configCaveat)}</td><td class=\"code\">${e(c.colorBufferType)}</td><td>${e(eglBooleanLabel(c.bindToTextureRgb))}</td><td>${e(eglBooleanLabel(c.bindToTextureRgba))}</td><td>${e("${c.maxPbufferWidth ?: "?"}×${c.maxPbufferHeight ?: "?"} / ${c.maxPbufferPixels ?: "?"}")}</td><td>${e(c.level)}</td><td>${e(eglBooleanLabel(c.nativeRenderable))}</td><td>${e(c.nativeVisualId)}</td><td>${e(c.nativeVisualType)}</td><td class=\"code\">${e(c.transparentType)}</td><td>${e("${c.transparentRed ?: "?"}/${c.transparentGreen ?: "?"}/${c.transparentBlue ?: "?"}")}</td><td>${e("${c.minSwapInterval ?: "?"}..${c.maxSwapInterval ?: "?"}")}</td><td>${e(c.recordableAndroid?.let { eglBooleanLabel(it) } ?: "N/A")}</td><td>${e(c.framebufferTargetAndroid?.let { eglBooleanLabel(it) } ?: "N/A")}</td><td class=\"code\">${e(c.colorComponentTypeExt ?: "N/A")}</td><td>${e(c.unavailableAttributes.joinToString(" · ") { "${it.name}: ${it.error}" }.ifBlank { "None" })}</td></tr>" }
     val availableQueries = r.diagnostics.count { it.status == "Available" }
     val unavailableQueries = r.diagnostics.count { it.status == "Unavailable" }
     val naQueries = r.diagnostics.count { it.status == "Not applicable" }
@@ -2564,7 +3526,7 @@ private fun reportHtml(context: Context, r: GlReport, d: DisplayInfo): String {
         section("Program binary formats (${r.programBinaryFormats.size})", "<th>Format</th>", listRows(r.programBinaryFormats))
         section("Shader precision (${r.precision.size})", "<th>Shader</th><th>Type</th><th>Range</th><th>Precision</th>", precisionRows)
         section("Query diagnostics (${r.diagnostics.size})", "<th>Query</th><th>Status</th><th>Detail</th>", diagnosticRows)
-        section("EGL configurations (${r.eglConfigs.size})", "<th>ID</th><th>RGBA</th><th>Buffer</th><th>Luminance</th><th>Alpha mask</th><th>Depth</th><th>Stencil</th><th>Sample buffers</th><th>Samples</th><th>Surface</th><th>Renderable</th><th>Conformant</th><th>Caveat</th><th>Color buffer</th><th>Bind RGB</th><th>Bind RGBA</th><th>Max pbuffer W×H / pixels</th><th>Level</th><th>Native renderable</th><th>Visual ID</th><th>Visual type</th><th>Transparency</th><th>Transparent RGB</th><th>Swap interval</th>", configRows)
+        section("EGL configurations (${r.eglConfigs.size})", "<th>ID</th><th>RGBA</th><th>Buffer</th><th>Luminance</th><th>Alpha mask</th><th>Depth</th><th>Stencil</th><th>Sample buffers</th><th>Samples</th><th>Surface</th><th>Renderable</th><th>Conformant</th><th>Caveat</th><th>Color buffer</th><th>Bind RGB</th><th>Bind RGBA</th><th>Max pbuffer W×H / pixels</th><th>Level</th><th>Native renderable</th><th>Visual ID</th><th>Visual type</th><th>Transparency</th><th>Transparent RGB</th><th>Swap interval</th><th>Recordable</th><th>Framebuffer target</th><th>Color component type</th><th>Unavailable attributes</th>", configRows)
         append("</div></body></html>")
     }
 }
