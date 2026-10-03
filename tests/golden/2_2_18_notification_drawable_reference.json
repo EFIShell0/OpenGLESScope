@@ -1,0 +1,15 @@
+{
+  "reference": "VulkanScope 3.0.12 immutable drawable SHA-256 snapshot",
+  "sharedIcons": {
+    "ic_info": "14defd95ac4cf8ffb1e44898358457658d3c8fa9a145a649894d2ac34aa13998",
+    "ic_network_connected": "8d7379c030c241289a99282e18b30598cad41419dccc399e3ce10ac3941eee3a",
+    "ic_network_disconnected": "68a4b86af269c1382dc277982ca3286ac5b1c39c114321c533f272a4ab67585f",
+    "ic_update_available": "1ed3cb331f2d62852851ec01a295d2b6f22c163ef3ad7cc5c44d62a256a457bf",
+    "ic_action_update": "c2f0ed6076d96e43bb216edfbdcb0e99b3633f2ebbd6d891e6bb67de39e7a2d8",
+    "ic_check": "78ab13ae8cd44530e8e0e7610ea6c1ac727fe73576e0110aaa2342e5dc2d534a",
+    "ic_close": "64a6f103e477a260e889ca57cf449dc45f89053f72abfc34b0269b714c27a74e",
+    "ic_download": "99391712a018678f7faa1154b64b957fe221cd73994d0833db8692960d171e66",
+    "ic_receive": "cd82c0c6b9e247f67a68360c62112f9191442a730d7416f02f2e55e8d3ca4b9e",
+    "ic_download_update": "23cd45846ffbbec903f2b93a079095edde4cd94db2f5733fe55723062316a3f6"
+  }
+}

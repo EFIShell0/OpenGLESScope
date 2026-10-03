@@ -1,0 +1,8 @@
+# ninja log v5
+0	9	0	clean	7073ed3aa4bb752
+16	5423	8113684289285412	CMakeFiles/openglesscope.dir/openglesscope.cpp.o	1dc4f90040802cb4
+5423	5631	8113684291370613	C:/Users/Administrator/Desktop/OpenGLESScope/app/build/intermediates/cxx/RelWithDebInfo/4h2csb4b/obj/arm64-v8a/libopenglesscope.so	7e253798748f4fcf
+2	405	8113689540861319	build.ninja	90446efec2605517
+5	4952	8113689593356181	CMakeFiles/openglesscope.dir/openglesscope.cpp.o	1dc4f90040802cb4
+4952	5113	8113689594917855	C:/Users/Administrator/Desktop/OpenGLESScope/app/build/intermediates/cxx/RelWithDebInfo/4h2csb4b/obj/arm64-v8a/libopenglesscope.so	7e253798748f4fcf
+0	9	0	clean	7073ed3aa4bb752

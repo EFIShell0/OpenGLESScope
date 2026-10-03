@@ -1,0 +1,309 @@
+@Composable
+private fun ExpressiveSingleFilterSelector(
+    labels: List<String>,
+    selectedIndex: Int?,
+    enabled: Boolean,
+    indicatorTint: ComposeColor,
+    onSelected: (Int) -> Unit
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var dropdownMounted by remember { mutableStateOf(false) }
+    var dropdownVisible by remember { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var page by rememberSaveable { mutableIntStateOf(0) }
+    var pageField by remember { mutableStateOf(TextFieldValue("1")) }
+    val pageSize = 50
+    val showSearch = labels.size >= 5
+    val indexed = remember(labels, query) {
+        labels.mapIndexed { index, label -> index to label }
+            .filter { (_, label) -> query.isBlank() || label.contains(query, ignoreCase = true) }
+    }
+    val pageCount = maxOf(1, (indexed.size + pageSize - 1) / pageSize)
+    val selectedLabel = selectedIndex?.takeIf { it in labels.indices }?.let(labels::get) ?: "Select filter"
+    val selectorAlpha by animateFloatAsState(if (enabled) 1f else 0.52f, animationSpec = tween(180), label = "filterSelectorAlpha")
+    val selectorScale by animateFloatAsState(if (enabled) 1f else 0.985f, animationSpec = tween(180), label = "filterSelectorScale")
+    val arrowRotation by animateFloatAsState(if (expanded) 180f else 0f, animationSpec = tween(180), label = "filterSelectorArrow")
+    val focusManager = LocalFocusManager.current
+    val density = LocalDensity.current
+    val imeVisible = WindowInsets.ime.getBottom(density) > 0
+
+    LaunchedEffect(enabled) {
+        if (!enabled) expanded = false
+    }
+    LaunchedEffect(showSearch) {
+        if (!showSearch && query.isNotEmpty()) query = ""
+    }
+    LaunchedEffect(expanded, enabled) {
+        if (expanded && enabled) {
+            query = ""
+            val openingPage = selectedIndex?.takeIf { it in labels.indices }?.div(pageSize) ?: 0
+            page = openingPage.coerceIn(0, pageCount - 1)
+            pageField = TextFieldValue((page + 1).toString())
+            dropdownMounted = true
+            dropdownVisible = false
+            delay(20)
+            dropdownVisible = true
+        } else {
+            dropdownVisible = false
+            delay(190)
+            dropdownMounted = false
+        }
+    }
+    LaunchedEffect(query, pageCount) {
+        page = page.coerceIn(0, pageCount - 1)
+        if (pageField.text.isNotEmpty()) pageField = TextFieldValue((page + 1).toString())
+    }
+    LaunchedEffect(page, pageCount) {
+        page = page.coerceIn(0, pageCount - 1)
+        if (pageField.text.isNotEmpty()) pageField = TextFieldValue((page + 1).toString())
+    }
+
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+        val landscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val dropdownWidth = if (landscape) maxWidth else maxWidth.coerceAtMost(560.dp)
+        val screenHeight = configuration.screenHeightDp.dp
+        val imeHeight = with(density) { WindowInsets.ime.getBottom(density).toDp() }
+        val usableHeight = (screenHeight - imeHeight).coerceAtLeast(220.dp)
+        val dropdownMaxHeight = if (landscape) {
+            ((usableHeight.value * 0.62f).dp).coerceIn(220.dp, 440.dp)
+        } else {
+            (usableHeight - 96.dp).coerceIn(240.dp, 620.dp)
+        }
+        val visibleRows = indexed.drop(page * pageSize).take(pageSize).size.coerceIn(1, if (landscape) 4 else 7)
+        val dropdownDesiredHeight = (
+            28.dp +
+                (if (showSearch) 96.dp else 0.dp) +
+                (58.dp * visibleRows) +
+                (if (pageCount > 1 && indexed.isNotEmpty()) 78.dp else 0.dp)
+            ).coerceAtMost(dropdownMaxHeight)
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            val selectorShape = MaterialTheme.shapes.medium
+            Surface(
+                shape = selectorShape,
+                color = SurfaceTonal,
+                contentColor = TextPrimary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, Outline),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 58.dp)
+                    .alpha(selectorAlpha)
+                    .graphicsLayer(scaleX = selectorScale, scaleY = selectorScale)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 15.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("Filter", color = TextMuted, style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            selectedLabel,
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    val arrowShape = RoundedCornerShape(15.dp)
+                    Surface(
+                        shape = arrowShape,
+                        color = if (expanded) Brand else BrandContainer,
+                        contentColor = indicatorTint,
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(arrowShape)
+                            .clickable(enabled = enabled, role = Role.Button) { expanded = !expanded }
+                    ) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_expand_more),
+                                contentDescription = if (expanded) "Close filter menu" else "Open filter menu",
+                                tint = indicatorTint,
+                                modifier = Modifier.size(24.dp).graphicsLayer(rotationZ = arrowRotation)
+                            )
+                        }
+                    }
+                }
+            }
+
+            BackHandler(enabled = dropdownMounted && expanded) {
+                if (imeVisible) focusManager.clearFocus(force = true)
+            }
+
+            if (dropdownMounted && enabled) {
+                AnimatedVisibility(
+                    visible = dropdownVisible,
+                    enter = fadeIn(tween(220)) + scaleIn(tween(240), initialScale = 0.97f, transformOrigin = TransformOrigin(0.5f, 0f)) + expandVertically(tween(220), expandFrom = Alignment.Top),
+                    exit = fadeOut(tween(150)) + scaleOut(tween(170), targetScale = 0.985f, transformOrigin = TransformOrigin(0.5f, 0f)) + shrinkVertically(tween(170), shrinkTowards = Alignment.Top)
+                ) {
+                    Surface(
+                        shape = MaterialTheme.shapes.extraLarge,
+                        color = SurfaceRaised,
+                        contentColor = TextPrimary,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Outline),
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.width(dropdownWidth).height(dropdownDesiredHeight)
+                    ) {
+                        Column(Modifier.fillMaxHeight().padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            if (showSearch) {
+                                ExpressiveSearchField(
+                                    value = query,
+                                    onValueChange = { value ->
+                                        query = value.take(120)
+                                        page = 0
+                                        pageField = TextFieldValue("1")
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    labelText = "Search filters",
+                                    placeholderText = "Type a filter name…"
+                                )
+                            }
+                            if (showSearch) {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        if (indexed.isEmpty()) "No matching filters" else "${indexed.size} result${if (indexed.size == 1) "" else "s"} · up to $pageSize per page",
+                                        color = TextSecondary,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    if (indexed.isNotEmpty() && pageCount > 1) {
+                                        Text("Page ${page + 1} / $pageCount", color = TextMuted, style = MaterialTheme.typography.labelSmall)
+                                    }
+                                }
+                            }
+                            Box(Modifier.weight(1f).fillMaxWidth().heightIn(min = 56.dp)) {
+                                AnimatedContent(
+                                    targetState = page to query,
+                                    transitionSpec = {
+                                        val direction = if (targetState.first >= initialState.first) 1 else -1
+                                        (fadeIn(tween(180)) + slideInHorizontally(tween(190)) { direction * (it / 10) }) togetherWith
+                                            (fadeOut(tween(120)) + slideOutHorizontally(tween(140)) { -direction * (it / 10) })
+                                    },
+                                    label = "filterPageTransition"
+                                ) { (targetPage, targetQuery) ->
+                                    val targetIndexed = labels.mapIndexed { index, label -> index to label }
+                                        .filter { (_, label) -> targetQuery.isBlank() || label.contains(targetQuery, ignoreCase = true) }
+                                    val targetPageItems = targetIndexed.drop(targetPage * pageSize).take(pageSize)
+                                    val selectedOffset = if (targetQuery.isBlank()) targetPageItems.indexOfFirst { it.first == selectedIndex } else -1
+                                    val targetListState = rememberLazyListState(initialFirstVisibleItemIndex = selectedOffset.coerceAtLeast(0))
+                                    val boundaryScrollConnection = rememberFilterScrollBoundaryConnection()
+                                    Box(Modifier.fillMaxSize().nestedScroll(boundaryScrollConnection)) {
+                                        LazyColumn(
+                                            state = targetListState,
+                                            modifier = Modifier.fillMaxSize(),
+                                            verticalArrangement = Arrangement.spacedBy(5.dp),
+                                            contentPadding = PaddingValues(vertical = 2.dp)
+                                        ) {
+                                            items(targetPageItems, key = { it.first }) { (index, label) ->
+                                                val selected = index == selectedIndex
+                                                val rowShape = RoundedCornerShape(18.dp)
+                                                Surface(
+                                                    shape = rowShape,
+                                                    color = if (selected) BrandContainer else ComposeColor.Transparent,
+                                                    contentColor = if (selected) TextPrimary else TextSecondary,
+                                                    modifier = Modifier.fillMaxWidth().clip(rowShape).clickable(role = Role.RadioButton) { onSelected(index) }
+                                                ) {
+                                                    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                                        Surface(shape = RoundedCornerShape(999.dp), color = if (selected) BrandSoft else OutlineVariant, modifier = Modifier.size(10.dp)) {}
+                                                        Text(
+                                                            label,
+                                                            modifier = Modifier.weight(1f),
+                                                            textAlign = TextAlign.Start,
+                                                            softWrap = true,
+                                                            color = if (selected) TextPrimary else TextSecondary,
+                                                            style = MaterialTheme.typography.bodyMedium
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            if (targetPageItems.isEmpty()) {
+                                                item {
+                                                    Text(
+                                                        "No filter matches this search.",
+                                                        color = TextMuted,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 16.dp),
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        ExpressiveScrollHints(targetListState, Modifier.fillMaxSize().padding(horizontal = 4.dp, vertical = 4.dp))
+                                    }
+                                }
+                            }
+                            if (indexed.isNotEmpty() && pageCount > 1) {
+                                HorizontalDivider(color = OutlineVariant)
+                                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        IconButton(
+                                            onClick = { if (page > 0) page -= 1 },
+                                            enabled = page > 0,
+                                            colors = IconButtonDefaults.iconButtonColors(
+                                                containerColor = BrandContainer,
+                                                contentColor = TextPrimary,
+                                                disabledContainerColor = SurfaceLow,
+                                                disabledContentColor = TextMuted
+                                            )
+                                        ) {
+                                            Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = "Previous filter page")
+                                        }
+                                        OutlinedTextField(
+                                            value = pageField,
+                                            onValueChange = { value ->
+                                                val candidate = value.text
+                                                when {
+                                                    candidate.isEmpty() -> pageField = value
+                                                    candidate.length <= pageCount.toString().length && candidate.all { it.isDigit() } && !(candidate.length > 1 && candidate.startsWith('0')) -> {
+                                                        val requested = candidate.toIntOrNull()
+                                                        if (requested != null && requested in 1..pageCount) {
+                                                            pageField = value
+                                                            page = requested - 1
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            modifier = Modifier.width(72.dp).onFocusChanged { focus ->
+                                                if (focus.isFocused) {
+                                                    pageField = pageField.copy(selection = TextRange(0, pageField.text.length))
+                                                } else if (pageField.text.isBlank()) {
+                                                    pageField = TextFieldValue((page + 1).toString())
+                                                }
+                                            },
+                                            singleLine = true,
+                                            label = { Text("Page") },
+                                            textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = BrandSoft,
+                                                unfocusedBorderColor = Outline,
+                                                focusedTextColor = TextPrimary,
+                                                unfocusedTextColor = TextPrimary,
+                                                cursorColor = BrandSoft
+                                            )
+                                        )
+                                        Text("/ $pageCount", color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                                        IconButton(
+                                            onClick = { if (page + 1 < pageCount) page += 1 },
+                                            enabled = page + 1 < pageCount,
+                                            colors = IconButtonDefaults.iconButtonColors(
+                                                containerColor = BrandContainer,
+                                                contentColor = TextPrimary,
+                                                disabledContainerColor = SurfaceLow,
+                                                disabledContentColor = TextMuted
+                                            )
+                                        ) {
+                                            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = "Next filter page")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

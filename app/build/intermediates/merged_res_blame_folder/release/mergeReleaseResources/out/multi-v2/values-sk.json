@@ -1,10 +1,27 @@
 {
     "logs": [
         {
-            "outputFile": "com.efishell.openglesscope.app-mergeReleaseResources-31:/values-sk/values-sk.xml",
+            "outputFile": "com.efishell.openglesscope.app-mergeReleaseResources-33:/values-sk/values-sk.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\50f5e142fd1a5e7576b89ad949918e41\\transformed\\material3\\res\\values-sk\\values-sk.xml",
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\132f248090166d17ae9bd4f1b73fd198\\transformed\\ui\\res\\values-sk\\values-sk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "107,214,309,393,488,591,683,762,856,946,1027,1110,1197,1269,1359,1437,1513,1588,1666,1734",
+                        "endColumns": "106,94,83,94,102,91,78,93,89,80,82,86,71,89,77,75,74,77,67,117",
+                        "endOffsets": "209,304,388,483,586,678,757,851,941,1022,1105,1192,1264,1354,1432,1508,1583,1661,1729,1847"
+                    },
+                    "to": {
+                        "startLines": "3,11,12,13,14,15,16,17,91,92,93,94,95,96,97,98,99,101,102,103",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "222,1066,1161,1245,1340,1443,1535,1614,9628,9718,9799,9882,9969,10041,10131,10209,10285,10461,10539,10607",
+                        "endColumns": "106,94,83,94,102,91,78,93,89,80,82,86,71,89,77,75,74,77,67,117",
+                        "endOffsets": "324,1156,1240,1335,1438,1530,1609,1703,9713,9794,9877,9964,10036,10126,10204,10280,10355,10534,10602,10720"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\6a580cd93fa60aabb2098bc18d2f39a0\\transformed\\material3\\res\\values-sk\\values-sk.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -21,7 +38,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\7ae56080bf03e7e99dfbd3aedf884515\\transformed\\core-1.19.0\\res\\values-sk\\values-sk.xml",
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\26dd9bfa12b0c9b2900d4445f52b1a15\\transformed\\core-1.19.1\\res\\values-sk\\values-sk.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
@@ -38,7 +55,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\27c227cf072cc99974bcb4bd2bce6ec9\\transformed\\foundation\\res\\values-sk\\values-sk.xml",
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\732e8f77deab56a12193236e7355cb64\\transformed\\foundation\\res\\values-sk\\values-sk.xml",
                     "from": {
                         "startLines": "2,3,4",
                         "startColumns": "4,4,4",
@@ -52,23 +69,6 @@
                         "startOffsets": "107,10725,10809",
                         "endColumns": "114,83,86",
                         "endOffsets": "217,10804,10891"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\ed2aaab545152a53b46bfab9793aab1c\\transformed\\ui\\res\\values-sk\\values-sk.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "107,214,309,393,488,591,683,762,856,946,1027,1110,1197,1269,1359,1437,1513,1588,1666,1734",
-                        "endColumns": "106,94,83,94,102,91,78,93,89,80,82,86,71,89,77,75,74,77,67,117",
-                        "endOffsets": "209,304,388,483,586,678,757,851,941,1022,1105,1192,1264,1354,1432,1508,1583,1661,1729,1847"
-                    },
-                    "to": {
-                        "startLines": "3,11,12,13,14,15,16,17,91,92,93,94,95,96,97,98,99,101,102,103",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "222,1066,1161,1245,1340,1443,1535,1614,9628,9718,9799,9882,9969,10041,10131,10209,10285,10461,10539,10607",
-                        "endColumns": "106,94,83,94,102,91,78,93,89,80,82,86,71,89,77,75,74,77,67,117",
-                        "endOffsets": "324,1156,1240,1335,1438,1530,1609,1703,9713,9794,9877,9964,10036,10126,10204,10280,10355,10534,10602,10720"
                     }
                 }
             ]

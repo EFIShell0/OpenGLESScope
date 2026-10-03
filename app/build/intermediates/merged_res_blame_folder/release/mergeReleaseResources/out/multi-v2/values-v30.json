@@ -1,10 +1,29 @@
 {
     "logs": [
         {
-            "outputFile": "com.efishell.openglesscope.app-mergeReleaseResources-31:/values-v30/values-v30.xml",
+            "outputFile": "com.efishell.openglesscope.app-mergeReleaseResources-33:/values-v30/values-v30.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\50f5e142fd1a5e7576b89ad949918e41\\transformed\\material3\\res\\values-v30\\values-v30.xml",
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\96c5cf7c2761216b7f710d1f5f574a10\\transformed\\core-splashscreen-1.2.0\\res\\values-v30\\values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "7",
+                        "endColumns": "12",
+                        "endOffsets": "433"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "128",
+                        "endLines": "8",
+                        "endColumns": "12",
+                        "endOffsets": "506"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\6a580cd93fa60aabb2098bc18d2f39a0\\transformed\\material3\\res\\values-v30\\values-v30.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

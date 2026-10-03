@@ -1,0 +1,199 @@
+Non-negotiable
+ABI
+Architecture
+Surface and display
+Extensions
+Features and limits
+Formats
+Complete report collection
+Release quality
+Mandatory evidence workflow for every future change
+Build compatibility
+Build gate
+Network address-family policy
+Application updates
+Current upstream and structured-report baseline
+Info / Settings visual scope
+Release 0.32.5 update confirmation and complete-export gate
+Release 0.32.6 collection mutation gate
+Release 0.32.7 Turnip SAF picker and Database 0.34.4 compatibility
+0.32.8 Turnip SAF and HDR presentation
+0.32.9 Turnip SAF regression restoration
+0.33.0 complete Turnip/SAF restoration
+0.33.1 collection gate for driver controls
+Release 0.33.2 capability-page Material 3 Expressive redesign
+Release 0.33.3 full application audit
+0.33.4 Info, theme and Android TV parity requirements
+0.33.5 update discovery and banner parity requirements
+Release 0.33.6 update-dialog parity requirements
+Release 0.33.7 full producer/report/display audit
+Release 0.33.8 Kotlin release-build repair
+Release 0.33.9 Properties & Limits summary parity
+Release 0.33.10 Properties & Limits summary semantics
+Release 0.34.0 legacy reference field-level parity
+Release 0.34.2 complete-report parity audit
+Release 0.34.2 Host Image Copy promoted-name parity
+Release 0.34.3 IzzyOnDroid direct-update policy
+Release 0.34.4 IzzyOnDroid first-install notice
+Release 0.34.5 Obtainium update-management integration
+Release 0.34.6 Obtainium UI simplification
+Release 0.34.7 default-enabled direct GitHub updates
+Release 0.34.8 FormatFeatureFlags2 and expressive navigation icons
+Release 0.34.9 full Material 3 Expressive surface pass
+Release 0.35.0 Material 3 Expressive compile-fix requirements
+Release 0.35.1 full application security and correctness audit
+Release 0.40.0 local analysis and optional tests
+Release 0.40.1 analysis build-fix requirements
+Release 0.40.2 full application audit requirements
+Release 0.41.0 advanced analysis, registry reference and sharing requirements
+Release 0.41.1 Analysis Compose build-fix requirements
+Release 0.41.2 full correctness, compatibility and reporting audit requirements
+Release 0.41.3 queue and Vulkan Video evidence semantics
+Release 0.41.4 full application hardening and reporting audit
+Release 0.41.5 Analysis, Profiles and Database compatibility requirements
+Release 0.41.6 Kotlin compile-gate requirements
+Release 0.41.7 Image Format Properties2 correctness requirements
+Release 0.41.8 Image Format Properties2 tuple-result and build baseline requirements
+Release 0.41.9 Image Format Properties2 query-outcome separation requirements
+Release 0.41.10 Image Format Properties2 tuple-state completeness requirements
+Release 0.41.11 reporting-state and canonical-mask requirements
+Release 0.41.12 Database submission reliability requirements
+Release 0.41.13 Database query-group state requirements
+Release 0.41.14 Kotlin compile-correctness requirements
+Release 0.41.15 canonical enumeration and Android HDR provenance requirements
+Release 0.41.16 native/Kotlin compile-correctness requirements
+Release 0.41.17 native warning-clean compile requirements
+Release 0.41.18 full correctness, provenance and report-integrity requirements
+Release 0.41.19 collection serialization, report preservation and package hygiene requirements
+Release 0.41.20 full reporting, registry-reference and stale-state correctness requirements
+Release 0.41.21 Surface, external-capability and evidence-state correctness requirements
+Release 0.41.22 full re-audit, multi-device and query-state correctness requirements
+Release 0.41.23 Vulkan Video routing, partial-evidence and update-version integrity requirements
+Release 0.41.24 Surface enumeration, bounded partial-evidence and native-lifecycle requirements
+Release 0.41.25 Android 17 native dynamic-code hardening requirements
+Release 0.41.26 export-snapshot, driver-mutation and UI-thread correctness requirements
+Release 0.41.27 checkpoint, incomplete-enumeration and bounded-driver-scan correctness requirements
+Release 0.41.28 simple-feature completeness and isolated-crash fast-fail requirements
+Release 0.41.29 base-completeness, extension-state and Turnip traversal requirements
+Release 0.41.30 spec-lock, regression-contract and reproducible-quality-gate requirements
+Release 0.41.31 spec-correctness, provisional-registry and allowlisted-regression requirements
+Release 0.41.32 Vulkan 1.4.361, registry-census, concurrency and resource-budget requirements
+Release 0.41.33 Vulkan 1.4.361 CMake registry-lock build-regression requirements
+Release 0.41.34 real release-compiler regression requirements
+Release 0.41.35 Turnip post-checkpoint lifecycle and bounded-detail-collection requirements
+Release 0.41.36 terminal probe-publication handshake and evidence-workflow requirements
+Release 0.41.37 pre-return terminal publication, one-shot process isolation and bounded base-timeout requirements
+Release 0.41.38 single terminal-owner and post-JNI handoff requirements
+Release 0.41.39 base terminal JSON structural-integrity requirements
+Release 0.41.40 report-field semantics, evidence-state and Database-contract requirements
+Release 0.41.41 Surface identity, binary-property and provenance requirements
+Release 0.41.42 HTML state-presentation and registry-label requirements
+Release 0.41.43 driver-bound Surface rebind requirements
+Release 0.41.44 authoritative Vulkan Profiles evaluation requirements
+Release 0.41.45 locked Vulkan Video StdVideo registry census requirements
+Release 0.41.46 Material 3 Expressive information-architecture requirements
+Release 0.80.0 full security, memory, specification and design audit requirements
+Release 0.80.1 Overview Encyclopedia requirements
+Release 0.80.2 local Vulkan encyclopedia expansion
+Release 0.80.3 separate Overview tools and crash-safe Encyclopedia search
+Release 0.80.4 detail affordance, scroll/TV and collection-outcome requirements
+Release 0.80.5 update release-notes Android TV and design-integrity requirements
+Release 0.80.6 TalkBack and large-text/display-size accessibility requirements
+Release 0.80.7 system-language, bidi, system-font and update-information requirements
+Release 0.80.8 final collection-status, AGP and Database companion requirements
+Release 0.80.9 explicit detail-action and Database 0.39.23 companion requirements
+Release 0.80.10 Vulkan 1.4.362 registry/header requirements
+Release 0.80.12 Compose role compile-regression requirements
+Release 0.80.13 Material 3 Expressive full-UI coherence requirements
+Release 0.80.14 PaddingValues compile-regression requirements
+Release 0.80.15 responsive overlay-scroll and detail-dialog requirements
+Release 1.0.0 advanced evidence, analysis and workflow requirements
+Release 1.0.1 full security, specification, correctness and usability audit requirements
+Release 1.0.2 Material 3 Expressive filters, connectivity state, Turnip metadata and accessibility requirements
+Release 1.0.3 Kotlin regular-expression compile-regression requirements
+Release 1.0.4 offline availability, Turnip driver manager and filter-edge continuity requirements
+Release 1.0.5 Kotlin default-parameter call-site compile-regression requirements
+Release 1.0.6 driver confirmation, network transition and UI-coherence requirements
+Release 1.0.7 Turnip manager, combined connectivity and continuation UI requirements
+Release 1.0.8 driver-manager, confirmation-action, external-link and no-SAF exchange requirements
+Release 1.0.9 detail-dialog, action-target, driver-evidence and fallback-guidance requirements
+Release 1.0.10 PaddingValues import compile-regression requirements
+Release 1.0.11 active-driver exclusivity and semantic-icon UI requirements
+Release 1.0.12 SAF fallback detection, fallback-dialog and supplied-icon requirements
+Release 1.0.13 update-action and semantic-icon refinement requirements
+Release 1.0.14 fallback-import compile and first-install update-intro requirements
+Release 1.0.15 system-document-picker launch-first and full-audit requirements
+Release 1.0.16 Info, Memory and Database compatibility requirements
+Release 1.0.17 semantic icon correction and Database 1.0.8 compatibility requirements
+Release 1.0.18 compile-regression and full retained-audit requirements
+Release 1.0.19 semantic UI refinement requirements
+Release 1.2.0 UI, reporting and audit requirements
+Release 1.2.1 Settings/update-check requirements
+Release 1.2.2 Settings navigation, interaction-target and semantic-artwork requirements
+Release 1.2.3 compile, Database result and Android 12 minimum requirements
+Release 1.2.4 History, Settings motion and Share-action requirements
+Release 1.2.5 Settings destination-transition correction
+Release 1.3.0 Vulkan registered-mark presentation and library-license disclosure
+Release 1.3.1 searchable paged single-select filters and HDR logo disclosure
+Release 1.3.2 persistent update-transfer dialog requirements
+Release 1.3.3 SAF and SAF-fallback removal-only requirements
+Release 1.3.4 in-app Turnip file manager requirements
+Release 1.3.5 full correctness, security, performance and UX audit requirements
+Release 1.3.6 in-app import/export storage completion requirements
+Release 1.3.7 Material3 Expressive compile opt-in fix
+Release 1.3.8 filter selector and Turnip file-manager Material 3 Expressive refinement
+Release 1.3.9 filter popup, export/storage browser and file-manager interaction refinement
+Release 1.3.10 filter-arrow interaction, Turnip duplicate-source presentation and About disclosure refinement
+Release 1.3.11 compile fix and updater palette hardening
+Release 1.3.12 filter compactness, shared-storage actions and driver-manager Expressive refinement
+Release 1.3.13 filter anchoring, driver branding and Turnip metadata semantics
+Release 1.4.0 filter unification and Quick Access icon refinement
+Release 1.4.1 filter scroll containment and Turnip slot metadata
+Release 1.4.2 landscape filter sizing and compact centered pagination
+Release 1.4.3 landscape filter width and rotation state retention
+Release 1.4.4 ChromeOS runtime evidence, adaptive dialogs, Expressive navigation and launch motion
+Release 1.4.5 Googlebook OS evidence, Vulkan 1.4.364 registry and full correctness audit
+Release 1.4.6 launch sequencing and compact navigation requirements
+Release 1.4.7 compile repair and mouse pointer scrolling requirements
+Release 1.4.16 Surface destination, capsule navigation and transient-status overlay requirements
+Release 1.5.0 compact floating navigation and startup watchdog requirements
+Release 1.5.1 profile evidence, reference-sized navigation and opening refinement requirements
+Release 1.5.2 AGP 9.4.1 full audit and build-chain hardening requirements
+Release 1.5.3 overlay and navigation obstruction requirements
+Release 1.5.4 landscape compact-navigation requirements
+Release 1.5.5 landscape safe-width requirements
+Release 2.0.0 collection timing instrumentation requirements
+Release 2.0.2 parallel one-shot correctness, overlay and desktop pointer requirements
+Release 2.0.3 adaptive parallel scheduler requirements
+Release 2.0.4 adaptive six-lane scheduler and Android TV evidence long-press requirements
+Release 2.0.5 Android TV key-input compile-fix requirements
+Release 2.0.6 Surface chooser scrollability requirements
+Release 2.1.0 translucent UI, file-manager layouts, bounded page rendering, determinate updates and Database result actions
+Release 2.1.1 collection pager Kotlin compile-fix requirements
+Release 2.1.2 header, layout and scroll refinement requirements
+Release 2.1.3 Telegram-style header, 25-item sticky pagination, shared file sorting and dialog-accent requirements
+Release 2.1.4 Kotlin compile restoration requirements
+Release 2.1.5 transparent header, aligned wordmark, unified file-manager options and sticky-pager requirements
+Release 2.1.6 frosted header, file-menu close action and coordinated paging overlay requirements
+Release 2.1.7 smooth glass, semantic file icons, pinned-pager lane ordering and SPIR-V trademark requirements
+Release 2.1.8 sticky-pager reporter Kotlin compile restoration requirements
+Release 2.1.9 clipping-independent pinned-pager overlay requirements
+Release 2.1.10 progressive pager-to-glass handoff and bounded backdrop requirements
+Release 2.1.11 Compose GraphicsLayer import compile restoration requirements
+Release 2.1.13 unified pager settle and bounded frosted chrome requirements
+Release 2.1.14 pager landing and unified glass requirements
+Release 2.1.15 single-pager anchor tracking and continuous shared glass requirements
+Release 2.1.16 lazy-viewport pager alignment requirements
+Release 3.0.0 edge-to-edge chrome, header underlap, opening rule and overlay coordination requirements
+Release 3.0.1 opening-rule stability, landscape file-manager, desktop secondary-input and page-separation requirements
+Release 3.0.2 Material 3 Expressive loading compile restoration
+Release 3.0.3 Analysis minimum confirmations, graph usability, full-screen Turnip file-manager, TV navigation and copy-feedback requirements
+Release 3.0.4 Kotlin compile restoration requirements
+Release 3.0.5 full-screen file-manager, diagnostic timing and Database lookup requirements
+Release 3.0.6 Analysis CompositionLocal compile restoration requirements
+Release 3.0.7 Database vendor identity, animated file-manager search, auditable Quality and self-test result requirements
+Release 3.0.8 hardware D-pad navigation, analysis clarity, metric presentation and file-manager motion requirements
+Release 3.0.9 Database date/time, driver identity and semantic icon uniqueness requirements
+Release 3.0.10 Kotlin compile and File Manager landscape requirements
+Release 3.0.11 Turnip File Manager validated folder-count requirements
+Release 3.0.12 Turnip folder-scan Kotlin compile restoration requirements

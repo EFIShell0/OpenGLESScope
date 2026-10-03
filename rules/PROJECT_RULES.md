@@ -1,445 +1,742 @@
 # OpenGLESScope Engineering Rules
 
-## Non-negotiable
-- Third-party comparison product names are forbidden in every shipped filename, source file, generated artifact, test, audit, UI string, report, database field and metadata. Neutral capability-reference terminology must be used instead.
-- Dedicated packaged app-store metadata directory bundles are forbidden from source release archives.
-- Root release.md files are forbidden from source release archives; release notes, when needed, are distributed separately from the source ZIP.
-- README.md files are forbidden from source release archives; project documentation needed for a release must live in purpose-specific audit, rules or changelog files.
-- Source-code comments are forbidden.
-- Security, correctness, memory safety, performance and usability are never traded away for convenience.
-- No known security vulnerability or memory leak may knowingly ship.
-- No guessed GPU, OpenGL ES, EGL, display or HDR capability may be reported.
-- Unknown, unsupported, unavailable and not-applicable are distinct states.
-- Runtime OpenGL ES and EGL extension names are displayed exactly as returned by the implementation.
-- OpenGL ES version, GLSL ES version, EGL version and Android platform version are distinct values.
-- Android Display HDR data is distinct from OpenGL ES/EGL capability data.
-- Wide-color support must not be represented as a measured physical gamut percentage.
-- Native collection must never block the UI thread.
-- Large capability collections must remain lazy/searchable in the UI.
-- Official Khronos OpenGL ES/EGL and Android documentation are primary API-behavior sources.
-- Device/display data stays on-device unless the user explicitly submits a complete report.
-- Submission excludes IMEI, Android ID, serial, MAC addresses, account data, authentication tokens and private paths.
-- No automatic/background report upload is allowed.
-- Runtime network access is limited to explicit database submission and the official OpenGLESScope GitHub update check/download flow.
-- HTTPS hostnames remain hostnames through TLS. IPv6 is preferred on dual-stack with IPv4 fallback retained.
+This file is the single release-blocking engineering contract for OpenGLESScope. It applies the same evidence discipline, regression methodology, UI quality, lifecycle ownership, bounded-resource rules, accessibility requirements, deterministic packaging and clean-extract verification used by VulkanScope 3.0.12, while keeping OpenGL ES/EGL semantics truthful. API-specific Vulkan concepts are never invented merely to obtain superficial feature parity.
 
-## ABI
-- armeabi-v7a required.
-- arm64-v8a required.
-- x86_64 required.
-- x86 intentionally excluded.
-- Release builds must produce four APK artifacts: universal, arm64-v8a, armeabi-v7a and x86_64.
-- The universal APK must contain exactly arm64-v8a, armeabi-v7a and x86_64 native libraries and must not contain x86.
-- Each split APK must contain only its declared ABI native library.
+## Exact VulkanScope 3.0.12 methodology reference
+- `rules/VULKANSCOPE_3.0.12_PROJECT_RULES_REFERENCE.md` is the byte-for-byte VulkanScope 3.0.12 `rules/PROJECT_RULES.md` reference and is immutable release evidence.
+- Every API-neutral VulkanScope 3.0.12 rule class is mandatory here: correctness, provenance, lifecycle, crash containment, performance, storage, file-manager behavior, paging, update transfer, accessibility, Android TV/D-pad, desktop pointer behavior, edge-to-edge layout, deterministic packaging, negative mutation and clean-extract verification.
+- API-specific Vulkan rules are adapted only when OpenGL ES/EGL has an authoritative equivalent. Otherwise the rule is explicitly Not applicable rather than imitated with fabricated data.
+- `tests/golden/vulkanscope_3_0_12_rule_headings.txt` freezes the exact VulkanScope level-2 rule-section census. Methodology gates must verify the reference SHA-256 and heading snapshot.
+- The OpenGLESScope contract may be stricter than the VulkanScope reference where GL/EGL safety or query legality requires it; it must never be weaker merely because the graphics API differs.
+- The exact VulkanScope reference contains 199 level-2 rule sections; all 199 are accounted for by `tests/golden/vulkanscope_3_0_12_rule_applicability.json`.
+
+## VulkanScope 3.0.12 complete methodology applicability census
+- `tests/golden/vulkanscope_3_0_12_rule_applicability.json` is release evidence, not documentation decoration. It must contain exactly one entry for each of the 199 level-2 headings in the immutable VulkanScope 3.0.12 reference, in the same order and with the same heading text.
+- `adopted` means the API-neutral rule class applies directly to OpenGLESScope.
+- `adapted` means the rule class applies with OpenGL ES/EGL authoritative equivalents and must retain equivalent failure semantics, bounds and test strength.
+- `api_specific_reference` means the Vulkan product feature itself is not fabricated in OpenGLESScope; only its API-neutral engineering lesson is inherited through an explicit current section.
+- `historical_methodology_reference` means the historical release detail remains auditable evidence while the current OpenGLESScope contract supersedes it for implementation.
+- Missing, duplicated, reordered or unclassified VulkanScope headings are release-blocking. An API-specific rule may be Not applicable as a product feature, but it may not be silently ignored as a methodology class.
+
+## Non-negotiable
+- Correctness, security, memory/resource safety, lifecycle safety, performance, accessibility, report integrity and usability are release-blocking.
+- A reproducible crash, deadlock, infinite wait, stale-process mutation, unbounded allocation, silent report loss, fabricated canonical name, incorrect query gate, privacy leak or security bypass blocks release.
+- Runtime support comes only from authoritative runtime evidence. GPU marketing name, SoC, Android version, device model, registry presence and extension registration are not runtime support evidence.
+- Registry metadata and runtime evidence are separate evidence classes everywhere: UI, TXT, HTML, structured report, Database payload and Encyclopedia.
+- Registry presence does not prove runtime support.
+- Extension-name presence alone does not prove a query result.
+- `Unknown / not queried` is preserved as a distinct evidence state when no legal runtime query has established a value.
+- Missing, failed, unsupported, unavailable, not applicable, incomplete and unknown/not queried states remain distinguishable whenever their meanings differ.
+- Unknown numeric enum values are preserved numerically/hexadecimally. A symbolic name is shown only when the locked current Khronos registry proves that exact name/value relationship.
+- Historical or desktop-only aliases absent from the locked Android-relevant registry path must never be presented as current OpenGL ES/EGL canonical names.
+- Complete report upload is explicit user action only. Silent/background report submission is forbidden.
+- Static inspection, model tests, Android compilation, lint/unit tests, sanitizer/profiler runs and physical-device tests are separate evidence classes. NOT EXECUTED is never presented as PASS.
+
+## Release evidence taxonomy
+- `SPEC-MISSING`: authoritative registry/spec capability is materially missing from the collector.
+- `QUERY-MISSING`: a legal runtime query is omitted or not executed behind its correct gate.
+- `QUERY-ILLEGAL`: a query is executed for the wrong core version, extension scope, object type or attribute class.
+- `REPORT-LOSS`: canonical collected evidence is dropped or semantically changed in export/submission/UI.
+- `FABRICATED-NAME`: a GL_/EGL_ symbolic label is not canonical in the locked registry or a descriptive label masquerades as a token.
+- `BUG`: deterministic implementation defect not covered by a more specific class.
+- `CRASH/LIFECYCLE`: process, service, coroutine, JNI, EGL context or resource-ownership failure.
+- `SECURITY`: origin, path, package, signing, input validation, privacy or permission defect.
+- `MEMORY/RESOURCE`: unbounded allocation, leaked descriptor/object/thread/context or unsafe driver-controlled count.
+- `PERFORMANCE`: avoidable repeated expensive work, unbounded Compose work, repeated native collection or pathological scan/query complexity.
+- `ACCESSIBILITY/UX`: keyboard/TV/TalkBack/large-text/rotation/input/visual hierarchy defect.
+- `TEST-GAP`: a claimed guarantee lacks a regression oracle, state model or negative mutation.
+
+## ABI and Android platform
+- Supported ABIs are arm64-v8a, armeabi-v7a and x86_64. Legacy x86 remains unsupported.
+- minSdk is 31 for the current release line; older historical audits document previous minimums.
+- compileSdk is Android API 37.2 and targetSdk is 37 (Android manifest targets major API levels).
+- 16 KiB page compatibility and native hardening remain release-gated.
+- Orientation and screen-size changes must not restart native collection merely to redraw the UI.
 
 ## Architecture
-- Kotlin and Jetpack Compose for UI.
-- Material 3 Expressive visual language.
-- C++20 with EGL/OpenGL ES for native capability collection.
-- JNI boundary remains small.
-- No unrelated graphics-API loader or third-party driver bundle loading exists in OpenGLESScope.
-- The active Android system EGL/OpenGL ES implementation is the authoritative runtime source.
+- UI is Kotlin + Jetpack Compose + Material 3 Expressive.
+- Collection is C++20 behind a dedicated `:opengles_probe` Android service process and a deliberately small JNI boundary.
+- The main process owns UI/report state. The probe process owns one terminal collection attempt and exits after atomic publication.
+- UI recomposition never triggers native recollection.
+- OpenGL ES core/GLSL ES, GL extensions, EGL core/runtime, EGL client extensions, EGL display extensions, Android Display/HDR and Android build/device provenance remain separate evidence layers.
+- App-private analysis history and watched evidence are offline by default and never uploaded without explicit user action.
 
-## OpenGL ES collection
-- GL_VENDOR, GL_RENDERER, GL_VERSION and GL_SHADING_LANGUAGE_VERSION are queried from a real current OpenGL ES context.
-- OpenGL ES extensions are enumerated with glGetStringi when available and otherwise from the implementation extension string.
-- Limits are queried with the corresponding OpenGL ES query and are never inferred from GPU model names.
-- Compressed texture formats are reported only from GL_COMPRESSED_TEXTURE_FORMATS.
-- Shader precision is reported from glGetShaderPrecisionFormat.
-- Core-version feature state is derived only from the runtime GL_VERSION.
-- Extension-backed feature state requires exact runtime extension-name evidence.
+## Probe process and terminal publication
+- Each collection attempt has a unique bounded result path in app cache and a separate terminal marker.
+- A terminal marker is accepted only after a complete bounded JSON payload is atomically published and structurally valid.
+- Partial JSON, oversized JSON, stale previous-run files and malformed terminal objects are failures, not success.
+- The main process has a bounded timeout and performs bounded non-cancellable teardown on cancellation.
+- A hard process watchdog terminates a stuck dedicated probe.
+- One process owns one terminal publication; double publication and post-terminal mutation are forbidden.
+- Service destruction tears down worker/watchdog state and the process terminates.
+- Self-tests use the same isolation model and are attributed to the current report only when runtime GL identity matches.
 
-## EGL
-- EGL vendor/version/client APIs and extensions are reported independently from OpenGL ES values.
-- EGL configuration data comes from eglGetConfigs/eglGetConfigAttrib.
-- EGL config attributes are raw implementation data; they must not be converted into unsupported display claims.
+## Native ownership and bounds
+- EGLDisplay, EGLContext, EGLSurface, thread-local EGL state, shader/program objects and all heap containers have deterministic teardown.
+- Every driver-controlled count is validated against an explicit ceiling before allocation or iteration.
+- GL extension count, EGL config count, device count, DMA-BUF format/modifier counts, internal-format sample counts, program binaries, logs and runtime strings remain explicitly bounded.
+- GL error draining is finite. EGL errors are intentionally consumed and recorded so stale errors cannot contaminate later evidence.
+- JNI payloads remain bounded and small enough for safe publication.
 
-## Display and HDR
-- Android Display HDR capabilities remain distinct from OpenGL ES and EGL.
-- HDR luminance values are shown only when Android exposes them.
-- An empty HDR type list is unavailable, not evidence that the GPU lacks HDR rendering capability.
+## Khronos registry lock
+- `registry/gl.xml` is the release-locked Combined OpenGL Registry source for OpenGL ES tokens, commands, extensions, aliases and core features.
+- `registry/egl.xml` is the release-locked EGL API Registry source.
+- Exact SHA-256 hashes are recorded in `registry/registry_lock.json`, manifests, CMake and release gates.
+- A registry hash change requires regeneration of derived catalog/coverage artifacts plus query legality, canonical-name and report-surface review.
+- Generated registry artifacts are never edited by hand to hide generator or source drift.
 
-## Database
-- Application identity is OpenGLESScope with package com.efishell.openglesscope.
-- Public web URL is https://efishell0.github.io/OpenGLESScope_database/.
-- API base is https://openglesscope-database-api.openglesscope.workers.dev.
-- Complete reports are all-or-nothing submissions; per-capability omission controls are forbidden.
-- Request bodies are bounded to 2 MiB without truncation.
-- Stored report IDs are SHA-256 hashes of stable canonical JSON.
-- Pagination uses server-authored submitted_at/id ordering.
+## Canonical-name and fabricated-name contract
+- Every hard-coded string literal that syntactically claims to be `GL_*` or `EGL_*` must be one of: a canonical registry enum, a canonical registry extension name, or an explicitly allowlisted API string such as GL_VENDOR/GL_RENDERER/GL_VERSION/GL_SHADING_LANGUAGE_VERSION/GL_EXTENSIONS.
+- A descriptive diagnostic must not invent a token-looking name. Example: timer query evidence uses `Query counter bits: GL_TIME_ELAPSED_EXT`, not a fabricated `GL_*_QUERY_COUNTER_BITS` token.
+- Hard-coded numeric enum/name pairs must exactly match the locked registry value.
+- Aliases are rendered as aliases; they never replace the canonical locked-registry name silently.
+- Unknown future runtime values remain raw hex/numeric evidence.
+- GL and EGL canonical-name audits are both release-blocking; auditing GL only is insufficient.
 
-## Release 0.1.20
-- Application version is 0.1.20 with versionCode 120. Database versioning is independent and changes only when the database is explicitly updated.
-- Package/namespace is com.efishell.openglesscope.
-- Official release repository is EFIShell0/OpenGLESScope.
-- Official database repository is EFIShell0/OpenGLESScope_database.
-- Primary UI accent is the official OpenGL ES brand tone #BA2A8D throughout the application and database.
-- Only OpenGL ES, EGL and Android display capability paths are permitted.
+## OpenGL ES core baseline
+- Current core baseline is OpenGL ES 3.2 and GLSL ES 3.20 unless authoritative upstream changes.
+- GL_VENDOR, GL_RENDERER, GL_VERSION and GL_SHADING_LANGUAGE_VERSION are bounded runtime strings and are not rewritten.
+- Parsed version and GL_MAJOR_VERSION/GL_MINOR_VERSION evidence are cross-checked where legal; a higher version is never inferred.
+- Core query legality follows exact core version requirements.
+- Default-framebuffer color/depth/stencil bit evidence comes from GL runtime state, not substituted EGLConfig metadata.
+- Array/vector/indexed limits use the correct query form and preserve per-index evidence.
+- Shader precision uses `glGetShaderPrecisionFormat` and preserves exact range/precision values.
+- Count+enumeration APIs preserve both count-query status and enumerated values without double-counting capability state.
 
-## 0.1.19 audit additions
-- OpenGL ES capability collection creates the highest context the system implementation can provide, then reports the actual runtime GL_VERSION without guessing.
-- Android HDR type collection uses Display.Mode.supportedHdrTypes on API 34+ and the legacy HDR capability list only on older supported Android versions.
-- Update checks follow the official release flow: startup performs a non-blocking metadata-only check, manual checks use the same path, and no APK is downloaded without explicit user confirmation.
-- UI, TXT and HTML expose the complete collected OpenGL ES, EGL, display/HDR, limits, extensions, formats, shader precision, query diagnostics and EGL-config datasets. Database submission must remain compatible with the independently versioned accepted schema and includes the complete human-readable report snapshot.
-- The update installer uses REQUEST_INSTALL_PACKAGES only for the explicit update flow and a non-exported FileProvider restricted to cache/updates.
-- Official OpenGL ES artwork is the only OpenGL ES brand source; the application does not invent a replacement OpenGL ES mark.
+## Features and limits
+- Core and extension implementation limits are collected only through legal GL/EGL runtime queries with exact version/extension ownership.
+- Feature/limit names come from the locked registries; app-created convenience labels must be descriptive and must not mimic GL_/EGL_ tokens.
+- UI summaries never replace the underlying complete values and diagnostics in reports.
 
-- Shader and program binary format enumerations are reported only from the corresponding runtime GL queries.
-- Version-gated OpenGL ES 3.0, 3.1 and 3.2 implementation limits are queried directly from the current context.
+## OpenGL ES core query census
+- The registry-derived GLES 2.0–3.2 capability-like GetPName census is recalculated from `gl.xml` every release.
+- A census change is an upstream-baseline event, not permission to update a golden number blindly.
+- Every required core capability query must either be collected legally or have an explicit specification-backed exclusion.
+- Query failure is Unavailable/diagnostic evidence and never a fabricated zero, false or Unsupported state.
 
-- JNI entry points use stable non-mangled Java method names and are protected from release shrinking/renaming.
-- Phone launcher, round launcher, adaptive launcher and Android TV banner preserve the established application shell layout geometry while using the official OpenGL ES artwork and SCOPE wordmark.
-- Application shell quality parity includes icon-based navigation, back/settings/info affordances and landscape navigation behavior matching the established application shell, excluding API-specific pages and brand colors.
-- Application-shell parity requires the established navigation geometry, spring page transitions, animated status banners, landscape focus behavior, card spacing/radii and expressive action-button alignment to remain intact unless a platform constraint requires a documented deviation.
+## OpenGL ES extension contract
+- Runtime extension enumeration is authoritative for extension presence.
+- Extension-defined implementation queries execute only behind the exact owning extension gate unless an audited core promotion path makes the same query legal.
+- Similar extension names do not imply interchangeable query legality.
+- `eglGetProcAddress` results are null-checked before invocation.
+- Extension query diagnostics remain separate from support counts.
+- Current-registry extension GetPName candidates are regenerated and triaged each release: collect, explicitly exclude with specification evidence, or block release.
+- Device/vendor-specific implementation queries are never inferred from vendor string alone; the owning extension must be present.
 
-## 0.1.19 collector-quality requirements
-- Native OpenGL ES/EGL probing runs in the dedicated non-exported `:opengles_probe` process. The UI process must not load the collector native library.
-- The probe process uses one worker thread and a process-wide native-probe lock.
-- Probe results are complete snapshots published through private-cache temporary-file replacement; partial snapshots are not parsed as final reports.
-- Probe result size is bounded to 8 MiB and probe duration to 20 seconds. Timeout/oversize handling terminates the probe process and reports Unavailable instead of retaining a stuck native worker.
-- A native-library load failure, JNI failure or probe exception must not crash the main application process.
-- Every attempted GL implementation query records an explicit Available or Unavailable diagnostic. Failed queries must not silently disappear.
-- Queries that are not applicable to the actual core version or exact extension evidence are not executed merely to populate a field.
-- OpenGL ES 2.0/3.0/3.1/3.2 implementation-limit families used by the comparison capability viewer are a minimum coverage floor; current Khronos core requirements remain authoritative.
-- Known compressed/shader/program binary enums are displayed as symbolic name plus raw hexadecimal value. Unknown enumerants remain raw hexadecimal values.
-- EGL config enumeration covers the EGL 1.5 core configuration attribute set and preserves per-attribute query failure as unavailable/null evidence.
-- Current Android display mode, resolution and supported display modes are display evidence only and must not be interpreted as GL/EGL capability.
-- UI, TXT and HTML exports must expose every collected dataset and query diagnostic. Export is disabled when the base capability report is unavailable.
-- Database submission remains compatible with the independently versioned database schema. No application-only release may mutate the database schema or version.
-- Database response parsing is bounded, database URL construction is restricted to the official HTTPS host, and report submission remains explicit and complete-report only.
+## OpenGL ES extension lookup performance
+- Runtime extension lists are normalized once into deterministic sorted unique vectors.
+- Repeated extension membership checks use logarithmic lookup over the normalized vector rather than repeated linear scans.
+- Normalization must not fabricate, rename or discard distinct registered tokens; only exact duplicate strings may collapse.
+- Extension output ordering is deterministic after normalization, improving report diff stability without changing evidence semantics.
 
-## 0.1.19 UI and coverage requirements
-- Settings is not a standalone destination. Report export and database actions live in Info. Collection policy and raw network-endpoint cards are not exposed as standalone Info sections.
-- Primary page animation direction is derived from the visible navigation order, never enum declaration order.
-- Search fields preserve the established rounded 22 dp geometry, spacing and placeholder presentation.
-- Android-reported HDR types use the established HDR card/logo presentation where matching bundled artwork exists; unknown types remain text and are never guessed.
-- Large LazyColumn datasets use stable keys where the collected key is intrinsically unique.
-- external OpenGL ES capability reference OpenGL ES 2.0/3.0/3.1/3.2 information families are a minimum comparison floor, excluding sensors and unrelated Android inventory. Khronos core specifications remain authoritative.
-- UI, TXT and HTML must continue to expose the same complete collected capability datasets and diagnostics.
+## EGL core baseline
+- Current EGL core baseline is EGL 1.5 unless authoritative upstream changes.
+- Client extensions (`EGL_NO_DISPLAY`) and initialized-display extensions remain separate datasets.
+- EGL vendor/version/client APIs, bound API, current context/display/surfaces and collector pbuffer evidence remain separate fields.
+- EGLConfig attributes are queried directly and failed attributes retain error/provenance.
+- Creation-only attributes are never presented as legal `eglQueryContext` runtime state.
+- ES3 context creation requires EGL 1.5 or the exact `EGL_KHR_create_context` path; safe ES2 fallback remains independent.
+- Extension scope is exact: client extensions gate client-scope entry points; display extensions gate initialized-display functionality.
 
-## 0.1.19 audit additions
-- Android TV D-pad, Enter/Center and Back navigation are first-class usability requirements. All actionable cards and navigation destinations must be focusable through Compose focus traversal and expose a visible focus state.
-- Leanback launcher support and non-required touchscreen declarations remain present so television devices do not require touch input.
-- Complete database payload parity includes query diagnostics, all collected EGL 1.5 configuration attributes and Android display mode evidence already present in UI/TXT/HTML. Database versioning remains independent.
-- “All OpenGL ES queries” means all relevant implementation capability queries for the active core version and evidenced extensions, not mutable rendering state, object state, framebuffer state or synthetic feature tests.
+## EGL query and configuration performance
+- Invariant extension gates used for every EGLConfig are computed once per display, outside the per-config loop.
+- Directory-like/config-like enumeration remains bounded before allocation.
+- Repeated local metadata lookup must not dominate driver query cost when a direct indexed/local result is available.
+- Performance changes must preserve every config row and every unavailable-attribute diagnostic; speed never justifies evidence loss.
 
-## 0.1.19 export, database and update parity requirements
-- TXT and HTML export use Android Storage Access Framework CreateDocument on phones and tablets.
-- Android TV export, and document-provider launch failure, fall back to the public Downloads collection rather than silently failing.
-- Android 9 and older request WRITE_EXTERNAL_STORAGE only when the Downloads fallback is actually required; the manifest permission is capped at API 28.
-- SAF and Downloads writes report success or failure to the user and never silently discard an export error.
-- TXT and HTML generation runs off the UI thread and concurrent export generation is blocked until the current snapshot is handed to the destination flow.
-- Database submission exposes one in-flight operation at a time, remains disabled without a complete report, uses the fixed official HTTPS endpoint, sends the complete structured dataset plus canonical TXT snapshot, and never truncates the report to satisfy the 2 MiB transport bound.
-- Database response materialization is bounded to 64 KiB and success/failure parsing must tolerate an absent report ID without producing misleading UI text.
-- The HTTP resolver uses the Android platform DNS resolver, prefers IPv6 addresses when both families are available, retains IPv4 fallback, and never substitutes numeric address literals for HTTPS hostnames.
-- Update checks remain asynchronous and metadata-only until explicit download confirmation. Manual and startup checks share the same code path and status-banner behavior.
-- Update ABI selection is based on the installed native-library directory when possible, then falls back to Android supported ABIs.
-- Release asset URLs are parsed and validated as HTTPS github.com paths under EFIShell0/OpenGLESScope/releases/download with no user-info, query or fragment before download.
-- Downloaded update APKs remain bounded, private-cache confined, package-identity checked, signing-certificate checked and strictly newer by versionCode and versionName before the package installer is opened.
+## Formats and binary evidence
+- Compressed texture formats, shader binary formats and program binary formats use runtime count+enumeration evidence.
+- Internal-format capability queries use legal targets and version/extension gates.
+- Unknown format/binary values remain raw numeric evidence when no locked-registry symbolic name exists.
+- Per-sample/internal-format details remain bounded.
 
-## 0.1.19 specification and evidence requirements
-- The OpenGL ES 3.2 implementation-dependent-value tables are an explicit core coverage gate. The collector must include the applicable multisample line-width range and granularity, fragment interpolation offset bits, layer provoking vertex, primitive-restart-for-patches support and texture-buffer offset alignment queries in addition to the existing core limit families.
-- A runtime extension list is evidence, not an inference source. Extension names must retain runtime spelling and enumeration order. Any extension-specific numeric query must be gated by the exact advertised extension that defines it.
-- Feature UI must return Unknown, not Unsupported, when the relevant extension enumeration itself is unavailable.
-- Query summaries must keep Available, Unavailable, Not applicable and Unknown separate.
-- Android HDR constants may be named only when the platform API level exposes the corresponding official constant; unknown integer values remain identified by their Android HDR type value.
-- Android TV release support requires armeabi-v7a and arm64-v8a APK coverage as well as the universal APK, with x86_64 retained for the required desktop/emulator ABI. Native libraries remain 16 KiB-page compatible.
+## Android Display and HDR
+- Android Display/HDR is platform evidence and never rewrites GL/EGL support state.
+- Wide color gamut is a platform boolean/evidence state, not a fabricated measured gamut percentage.
+- HDR luminance is shown only when Android supplies it.
+- Current-mode HDR types and legacy HdrCapabilities provenance remain distinguishable where platform APIs differ.
+- Unknown future integer HDR types remain explicit unknown values rather than mislabeled logos.
 
-## 0.1.19 Android TV browse and HTML-report requirements
-- Android TV D-pad browsing must traverse read-only capability content as well as actionable controls. Read-only section, item, metric, HDR and key/value surfaces are focus targets on television devices and request bring-into-view when focused.
-- D-pad Down/Up must be able to advance through capability evidence without requiring a touchscreen, mouse wheel or clickable control.
-- Focusability added for television browsing must not turn read-only evidence into an action and Enter/Center must not mutate state on read-only cards.
-- HTML report presentation quality tracks the established report shell: embedded application branding, hero metrics, responsive dark layout, section cards, readable wide tables, monospace technical identifiers and explicit query-status badges.
-- HTML remains self-contained and does not load remote scripts, styles, fonts or tracking resources.
-- TXT and HTML exports do not embed public database, database API or source-repository URLs; exported reports contain collected capability evidence and local report metadata only.
-- Runtime extension enumeration is vendor-neutral and complete for the active implementation: every exact GL extension token reported by the implementation and every EGL display/client extension token is retained. Vendor-specific extensions are not guessed from GPU branding.
-- Extension-specific numeric capability queries are executed only when the exact defining extension is advertised and the query is valid for the active context; vendor extensions that expose no implementation query are represented by their exact runtime extension token rather than synthetic values.
+## Complete report contract
+- Canonical structured evidence is lossless within defined safety ceilings.
+- TXT, self-contained HTML, analysis snapshot and Database submission must not silently omit a canonical complete-report section.
+- HTML escapes runtime/untrusted strings and includes restrictive local CSP.
+- Structured/query state and human-readable text must agree semantically.
+- Report generation never turns Unknown/Unavailable into Unsupported merely for presentation simplicity.
 
-## 0.1.19 completion and artifact-cleanliness requirements
-- Info must not expose standalone Collection policy or Network sections; fixed endpoint and transport policy remain implementation details unless needed for an actionable error or security disclosure.
-- TXT export, HTML export and public-database submission remain disabled while capability collection is in progress, after an incomplete collection, and whenever a complete available report snapshot does not exist.
-- A report action may become enabled only after the collection coroutine has completed and the parsed snapshot is marked available.
-- The probe service accepts result paths only as direct children of the private cache/probe directory with the expected generated filename pattern.
-- Release source, resources, documentation, archive entries and binary asset metadata contain no legacy graphics-project identifiers or external comparison-project identifiers.
-- Coverage comparison is an engineering audit input only; comparison-project branding is never shipped in application artifacts.
+## Database submission
+- Submission is explicit and complete-report gated.
+- Endpoint is the fixed official HTTPS Worker origin; redirects are disabled.
+- Request body is bounded to 2 MiB and never truncated to fit.
+- Response reading is independently bounded.
+- Success requires a canonical lowercase 64-hex report ID before permalink/success state is entered.
+- Malformed success bodies are failures.
+- Producer version/versionCode and technicalReport schema must match the companion Database contract exactly.
+- When the app version ceiling advances, release is blocked until a companion Database release accepts that exact producer or Database submission is explicitly disabled for that app release.
 
-## Release 0.1.20 update-channel requirements
-- Application version is 0.1.20 with versionCode 120. Database versioning remains independent and is not changed by this application release.
-- The official update source remains the public EFIShell0/OpenGLESScope GitHub repository only.
-- Update metadata is obtained from the official GitHub Releases API release list so a repository whose newest published release is marked pre-release does not fail with GitHub's `/releases/latest` 404 behavior.
-- Draft GitHub releases are never update candidates.
-- Published stable and pre-release entries may be considered, but a candidate must have a parseable dotted numeric version and must be strictly newer than the installed application version.
-- At most 20 recent official releases are materialized and the response body is bounded to 2 MiB.
-- Candidate ordering is determined by parsed numeric version rather than trusting GitHub list order.
-- APK selection retains installed-ABI matching with universal fallback.
-- Release asset URLs remain restricted to HTTPS github.com paths under `/EFIShell0/OpenGLESScope/releases/download/` with no user-info, query or fragment.
-- Startup update checks remain metadata-only and silent when up to date or when a background check fails. Manual checks use the same metadata path and surface actionable failures.
-- No APK download starts until explicit user confirmation. Downloaded APK verification continues to require the expected package identity, signing certificate, strictly newer versionCode and strictly newer versionName before Android's installer is opened.
+## Privacy
+- Reports and Database payloads never collect IMEI, serial, Android ID, MAC address, account identifiers, auth tokens, cookies or private filesystem paths.
+- Android build/device metadata may include non-secret platform/build fields already required by the schema, but must not be extended with unique/private identifiers.
+
+## Network policy
+- Network behavior supports normal IPv4, IPv6 and dual-stack Android networks.
+- No IPv4-only literals or address-family assumptions are allowed.
+- Validated internet is checked for network-only user actions; offline inspection remains usable without network.
+
+## Application updates
+- Release discovery is limited to the official `EFIShell0/OpenGLESScope` GitHub Releases channel.
+- Asset URL, package identity, signing identity, versionCode and exact selected versionName are verified.
+- Trusted release metadata asset size is retained and compared to the completed download.
+- Download size is bounded to 256 MiB.
+- Disabling direct updates cancels active work and removes pending update artifacts.
+- Update status distinguishes checking, offline/unavailable, up-to-date, available, downloading, paused, canceled, failed, verified and installer handoff states.
+- The semantic update-check action uses the update-check icon, not a generic download icon.
+
+## Shared-storage security
+- Shared-storage browsing stays inside the canonical shared-storage root.
+- Path traversal, symlink escape and non-canonical destinations are rejected.
+- Folder scans are bounded to 4096 entries.
+- Import extension and byte-size limits are validated before parsing.
+- Export uses atomic temporary write/replace semantics and explicit overwrite confirmation.
+- Legacy WRITE_EXTERNAL_STORAGE fallback and SAF-provider ambiguity do not return unless separately audited.
+
+## File Manager parity
+- The shared-storage File Manager follows the same interaction quality as VulkanScope 3.0.12 while retaining OpenGLESScope colors.
+- Six view modes are available: List, Compact list, Detailed list, Grid, Dense grid and Large tiles.
+- Six sort modes are available: Name A–Z, Name Z–A, Modified newest/oldest, Created newest/oldest.
+- The most recently selected view/sort mode persists locally.
+- Search is bounded and never causes an unbounded full-tree scan.
+- Breadcrumb navigation exposes the canonical path hierarchy without showing an editable raw filesystem path.
+- Back first dismisses the IME, then navigates to the parent folder, then closes at root.
+- Import/export validation remains identical regardless of visual layout.
+- Folder/file icons are semantic and stable; view-mode and sort-mode icons are not reused for unrelated actions.
+- The File Manager remains usable in portrait, landscape, narrow windows, desktop pointer input and Android TV/D-pad navigation.
+
+## Icon semantics
+- API-neutral shared icons must remain byte-identical to the VulkanScope 3.0.12 assets unless an audited OpenGLESScope-specific semantic replacement is required.
+- Vulkan-only icons are not copied merely to inflate parity.
+- OpenGLESScope/OpenGL ES/EGL brand icons remain app-specific.
+- One visible action must not use a misleading unrelated icon when a correct shared icon exists.
+- Update check uses `ic_check_updates`; download/receive remain transfer semantics.
+- Encyclopedia uses `ic_book`; reference search uses `ic_search`; evidence-boundary guidance uses `ic_shield`; opening-animation preference uses `ic_opening_animation_toggle`.
+- Settings uses `ic_settings`; Info/About uses `ic_info`; Database submit/browse actions retain their dedicated database icons.
+- Composite artwork is permitted only when a checked-in parity rule documents the semantic composition. Decorative invention that implies nonexistent capability is forbidden.
+
+## Primary navigation parity
+- The compact bottom navigation is used in portrait and landscape; a navigation rail must not reappear.
+- The primary navigation has four API-appropriate destinations, matching VulkanScope 3.0.12 density: Overview, OpenGL ES, EGL and Extensions.
+- Display & HDR, Features, Limits, Formats, Precision, EGL Configs, Encyclopedia, Analysis and Settings are secondary destinations reached from Overview/header or contextual actions.
+- Secondary pages select Overview in primary navigation rather than inventing a fifth primary destination.
+- Selection animation uses a rounded capsule and semantic icon/text state; no square highlight is allowed.
+- Primary navigation stays above Android system navigation insets and remains usable in landscape.
+
+## Settings information architecture
+- Settings is entered from the header settings action and is not duplicated as a separate primary tab.
+- Settings contains exactly the current meaningful areas: Info, Reports & Database, and Update/Startup preferences.
+- A separate unreachable `Page.Info` destination is forbidden; Info is owned by the Settings information architecture.
+- Update/startup settings include direct GitHub update preference and opening-animation preference.
+- Settings subpage back behavior returns to Settings before leaving for Overview.
+- Settings cards use the same Material 3 Expressive geometry, typography, spacing and semantic artwork as the rest of the app.
+
+## Encyclopedia parity
+- Encyclopedia is offline and generated only from the locked `gl.xml` + `egl.xml` catalogs.
+- It has separate introductory/evidence-boundary guidance, Reference search, and How to read entries sections.
+- Search is bounded to 160 input characters and 250 visible matches.
+- Large Commands/Tokens/Types families require at least two query characters before enumeration into Compose UI.
+- Catalog decompression is bounded to 2 MiB and entry count to 6000.
+- Malformed individual catalog rows are skipped; invalid top-level schema fails closed without crashing the whole app process.
+- Extension runtime state is derived only from exact runtime enumeration; non-extension registry entries are labeled registry reference, not runtime supported.
+- Registry owners, alias/value/group/signature/definition fields are presented only when present in generated catalog data.
+
+## Pagination and filters
+- `COLLECTION_PAGE_SIZE` is 25 for heavy capability surfaces and filter popup paging.
+- Page fields reject zero, leading-zero multi-digit forms and values beyond the current page count.
+- Typing in a page field does not mutate the active page until commit/IME Done/focus loss.
+- Arrow page changes update the field, clear focus and animate the displayed page number without corrupting in-progress keyboard input.
+- Search/filter state is saveable across supported configuration changes.
+- Heavy lists use lazy containers and bounded result windows.
+
+## Opening sequence
+- Opening animation preference is independent of direct-update preference.
+- When enabled on a normal fresh launch, native collection starts only after the opening animation completes.
+- A bounded watchdog releases startup if animation completion cannot be delivered.
+- Disabling the animation allows immediate startup work; it does not change query semantics.
+- Devices with unavailable GL/EGL evidence must not hang on the opening screen.
+
+## Material 3 Expressive UI
+- All destinations use one coherent dark Material 3 Expressive language; OpenGLESScope keeps its own magenta palette and logos.
+- Edge-to-edge layout and system insets are handled without content hiding behind system UI.
+- Long technical values wrap or use contained horizontal scrolling instead of clipping.
+- Loading, failure, empty, unavailable and completed states are visually and semantically distinct.
+- Actionable icons have accurate content descriptions; decorative icons do not create duplicate accessibility announcements.
+- Interaction targets remain usable with touch, mouse, keyboard, TV remote, TalkBack, large text and increased display size.
+
+## Android TV and desktop input
+- Focusable rows/cards bring themselves into view when focused.
+- D-pad traversal must not strand focus in clipped lists or dialogs.
+- Long technical evidence remains copyable through supported long-press/keyboard/TV action paths where the UI exposes copying.
+- Mouse-wheel/pointer scrolling remains usable on ChromeOS/Googlebook-style desktop Android environments.
+- Desktop secondary-input behavior must not create duplicate/context menus where the platform contract disables them.
+
+## Accessibility
+- System font substitution, font scale, display scale, RTL/bidi and narrow landscape remain usable.
+- Dynamic status announcements use appropriate semantics without repeated noisy announcements.
+- Color is never the sole representation of evidence state.
+- Large text may stack rows instead of truncating technical labels or action descriptions.
+
+## Performance contract
+- Native collection executes once per requested report, never once per recomposition/page.
+- Extension membership lookup uses normalized sorted vectors and binary search.
+- Invariant EGLConfig extension gates are hoisted outside per-config loops.
+- Registry catalog loading is cached process-wide after bounded validation.
+- Encyclopedia and filters cap visible work and use lazy containers.
+- File Manager scans only the current folder and uses a 4096-entry ceiling.
+- Network, hashing, package inspection, filesystem scans, registry decoding and report parsing do not block the main UI thread.
+- A performance optimization is invalid if it drops rows, skips required query diagnostics, changes evidence state, reduces registry coverage or makes report output nondeterministic.
+
+## Security contract
+- Cleartext HTTP remains disabled.
+- Official network origins are fixed/validated.
+- Response bodies and local imports are bounded before materialization.
+- APK install requires package/signature/version verification.
+- HTML output escapes runtime strings.
+- Shared-storage paths are canonicalized and root-confined.
+- Sensitive-field rejection remains part of app/Database tests.
+
+## Build and toolchain
+- Current compile/target SDK baseline: 37.
+- Current minSdk baseline: 31, matching the VulkanScope 3.0.12 Android platform floor and allowing the same Android 12+ window/splash behavior without compatibility-only branches.
+- NDK remains explicitly locked by Gradle.
+- Gradle/Kotlin/AGP/Compose/Material/OkHttp versions must form a build-compatible set verified by an actual Android build environment.
+- Native compilation retains warning-as-error/hardening policy established by CMake.
+- Experimental Compose/Material APIs require explicit compile-time opt-ins rather than suppression of real failures.
+
+## Android build gate
+- Release command is `./gradlew :app:assembleRelease :app:lintRelease :app:testReleaseUnitTest --offline --no-daemon --stacktrace` when dependencies are locally available.
+- A Python/static quality gate cannot substitute for this build gate.
+- If the Gradle distribution or dependencies are unavailable, record build/lint/unit as NOT EXECUTED.
+- Any reached Kotlin/C++/resource/lint/unit failure blocks release until fixed and rerun.
+
+## Static source and data gate
+- Every Python tool must parse.
+- Checked-in JSON/CSV/XML generated evidence must parse and satisfy schema/census/hash contracts.
+- Registry source and generated artifacts must agree.
+- Release source ZIP must not contain IDE/VCS/cache/build/credential/keystore/pyc/__pycache__ artifacts.
+
+## Query coverage gate
+- Core GLES capability census is derived from `gl.xml`.
+- Extension capability candidates are derived from current GLES2 extension ownership and GetPName groups.
+- EGL query legality is separately audited against `egl.xml` and API semantics.
+- GL and EGL canonical-name audits both run.
+- Query additions must be present end-to-end in canonical structured report, UI when applicable, TXT/HTML and Database compatibility when the schema carries them.
+
+## Report integrity gate
+- Structured report schema constants, parser, TXT, HTML, Database payload and Worker expectations are mutually consistent.
+- Duplicate diagnostic keys are forbidden except for explicitly version-scoped historical compatibility exceptions.
+- Complete-report readiness is a validated terminal state, not merely non-null JSON.
+
+## Lifecycle/resource gate
+- Probe timeout, cancellation, service destruction, terminal publication and stale-process teardown have source verifiers plus independent state-machine tests.
+- Native bounded-resource rules have static checks and regression fixtures.
+
+## UI parity gate
+- Four primary destinations, no production navigation rail, no unreachable Page.Info and no fifth primary Display tab.
+- Encyclopedia structure, filter-page input behavior, semantic icons, Settings structure and File Manager breadcrumb/view/sort behavior are release-gated.
+- API-specific destination counts may differ only where OpenGL ES/EGL semantics require it; common interaction behavior must remain at VulkanScope 3.0.12 quality.
+
+## Negative-mutation gate
+- Every new release contract includes mutations that deliberately break version identity, registry/name checks, query coverage, performance contract, navigation/Settings/Encyclopedia/File Manager requirements and verifies the gate fails.
+- A negative-mutation fixture that no longer exercises the intended defect is itself a failure.
+
+## Deterministic package and clean-extract gate
+- Final source ZIP file order/timestamps/contents follow the deterministic packager contract.
+- `files.txt` is regenerated from the final source tree and must match exactly.
+- The finished ZIP is extracted to a new clean directory and the aggregate quality gate is rerun there.
+- Clean-extract content hashes must match the packaged source tree.
+
+## Immutable predecessor contract
+- The exact predecessor release ZIP and SHA-256 are recorded in the 2.1.0 regression contract.
+- Every production-source change is allowlisted with predecessor hash/state, successor hash/state and reason.
+- Unrelated production drift blocks release.
+- Test/rules/generated-artifact updates cannot be used to hide an unreviewed production change.
+
+## Mandatory evidence workflow for every future change
+1. Start from the exact immutable predecessor ZIP and record SHA-256/file census.
+2. Read this complete rules file before editing production source.
+3. Recheck current authoritative Khronos/toolchain sources when a claim can become stale.
+4. Audit before patching and classify each finding using the evidence taxonomy.
+5. Preserve a regression oracle before fixing a concrete defect whenever practical.
+6. Make the smallest architecture-correct fix; never weaken evidence semantics or a gate to obtain PASS.
+7. Update generated registry/report artifacts only from locked sources and deterministic generators.
+8. Run source/state/negative-mutation/package gates.
+9. Run the real Android build/lint/unit gate when the environment can resolve the locked toolchain.
+10. Package deterministically, extract cleanly, rerun the aggregate gate and record any NOT EXECUTED evidence separately.
+
+## Release 2.1.0 VulkanScope 3.0.12 rules/UI/query/performance parity audit
+- Release identity is OpenGLESScope 2.1.0 / versionCode 2100.
+- `PROJECT_RULES.md` is now a single authoritative document; the duplicate second engineering-rules root from 2.0.0 is removed.
+- Exact VulkanScope 3.0.12 rules remain byte-for-byte locked as external methodology evidence.
+- Production navigation contains exactly four primary destinations: Overview, OpenGL ES, EGL, Extensions.
+- The unused legacy landscape navigation rail is removed; bottom navigation is the only primary navigation in both orientations.
+- The unreachable duplicate `Page.Info` destination is removed; Info remains a Settings section.
+- Heavy filter paging uses `COLLECTION_PAGE_SIZE` (25) and VulkanScope 3.0.12 focus/commit behavior.
+- Encyclopedia now separates introduction/evidence boundary, Reference search and How to read entries.
+- Semantic icon corrections include `ic_check_updates`, `ic_shield`, `ic_search`, `ic_question` and `ic_opening_animation_toggle` in their exact roles.
+- File Manager adds canonical breadcrumb navigation while retaining six view and six sort modes, bounded current-directory scans and atomic import/export behavior.
+- GL/EGL extension lists are normalized once; repeated membership gates use binary search.
+- EGLConfig-invariant extension booleans are computed once per display rather than once per config row.
+- Canonical-name audit expands from GL-only token checks to both `gl.xml` and `egl.xml`, including hard-coded enum/value agreement and fabricated-token rejection.
+- Query coverage, report semantics, Database producer compatibility, security, lifecycle/resource, accessibility and deterministic package gates remain mandatory.
+- Companion Database is OpenGLESScope Database 1.0.10; it accepts exact producer 2.1.0 / 2100 schema-5 evidence, retains exact 2.0.0 / 2000 as historical schema-5 evidence and keeps unaudited producer identities fail-closed.
+
+## Historical release contracts
+- Historical per-release audit documents under `rules/` remain immutable evidence for their released behavior.
+- Historical rules are not duplicated inline in this file; the current contract above supersedes them where it is stricter.
+- Existing regression contracts for 1.2.1 through 2.0.0 continue to protect released query/report/lifecycle behavior unless an explicit 2.1.0 allowlist documents a change.
+
+## Release 2.1.1 full-report/UI/Analysis evidence parity audit
+- Release identity is OpenGLESScope 2.1.1 / versionCode 2101; technicalReport remains schema 5 and submission schema remains 2.
+- VulkanScope 3.0.12 remains the byte-locked API-neutral UI/interaction/quality methodology reference; Vulkan-only driver A/B and Vulkan Profiles behavior must never be fabricated for OpenGL ES/EGL.
+- Every hard-coded GL_/EGL_ capability/query/token name must resolve against the locked `gl.xml`/`egl.xml` registries or be an explicitly audited state/query identifier covered by the canonical-name verifier.
+- UI support state must be derived from exact runtime evidence. Registry ownership, an extension-name substring, absent data, failed query, Unknown or Unavailable evidence must never be promoted to Supported/Unsupported without the corresponding complete enumeration/query evidence.
+- Features is generated from the complete OpenGLESScope query-gate catalog plus core-version milestones; it must not remain a hand-selected sample list.
+- OpenGL ES, EGL, Limits, Precision, Formats, Configs and Extensions surfaces must expose diagnostic/provenance detail when the canonical report already contains that evidence; hiding retained query errors behind summary counts is a release blocker.
+- Analysis contains the applicable VulkanScope-quality tools: Compare, Search, Diagnostics, Requirements, Minimums, Graph, Presentation, Raw JSON, Database, History, Watched, Quality, Share and Tests. Vulkan-only tools are identified as not applicable rather than simulated.
+- Analysis Search distinguishes total matches from its bounded rendered window and discloses hidden matches. Raw JSON similarly reports total/matched/rendered counts and never truncates export data silently.
+- Diagnostics exposes OpenGL ES runtime state, unavailable GL attributes, isolated probe timing/bounds/publication behavior, EGL current-binding evidence and query diagnostics. Per-query timing is shown only if actually recorded; it must not be invented.
+- Requirements evaluates only checked-in scalar OpenGL ES 3.2 implementation minima/maxima that map to collected numeric evidence. Behavioral/conformance rules outside this resolver are stated as out of scope; missing source evidence is UNKNOWN.
+- Minimum profiles use bounded local schemas and confirmation for save/load/delete operations; profile evaluation cannot mutate canonical capability evidence.
+- Dependency graph explicitly separates runtime query-gate state from locked registry reference metadata; registry edges/owners do not imply runtime support.
+- Presentation combines Android display evidence with EGL surface/runtime evidence and explicitly refuses end-to-end colorspace/HDR/presentation guarantees that the evidence cannot establish.
+- Database analysis supports bounded recent-report browsing and exact 64-hex report lookup from the fixed HTTPS origin. Comparison is local and reports evidence differences, not GPU ranking/conformance/performance conclusions.
+- History timestamps are user-readable while preserving private-storage size evidence; destructive history and watched-evidence actions require explicit confirmation.
+- Collection integrity scoring is transparent: every audited check, maximum deduction and evidence is shown. The score is not conformance, certification, performance or device/vendor ranking.
+- Self-test status has explicit PASS/FAIL/UNAVAILABLE semantics and never overwrites canonical feature-support state or collection-integrity scoring.
+- Precision and EGL Configs have distinct semantic destination icons; unrelated Features/Surface artwork must not be reused for those destinations.
+- Native/report correctness, canonical registries, File Manager safety/performance, updater security, lifecycle/resource, accessibility and deterministic packaging remain unchanged release blockers.
+- Companion Database is OpenGLESScope Database 1.0.11 and accepts exact 2.1.1 / 2101 schema-5 evidence while preserving exact historical producer contracts and rejecting unaudited future identities.
+
+## Release 2.1.2 current toolchain/spec/query/detail parity audit
+- Release identity is OpenGLESScope 2.1.2 / versionCode 2102; submission schema remains 2 and technicalReport schema remains 5.
+- Android platform parity is compileSdk 37, targetSdk 37 and minSdk 31, matching VulkanScope 3.0.12. `android.hardware.type.pc`, optional Leanback and optional touchscreen declarations remain aligned while the OpenGL ES requirement stays app-specific.
+- Android Gradle Plugin is pinned to current stable 9.4.1 and uses AGP 9 built-in Kotlin; `org.jetbrains.kotlin.android` / `kotlin-android` must not be applied. The Compose Compiler Gradle plugin is pinned to current stable Kotlin 2.4.20. Gradle wrapper remains 9.7.1 to match VulkanScope 3.0.12 and is above AGP 9.4's minimum Gradle 9.6.0. Kotlin 2.4.20 documents full KGP support through Gradle 9.7.0 and permits newer Gradle releases with possible warnings; therefore 9.7.1 must not be described as fully supported by Kotlin and real build/lint/unit execution remains mandatory evidence.
+- Android NDK is pinned to current LTS r30 / 30.0.16248370. ABI output remains arm64-v8a, armeabi-v7a, x86_64 and universal; legacy x86 remains excluded.
+- AndroidX Core KTX is 1.19.1, Core SplashScreen is 1.2.0, Activity Compose is 1.13.0, Compose UI/Foundation/Animation are 1.12.1, Material 3 Expressive is 1.5.0-alpha28, Lifecycle Runtime Compose/KTX are 2.11.0, OkHttp is 5.5.0 and ZXing Core is 3.5.4.
+- Material 3 remains on the current Expressive alpha line because production source uses `MaterialExpressiveTheme`, `MotionScheme.expressive`, `ShortNavigationBar`, `LoadingIndicator` and `LinearWavyProgressIndicator`; silently downgrading to a stable artifact that removes those APIs is forbidden.
+- User-visible library/build-tool versions are generated from the pinned Gradle build configuration through BuildConfig constants; duplicate hand-maintained UI version strings are forbidden.
+- Android platform splash uses the same API-neutral behavior as VulkanScope 3.0.12: `Theme.SplashScreen`, the app-specific foreground logo, bounded exit animation and `postSplashScreenTheme`. The in-app OpenGLESScope opening animation remains separately user-configurable and data collection still begins only after its startup gate opens.
+- Current normative specification baseline is OpenGL ES 3.2, GLSL ES 3.20 revision 8 and EGL 1.5. Khronos still identifies OpenGL ES 3.2 and EGL 1.5 as current; later document publication timestamps do not imply a new API version.
+- Locked `gl.xml` and `egl.xml` remain the canonical token/command/extension naming source. Every hard-coded GL_/EGL_ name must resolve to those registries or to an explicitly audited non-registry evidence-state identifier. Fabricated names, guessed aliases and substring-derived support are release blockers.
+- Query coverage is independently release-blocked by the registry-derived GLES core census, current extension candidate triage, EGL registry coverage, EGL query-legality audit and GL GetPName disposition audit. A PASS means every in-scope candidate is collected or has an explicit specification-backed exclusion; it does not authorize inventing a runtime value.
+- Runtime support remains evidence-only. Registry membership is reference metadata; failure/absence/Unknown/Unavailable are not converted into Unsupported, and extension ownership never becomes Supported without complete runtime enumeration/query evidence.
+- OpenGL ES/EGL/Features/Limits/Precision/Formats/Configs/Extensions/Encyclopedia/Analysis screens must show retained query/provenance/error detail when the canonical report has it. Summary counts may accompany evidence but never replace it.
+- Build-tool, library, Android API and Khronos baseline details in Settings > Info must be explicit enough to audit the shipped environment and must not rely on stale duplicated constants.
+- Companion Database release is OpenGLESScope Database 1.0.12. It accepts exact 2.1.2 / 2102 schema-5 evidence, preserves exact audited historical producer contracts and rejects 2.1.3+ or any unaudited producer identity fail-closed.
+- Release requires `verify_2_1_2_quality.py`, immutable predecessor verification against exact 2.1.1 ZIP SHA-256, negative mutation coverage, aggregate quality gate, deterministic package verification and clean-extract rerun.
+
+## Release 2.1.3 NDK r30 native compile-correctness hotfix
+- Release identity is OpenGLESScope 2.1.3 / versionCode 2103; submission schema remains 2 and technicalReport schema remains 5.
+- OpenGLESScope 2.1.2 is the immutable predecessor. This hotfix changes only release identity and the audited EGLConfig extension-applicability identifier regression in `openglesscope.cpp`; registry/query/report/UI semantics must remain 2.1.2-equivalent.
+- EGLConfig extension applicability must use the display-level extension booleans `hasRecordableConfigAttr`, `hasFramebufferTargetConfigAttr` and `hasFloatComponentsConfigAttr`. The stale undeclared identifiers `hasRecordable`, `hasFramebufferTarget` and `hasFloatComponents` are forbidden.
+- `extensionApplies[]` is evidence gating only. It must describe whether the corresponding EGL configuration attribute is applicable from runtime extension enumeration; it must not be derived from the queried attribute values themselves.
+- NDK r30 `-Wall -Wextra -Werror` compile correctness is release-blocking. Static gates may prove this exact regression absent, but Android `assembleRelease` remains separate execution evidence and must not be claimed unless actually run.
+- Locked `gl.xml` / `egl.xml`, canonical-name/query coverage, EGL legality, report semantics, UI detail, Analysis, File Manager, security, lifecycle/resource, accessibility, toolchain and dependency contracts remain unchanged from 2.1.2.
+- Companion Database release is OpenGLESScope Database 1.0.13. It accepts exact 2.1.3 / 2103 schema-5 evidence, preserves exact audited historical producer contracts and rejects 2.1.4+ or any unaudited producer identity fail-closed.
+- Release requires `verify_2_1_3_compile_hotfix.py`, immutable predecessor verification against exact 2.1.2 ZIP SHA-256, dedicated negative-mutation coverage, aggregate quality gate, deterministic package verification and clean-extract rerun.
+
+## Release 2.1.4 Kotlin/Compose compile-correctness hotfix
+- Release identity is OpenGLESScope 2.1.4 / versionCode 2104; submission schema remains 2 and technicalReport schema remains 5.
+- OpenGLESScope 2.1.3 is the immutable predecessor. This hotfix may change only release identity and the audited Kotlin/Compose compile-correctness surface in `MainActivity.kt`; GL/EGL registry/query/report semantics, native collector behavior, File Manager, security, Android API and dependency/toolchain pins remain unchanged.
+- `Modifier.matchParentSize()` is a BoxScope member extension and must not be imported as `androidx.compose.foundation.layout.matchParentSize`. Usage is permitted only from a valid BoxScope receiver.
+- `animateContentSize` must resolve from `androidx.compose.animation.animateContentSize`; `FastOutSlowInEasing` must resolve from `androidx.compose.animation.core.FastOutSlowInEasing`. Missing or guessed import paths are release blockers.
+- Internal evidence models must not expose private-in-file types. `FeatureEvidenceRow` and `EvidenceState` must have compatible visibility.
+- Composable state APIs (`remember`, `rememberSaveable`, `LaunchedEffect`, etc.) must run only from composable scope. They must never be invoked directly from `LazyListScope` / `LazyGridScope` builders outside an `item`/`items` composable lambda.
+- Analysis Graph registry-reference memoization must be computed in `AnalysisPage` composable scope before the lazy-list DSL and passed into lazy items as immutable values. Registry metadata remains reference-only and cannot be promoted into runtime support.
+- The 2.1.3 NDK r30 native compile-correctness rules remain mandatory, including the exact EGLConfig applicability booleans and prohibition of stale undeclared native identifiers.
+- Release requires a dedicated 2.1.4 Kotlin/Compose compile verifier, immutable predecessor verification against exact 2.1.3 ZIP SHA-256, negative mutation coverage for every reported compile failure class, aggregate quality gate, deterministic packaging and clean-extract rerun.
+- Companion Database release is OpenGLESScope Database 1.0.14. It accepts exact 2.1.4 / 2104 schema-5 evidence, preserves audited historical producer contracts and rejects 2.1.5+ or any unaudited producer identity fail-closed.
 
 
-## Release 0.1.21 system navigation and HTML application parity requirements
-- Application version is 0.1.21 with versionCode 121. Database versioning remains independent and is not changed by this application release.
-- The Android system navigation-bar surface matches the established VulkanScope shell: #111111, dark-system-bar appearance, and Android 10+ navigation-bar contrast enforcement disabled. The status bar remains black.
-- The HTML report Application section uses the same application-information hierarchy as the VulkanScope report while retaining OpenGLESScope identity and brand colors. It includes Version, Version code, Package, Application ABI, Supported device ABIs, Developer, Nickname and the EFIShell0 GitHub profile link.
-- The HTML GitHub profile link is presentation/application metadata only. The 0.1.19 prohibition on public Database, Database API and source-repository URLs in TXT/HTML exports remains in force.
-- Android/device information remains a separate HTML section and must not be merged into application identity.
-- These parity changes must not modify OpenGL ES/EGL collection, capability semantics, diagnostics, report completeness, database submission schema or update security.
+## Release 2.2.0 VulkanScope 3.0.12 visual/interaction parity contract
+- Release identity is OpenGLESScope 2.2.0 / versionCode 2200. Submission schema remains 2 and technicalReport schema remains 5; this release is a UI/interaction parity release and must not silently change collected capability semantics.
+- VulkanScope 3.0.12 remains the frozen API-neutral UI/interaction methodology reference. OpenGLESScope may differ only where OpenGL ES/EGL capability semantics require different content, and in OpenGLESScope branding/accent color. Shared chrome, navigation motion, spacing, blur behavior, dialogs, copy actions, File Manager interaction, Database result presentation and accessibility must follow the VulkanScope reference.
+- The global app header and Application/About section artwork use the standalone SCOPE wordmark. The full OpenGLESScope wordmark remains allowed only for OpenGLESScope-specific branding surfaces such as launch/report branding; it must not replace SCOPE in shared VulkanScope-equivalent chrome.
+- API-neutral common icons remain byte-locked to the frozen VulkanScope 3.0.12 semantic icon set. OpenGL ES/EGL-specific official artwork is rendered as artwork without accent tint. Application, update, precision and EGL-config actions must use their reviewed semantic icons; a generic or unrelated glyph is a release blocker.
+- The primary bottom navigation is exactly Overview / OpenGL® ES / Display / Extensions. EGL™ is a nested OpenGL® ES destination, analogous to Display being a nested Surface destination in VulkanScope; EGL™ must not reappear as a primary bottom-navigation item.
+- User-facing API names use current Khronos mark presentation: OpenGL® ES, EGL™ and SPIR-V™. Raw registry tokens, extension names, query keys and serialized report field names are never rewritten with trademark glyphs.
+- Header, bottom navigation and system-navigation chrome use the same live page-backdrop blur model as the VulkanScope reference: page content is recorded, blurred, sampled behind translucent chrome, and content insets prevent headers/status overlays/navigation from obscuring evidence rows.
+- Evidence key/value rows support long-press actions, Android TV OK/Enter long-hold, desktop secondary-button quick actions, explicit copy/share actions and an accent-bordered detail dialog. Copy/share actions never mutate collected evidence.
+- Alert dialogs and custom dialogs use OpenGLESScope accent-colored borders matching the shared VulkanScope dialog treatment. Full-screen/shared-storage dialogs remain bounded, focus-safe and navigation-safe.
+- Analysis Database list results use the VulkanScope evidence presentation pattern: identity summary, API/version pills, localized submitted date/time/time-zone evidence, exact report ID, explicit compare action, and bounded explicit remote fetch. Successful Database submission shows the exact validated 64-hex report ID in a bordered monospaced field with copy and Open report actions.
+- Database result/UI differences must never be hidden through truncation or fabricated fields. Unknown/unavailable evidence stays explicit and raw report identifiers remain exact.
+- Release verification must include a dedicated 2.2.0 UI parity verifier, negative mutations for every release-critical parity contract, immutable predecessor verification against the exact 2.1.4 release ZIP, aggregate quality gate, deterministic packaging and clean-extract rerun.
+- The 2.2.0 UI parity audit is recorded in `rules/2.2.0_VULKANSCOPE_3.0.12_VISUAL_INTERACTION_PARITY_AUDIT.md`; all 103 common drawable resources in the locked census must remain byte-identical to VulkanScope 3.0.12.
+- Companion Database release is OpenGLESScope Database 1.0.15. It accepts exact 2.2.0 / 2200 schema-5 evidence, preserves audited historical producer contracts and rejects 2.2.1+ or any unaudited producer identity fail-closed.
 
 
-## Release 0.1.22 EGL branding and TXT application parity requirements
-- Application version is 0.1.22 with versionCode 122. Database versioning remains independent and is not changed by this application release.
-- EGL navigation and in-application destination icons use the supplied official EGL artwork, preserving its geometry and transparent silhouette while matching the established OpenGL ES icon sizing and alignment behavior.
-- EGL Configs remains a distinct technical destination and does not masquerade as the EGL brand destination.
-- TXT Application information follows the established VulkanScope hierarchy while retaining OpenGLESScope identity: Application, version, version code, package, installed application ABI, Developer, Nickname and the EFIShell0 GitHub profile.
-- The TXT GitHub entry is application/developer profile metadata only. Database, Database API and source-repository URLs remain excluded from exported TXT/HTML metadata unless a later rule explicitly changes that policy.
-- These presentation/export changes must not alter OpenGL ES/EGL capability collection, query semantics, diagnostics, submission completeness, database schema or update-channel security.
+## Release 2.2.1 Kotlin/Compose parity compile-correctness hotfix
+- Release identity is OpenGLESScope 2.2.1 / versionCode 2201; submission schema remains 2 and technicalReport schema remains 5.
+- OpenGLESScope 2.2.0 is the immutable predecessor. This hotfix may change only release identity and the audited Kotlin/Compose compile-correctness surface in `MainActivity.kt`; GL/EGL registry/query/report semantics, native collector behavior, UI parity intent, Android API and dependency/toolchain pins remain unchanged.
+- `drawLayer` must resolve from `androidx.compose.ui.graphics.layer.drawLayer`; the obsolete/incorrect `androidx.compose.ui.graphics.drawscope.drawLayer` import is forbidden.
+- `animateDpAsState` must resolve from `androidx.compose.animation.core.animateDpAsState`.
+- `FlowRow` must resolve from `androidx.compose.foundation.layout.FlowRow`.
+- Scroll-hint parity must include `LazyListState`, `LazyGridState` and plain `ScrollState`; a `ScrollState` must never be passed to a lazy-only overload.
+- Shared Analysis helpers `ExpressiveToggleRow` and `ExpressiveMetric` must remain real composables, use OpenGLESScope theme semantics, and must not be replaced by unresolved placeholders.
+- Kotlin compile regressions reported by real `assembleRelease` evidence are release-blocking. Static verification may prove the exact reported failure classes absent, but a real Android build must not be claimed PASS unless it actually runs.
+- The 2.2.0 VulkanScope visual/interaction parity contract remains mandatory, including SCOPE artwork, nested EGL™, blur, evidence actions, Database presentation and complete Analysis branches.
+- Companion Database release is OpenGLESScope Database 1.0.16. It accepts exact 2.2.1 / 2201 schema-5 evidence, preserves audited historical producer contracts and rejects 2.2.2+ or any unaudited producer identity fail-closed.
+- Release requires `verify_2_2_1_kotlin_compile_hotfix.py`, immutable predecessor verification against exact 2.2.0 ZIP SHA-256, dedicated negative-mutation coverage, aggregate quality gate, deterministic packaging and clean-extract rerun.
+
+## Release 2.2.2 VulkanScope video-detail parity audit
+- Release identity is OpenGLESScope 2.2.2 / versionCode 2202, with schema 2 submission and schema 5 technicalReport unchanged. The immutable predecessor is the exact OpenGLESScope 2.2.1 ZIP; its hash and complete production inventory are recorded in `tests/golden/2_2_2_video_ui_parity_regression_contract.json`.
+- Only `app/build.gradle.kts` (release identity) and `app/src/main/java/com/efishell/openglesscope/MainActivity.kt` (reviewed UI/detail/evidence presentation) may change among production sources. Everything else retains the SHA-256 bytes from the immutable predecessor.
+- The October 1 VulkanScope reference video demonstrates a bounded, accent-bordered, scrollable detail sheet with fixed header and Close and explicit Copy, Share, Watch and Encyclopedia controls. Common UI routes must provide equivalent interaction and long-token display using collected GL/EGL evidence. Vulkan-only device/profiles/driver-slots are Not applicable, and no registry token can be presented as proof of an unrelated runtime query.
+- Exact run-time `GlReport` evidence is the only source for renderer/vendor/GL/GLSL/EGL implementation details. Extension detail distinguishes enumeration from separate query-gate availability, failures, or unknown. Copy/Share/Watch are explicit user actions and may not mutate canonical evidence.
+- The new detail shell must remain within screen bounds in portrait and landscape, expose scrolling hints, respect Android TV D-pad/desktop pointer, have a clear Close action, and stack long tokens rather than truncate canonical query names.
+- The 103 common VulkanScope drawables, SCOPE branding, navigation destinations and screen architecture, all GL/EGL native sources, manifests, registry locks, schema constants, toolchain pins and privacy/security/probe lifecycle conditions must remain unchanged from 2.2.1.
+- Database 1.0.16 strictly accepts the audited 2.2.1/2201 producer. This 2.2.2 app remains a source release requiring a separate Database admission update before new-version remote submission. Do not fabricate the older producer identity, change its versionCode or weaken the companion Worker fail-closed validation.
+- Release requires `verify_2_2_2_video_ui_parity.py`, `verify_2_2_2_regression_contract.py`, dedicated negative-mutation tests, aggregate quality gate, deterministic ZIP proof and clean-extract recheck. Real Android compile/lint/unit gates remain required and must be marked NOT EXECUTED, never PASS, if dependencies cannot resolve.
+
+## Release 2.2.3 full branding/copy/HDR/extension interaction parity audit
+- Release identity is OpenGLESScope 2.2.3 / versionCode 2203; predecessor is the exact immutable OpenGLESScope 2.2.2 ZIP, SHA-256 `be81f683a410d8436d1d0479142b021f70cff5547e5c45a035569f1b6e4699c0`. All 158 production source paths are frozen in `tests/golden/2_2_3_full_ui_regression_contract.json`.
+- Production-source allowlist: `app/build.gradle.kts` for identity and `app/src/main/java/com/efishell/openglesscope/MainActivity.kt` for UI corrections. No changes to native collector, Khronos registries, GL/EGL query legality, data schema, manifests, assets, file manager, submission privacy or network transport. All other production hashes must remain byte-identical to 2.2.2.
+- Main header uses the actual full horizontal OpenGLESScope product logo, not the historical SCOPE-only crop. Historical `openglesscope_scope_wordmark.png` is retained without modification for its documented About and version-block uses. Exact VulkanScope common icon assets and their locked SHA-256 hashes are preserved.
+- Clipboard action must place exact key/value or token bytes on Android's native clipboard and must not show an additional duplicate `Copied` toast; Android owns its platform clipboard confirmation. Successful explicit action feedback inside the evidence sheet remains a separate interaction state, not an OS Toast.
+- Fixed user-facing strings must contain no unrelated Vulkan/Turnip/VulkanScope claims, driver-slot explanations, or product comparison. Actual GL/EGL runtime strings are always preserved verbatim even when an active third-party implementation identifies itself with an unexpected term. Historical rules/reference filenames are immutable methodology artifacts, not UI resources.
+- HDR cards follow the common reference: accurate `None reported`/`Unknown / not exposed`/`Unavailable` states, original Android `HdrCapabilities`/current-display-mode provenance and luminance, official logos where corresponding assets exist, textual HLG/HLG+, scrollable bounded horizontal carousel with accessible left/right buttons. A logo never manufactures HDR support.
+- Long canonical GL/EGL keys and values switch to stacked full-width evidence rows, avoiding truncated or badly wrapped tokens in standard portrait and landscape widths.
+- An extension token row uses the same shared `CapabilityKeyValue` press/TV/secondary-pointer/accessibility action implementation as other evidence rows. Its Details route keeps exact runtime enumeration scope separate from registry metadata and independently observed query gates; all related detail rows also expose shared evidence actions.
+- Small EGL destinations/section/quick-access marks use a unified branded typographic glyph instead of a hard-red official bitmap shrunk or incorrectly tinted inside an accent-colored container. Existing official raster remains immutable; opening-animation icon uses the common tinted semantic icon treatment.
+- Release gates: `verify_2_2_3_full_ui.py`, `verify_2_2_3_regression_contract.py`, `test_2_2_3_negative_mutations.py`, aggregate static/data/source/security/lifecycle/report/packaging checks, deterministic source ZIP and clean extraction. Reached Android build/lint/unit failures block production release; unavailable locked Android toolchain is `NOT EXECUTED`, never implied PASS.
+- Companion Database 1.0.16 has not been updated to admit producer 2.2.3/2203. Do not spoof 2.2.1 or weaken fail-closed remote validation. A separate Database release must authorize 2.2.3 before production remote submission.
+
+## Release 2.2.4 paging/Analysis/status/report source parity audit
+- Release identity is OpenGLESScope 2.2.4 / versionCode 2204; immutable predecessor is OpenGLESScope 2.2.3 ZIP, SHA-256 `b238e6ac4db108f404afc3291604c8b51833d16e0c450440f9cf316645edd9b9`. All 158 production source hashes are checked by `tests/golden/2_2_4_paging_analysis_report_regression_contract.json`; only `app/build.gradle.kts` and `MainActivity.kt` may change.
+- VulkanScope 3.0.12 is an API-neutral **behavioral code reference** for measured sticky pagination (single live chip; animated header join/detach; focus-safe page number commit; top overlay, pager, scroll-arrow and bottom-navigation z-order), transient popup geometry, status animations and report-list UX. Native OpenGL ES/EGL inspection stays authoritative and Vulkan-only data is forbidden in product text and reports.
+- Exactly four bottom-navigation destinations in portrait and landscape, in order Overview, OpenGL ES, EGL, Extensions. Display is an Overview child, never an independent bottom tab. EGL retains both its own screen and optional inner OpenGL ES navigator route for backward navigation compatibility.
+- All collections use 25 rows per in-app page. An actual measured list item supplies the pager's only visible control. The floating pager must never be duplicated, overlap the top bar or cover validated transient overlays. Page arrow motion, scroll arrow visibility, hardware/D-pad, input focus, invalid-number commit and accessibility mirror the reference implementation; invalid pages cannot be selected.
+- Analysis Raw JSON generation runs on a bounded background dispatcher, explicitly indicates loading and parsing failure and does not mutate submission data. A Database comparison clears previous baseline before a new exact-ID request, avoids an outdated response changing a different selected ID and restores action-state flags on both success and failure.
+- Database report list uses the published `nextCursor` from Database 1.0.16. Requests are bounded to 50 public summaries, with a maximum of 200 retained in-app rows, de-duplication by exact 64-hex ID, safe ISO8601/id validation and explicit Load more; list-page control operates only on loaded entries. Invalid/empty cursors do not fabricate further results. No implicit uploads.
+- Connectivity, collection and update banner cards use a common 520-dp maximum-width, 22-dp frosted floating status surface, shared transition timings, 13x8 internal padding, 30-dp state artwork, correct z-order below any merged pager, and polite accessibility status announcements.
+- Database submission exposes distinct idle/uploading/accepted/failed accessible animated states. Accepted ID and Open report are shown only after a real validated successful server reply; any failure retains an explicitly accessible bounded error log. Source 2.2.4 is NOT yet authorized by Database 1.0.16's producer allowlist; client must never spoof a lower version or show success for HTTP 400.
+- No native collection, registry, schema, storage security, manifest, permissions, Android build-tool locks, existing logo assets or release artifact hashes may be modified. Static/source negative-mutation and clean-extract quality gates are required; real Android build/lint/unit tests are NOT EXECUTED if the locked distribution/SDK cannot resolve.
+
+## Release 2.2.5 input, File Manager and responsive accessibility parity audit
+- Release OpenGLESScope 2.2.5 / versionCode 2205 is based on byte-locked OpenGLESScope 2.2.4 ZIP SHA-256 `c10772b9f32ce7ec73341f6a4e6d60aed6a1a27797980896d5eef0adc88ccee8`; production changes are limited to app/build.gradle.kts and MainActivity.kt with 158 predecessor hashes fully checked by the dedicated 2.2.5 regression contract.
+- VulkanScope 3.0.12 serves as an API-neutral source implementation reference: graphics-layer 24-dp true blur/backdrop, wheel plus mouse-primary drag (slop-aware), keyboard/TV/card focus and bring-into-view. Retain OpenGLESScope's palette and GL/EGL evidence truth; do not include Vulkan-only runtime surfaces.
+- Desktop secondary click is consumed in the File Manager on ChromeOS, Android PC and freeform-window Android; on supported touch/pointer platforms, evidence actions retain their bounded, existing long-press semantics.
+- Wide landscape File Manager (at least 700 dp width and wider than height) separates a scrollable controls column and an independently scrollable list/grid. Narrow, large-font, portrait and split screen use a bounded single-column path. Insets protect status, navigation and desktop window edges.
+- File Manager options use 2 columns below 380 dp or fontScale >= 1.3, otherwise 3; menu width is never forced wider than the parent. View/sort background transitions are animated, and decorative mode icons do not duplicate spoken labels.
+- All actionable browse rows focus and bring into view for keyboard/TV/desktop; disabled and current breadcrumb targets are not focusable. RTL reverses breadcrumb glyph, folder arrow and logical search feathering, not raw filenames/paths. File Manager statuses use polite live regions; system-font-scale navigation reserves extra label height.
+- Collection, schema-5 technical reports, submission schema-2, registry, native API queries, manifests, security, asset hashes and remote Database admission policy remain unchanged. Actual Android build/lint/unit and device-level visual/semantics checks are mandatory when a compatible environment is available and must be marked NOT EXECUTED rather than PASS otherwise.
+- Mandatory release gates: predecessor source-hash chain, 2.2.5 UI/source checks, independent negative mutation, original shared quality/security/data suite, deterministic packaging and clean-extract recheck.
+
+## Release 2.2.6 real Kotlin compile correction and UI parity re-audit
+- Release OpenGLESScope 2.2.6 / versionCode 2206 is based on the byte-locked exact 2.2.5 source ZIP, SHA-256 `6896534078df8074f98d05894d8b8cc0bb23e1d02e7fb745d01665a7b3041321`. The 158 production paths and allowlist of only `app/build.gradle.kts` and `MainActivity.kt` are captured in `tests/golden/2_2_6_kotlin_compile_parity_regression_contract.json`.
+- Four actual Windows `:app:compileReleaseKotlin` diagnostics are release-blocking: unresolved Compose `rememberUpdatedState`, nonexistent `R.drawable.ic_chevron_down`, non-composable `remember` inside the `LazyListScope` Analysis builder, and missing explicit `ExperimentalMaterial3ExpressiveApi` opt-in for the Database submission `LoadingIndicator`.
+- Resolve the import from `androidx.compose.runtime`, use an existing reviewed semantic expand icon, hoist Analysis comparison state into its nearest actual composable with all three source keys and retain bounded rendered results, and annotate only the specific experimental composable instead of suppressing compiler diagnostics.
+- Changing a typed report ID must immediately clear an unrelated previous comparison. A failed/old exact-ID or selected-Database-row asynchronous read must not erase a newer ID's Analysis baseline or status. Validate identity in the error branch just as in the success branch; terminal progress indicators may still exit in `finally`.
+- An independent current-version gate must check all referenced drawable names against packaged Android resources; the shared sticky pager must equal the frozen VulkanScope 3.0.12 normalized implementation, and all 103 API-neutral common drawables must preserve the approved reference hashes. Different product-specific TV banners are intentional branding, not a reference parity failure.
+- Preserve header, blur, File Manager, Display/HDR, collection paging, report statuses, GL/EGL runtime semantics, Khronos registry, all native sources, security/privacy, schema-5 technicalReport, schema-2 submission, toolchain/SDK and Database 1.0.16 fail-closed producer admission. Never spoof 2.2.1 to bypass Database version policy.
+- The next source archive requires the predecessor-hash contract, dedicated compiler/error regression gate, deliberately failing negative mutations, complete existing static quality/data/security suite, deterministic package, clean extraction and rerun. Static success is not proof of Android compilation; actual Gradle build/lint/unit must be labeled NOT EXECUTED when the locked Gradle distribution or Android SDK cannot resolve.
+
+## Release 2.2.7 official artwork, reference evidence menu, overlay and full-screen File Manager audit
+- Version OpenGLESScope 2.2.7 / 2207 derives from immutable 2.2.6 ZIP SHA-256 `a1e2f69e864766cc5c47dac21819fc40051fc5f5552ac6c85cc4beab2866376d`; lock all predecessor production paths and allow changes only to MainActivity.kt, app/build.gradle.kts and a new theme-colored `ic_android_brand.xml` resource. Original shared 103 drawable hashes and original official EGL PNG are immutable.
+- Restore official EGL raster silhouette rendered through Compose `ColorFilter.tint(BrandSoft)` (not substitute typography and not a literal red logo). Android robot body must use the exact `BrandSoft` palette hex `#F06BC7`, retaining the separately rendered dark eye detail. Both marks must be visible in Overview/section cards using correct semantic artwork routing.
+- Extensions detail is a full-width `ExpressiveDetailDialog` showing source, runtime enumeration separately from query legality, relevant diagnostics, and the actual consistent four evidence actions: Copy name + value, Share evidence, Add to watched evidence, Open in Encyclopedia. A Khronos specification button may be additional. Extension-row long press still exposes standard accessibility/pointer/TV evidence actions.
+- Watched evidence actions must never sit inside an unconstrained horizontal scroll container when action buttons use fillMaxWidth. Use a bounded fillMaxWidth vertical action group with meaningful keyboard/TV semantics.
+- Reference shared-storage File Manager as of VulkanScope 3.0.12 must use a separate platform full-screen dialog above primary navigation, 180/220-ms entrance and 160/210-ms exit, animated back/header/search, 40/60 independently scrollable wide-landscape controls/content layout, portrait/split-window single-column layout, true list/grid/dense/large-tile mode spacing (92/156/228 dp adaptive cells), bounded directory scan and canonical-path validation, atomic export/import, genuine sort/filter, and deferred overwrite confirmation. TV back handling must belong to the dialog window; status must be a polite accessibility live region. Soft scroll boundary fade and navigation animations remain real, not mock overlays.
+- Collection up/down overlays must reserve BOTH the bottom-navigation content inset and Android system navigation inset plus separation, including landscape and enlarged font conditions. Never allow bottom arrow to appear within/below primary navigation.
+- No GL/EGL native query, Khronos registry file, report schema, producer identity spoofing, permissions, toolchain lock or existing image may change. Database 1.0.16 has not authorized 2.2.7 producer submissions; server 4xx must be a real failure UI state.
+- Current 2.2.7 mandatory gates: full hash chain, existing historical API-neutral tests updated only where legitimately superseded, dedicated source and resource checks plus deliberate negative mutations, reproducible ZIP and clean-extract gate. Actual Gradle assemble/lint/unit and instrumented portrait/landscape/TV tests are NOT EXECUTED without Android toolchain/emulator; static PASS must not be called compiled/running PASS.
+
+## Release 2.2.8 full-logo, continuous blur, SDK 37.2 and Encyclopedia search parity audit
+- OpenGLESScope 2.2.8 / versionCode 2208 derives only from the exact immutable 2.2.7 source ZIP, SHA-256 `02d6c1ac92bd0427d1d7ef578b0f1dc680f927fbbf68bebd2b2bf0c50effd1dc`. Production-source allowlist is solely `app/build.gradle.kts` and `app/src/main/java/com/efishell/openglesscope/MainActivity.kt`; every other production asset/native file retains its predecessor hash.
+- Application Info version badge uses the complete official OpenGLESScope foreground artwork within the same 46-dp brand container and position as the reference VulkanScope 3.0.12 version component. The small independent historical SCOPE wordmark remains permitted in compact section-specific artwork, not the central version badge.
+- A continuously recorded graphics-layer fallback, with a real 24-dp shader blur, must be available during loading, collection and AnimatedContent transitions. The outgoing page may clear its backdrop registration only when its own layer is still the active registration. Never draw header/navigation back into the fallback source or substitute an empty never-rendered layer for it.
+- `compileSdk` uses AGP's stable minor-level release DSL: `version = release(37) { minorApiLevel = 2 }`. Because Android `targetSdkVersion` targets an integer API level (rather than an SDK minor), `targetSdk = 37` remains correct. Report compile SDK as `37.2`; do not invent `targetSdk = 37.2` or misrepresent a minor-version manifest target. Preserve AGP 9.4.1, Kotlin 2.4.20, NDK r30, SDK min31, manifest, ABIs and pinned dependencies.
+- Encyclopedia follows VulkanScope responsive metric-grid structure while truthfully labeling GL and EGL data. Seed/query/category/API/runtime filter edits synchronously reset page; clamping guarantees stable, bounded paging even after filtering reduces results. Khronos catalog loading is off-main and cancellation is rethrown instead of rendered as an error; bounded search and no remote queries preserved.
+- Production fixed strings/resources must not contain Vulkan/Turnip/VulkanScope product language; immutable reference rule evidence and historical regressions must never be rewritten to erase provenance. Actual runtime GL/EGL renderer/vendor names are never falsified or filtered.
+- Dedicated current release source/inventory verifier, negative mutations, full historical static/data/security/report gates, deterministic packaging, clean extraction, and honest actual Android compile/lint/unit evidence are mandatory. Source PASS alone does not assert APK/build/device PASS. The companion Database 1.0.16 does not admit unaudited 2.2.8 producer; fail closed without version spoofing.
 
 
-## Release 0.1.23 Overview GPU-logo parity requirements
-- Application version is 0.1.23 with versionCode 123. Database versioning remains independent and is not changed by this application release.
-- The Overview hero GPU vendor artwork uses the same geometry as VulkanScope: an 82 dp outer card, 18 dp corner radius, #111111 card surface, 8 dp internal image padding and ContentScale.Fit.
-- Vendor artwork remains presentation-only and must never infer OpenGL ES/EGL capability support from branding.
-- This release must not alter OpenGL ES/EGL collection, query semantics, diagnostics, report completeness, database schema/submission behavior, update security or ABI policy.
+## Release 2.2.9 File Manager, Khronos, viewport and brand alignment parity
+- Release identity is OpenGLESScope 2.2.9 / 2209, compiled against locked SDK 37.2 while targeting API 37. Schema 5 technical reports and submission schema 2 are unchanged.
+- Immutable predecessor is the exact OpenGLESScope 2.2.8 ZIP SHA-256 1138fa2b2b71db24c567de884331d9d1898c4eed861bc90032bcbe9d1976e1dd. Only MainActivity.kt, app/build.gradle.kts, and newly derived aligned logo PNG may differ in the production source tree. Golden source SHA-256 chaining is release-blocking.
+- The full-screen shared-storage File Manager has the exact reference VulkanScope black (0xFF000000) outer background, including status/navigation inset area rather than OpenGLESScope's tinted main-screen SurfaceDark. Content-card colors retain OpenGLESScope product palette. Keep search, sort, canonical path bounds, atomic writes, back handling and keyboard/TV input unchanged.
+- The Open Khronos specification action in extension evidence uses the reference contained text-and-external-icon button, spans available width and is disabled without validated network; URL is an authoritative registry-specification URL, never fabricated for unknown extensions.
+- Derive real bottom navigation height from `onSizeChanged` and provide it to all scrolling pages through LocalBottomNavigationContentInset. Last cards must remain reachable at the actual bottom independent of Android navigation-bars inset, display orientation or font scale; scroll arrows sit above the measured navigation rather than double-counting system insets.
+- Render official EGL artwork white *in the bottom navigation only*, in the same centered icon slot as OpenGL ES; other EGL surfaces may use the brand tint according to semantic context. Never replace the official EGL glyph with a generated text symbol.
+- Header uses genuine OpenGLESScope horizontal logo alpha-framed to VulkanScope 3.0.12 aligned artwork geometry (546x84 PNG), rendered 126x30 dp on normal widths, reduced only for truly narrow layouts/very large text. Original artwork remains available as immutable source.
+- New UI regression and negative-mutation gates must detect root background, external button shape/network state, measured inset, EGL alignment/tint, header image size, and accidental native probe changes. Repeat aggregate gate on a clean extraction; real Android compile/lint/unit/on-device remain separately classified if unavailable.
 
 
-## Release 0.1.24 end-to-end producer/database and specification-audit requirements
-- Application version is 0.1.24 with versionCode 124. OpenGLESScope Database remains independently versioned; this release is validated against Database 0.1.19 without mutating its D1 schema or Worker version.
-- Database submission must remain accepted by the Database 0.1.19 exact schema. Top-level display evidence and technicalReport.display remain byte-semantically equivalent after JSON materialization, including nullable mode and wide-color evidence.
-- The driver.version database field must not reuse GL_VERSION. OpenGL ES exposes implementation/version identity through GL_VERSION but no standardized standalone graphics-driver version query; absent standardized evidence is reported explicitly as unavailable.
-- Android display evidence that cannot be queried on the running API level is null/unavailable, never fabricated as false/unsupported. In particular, wide-color-gamut evidence is unavailable before API 26.
-- Android HDR_TYPE_INVALID is never presented as an HDR capability. API 34+ mode-specific HDR types remain authoritative for the active Display.Mode; other unknown non-invalid integer values remain visible as raw Android HDR type values.
-- Display/HDR evidence is refreshed when Android reports display addition, removal or change so UI, TXT, HTML and Database submission do not silently retain a stale mode snapshot.
-- OpenGL ES 3.0 core implementation-dependent coverage includes GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT. OpenGL ES 3.1+ coverage includes GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT. Both are queried directly only when their core version applies and receive query diagnostics.
-- GL_VENDOR, GL_RENDERER, GL_VERSION and GL_SHADING_LANGUAGE_VERSION successful runtime queries receive diagnostics. GL_MAJOR_VERSION and GL_MINOR_VERSION are queried only for OpenGL ES 3.0+ and fall back to the parsed GL_VERSION core version when unavailable.
-- UI labels must distinguish parsed core-version fields from direct GL_MAJOR_VERSION/GL_MINOR_VERSION query evidence.
-- EGL Config search covers every displayed configuration attribute rather than only ID/renderable/surface fields.
-- TXT, HTML, UI and Database payload retain the same collected datasets: runtime identity, limits, exact GL/EGL extension tokens, format enumerations, precision, diagnostics, EGL configs and Android display/HDR evidence. Newly collected core alignment values flow through all four paths without a presentation-only omission.
-- Generated HTML remains self-contained, escapes report-derived strings and declares a restrictive local CSP plus no-referrer policy; no remote script, style, font or tracking dependency is permitted.
-- Update version ordering ignores SemVer build metadata for precedence and orders a stable release above a pre-release with the same numeric core. Numeric pre-release identifiers compare numerically and build metadata never turns a newer release into an older one.
-- Source release archives exclude transient Python bytecode/cache directories and other generated build caches.
-- Current Khronos OpenGL ES 3.2 / GLSL ES 3.20 and EGL 1.5 specifications plus current Android Display/HDR API documentation remain the primary specification references. No marketing/vendor database substitutes for runtime evidence.
+## Release 2.2.10 license, Extensions evidence, File Manager chooser, Database and GPU detail correction
+- Release identity OpenGLESScope 2.2.10 / 2210; compileSdk 37.2, targetSdk 37, schema 5 technical report and submission schema 2 are unchanged. Exact immutable predecessor OpenGLESScope 2.2.9 ZIP SHA-256: b575307b6acac5a14672fd01fa73246a37430368287ec4af8495df3c427f0098. The only allowlisted production changes are MainActivity.kt and app/build.gradle.kts. Every other source SHA-256 must equal its predecessor; changes to the registry, native GL/EGL probes and transport are forbidden.
+- Each Libraries license agreement is a single full-width accessible action with a visible 22dp right chevron, a bounded label and existing packaged license document; do not rely on an off-screen nested trailing button.
+- The Extensions Details window initially presents Copy name + value, Share evidence, Add to watched evidence and Open in Encyclopedia before any unbounded query-gate diagnostics. The network-validated Open Khronos specification action remains a full-width contained control with the authoritative extension registry URL and no synthetic link for unknown entries. Long GL/EGL metadata scrolls below the actions.
+- File Manager view/sort chooser defaults to three reference-sized columns at ordinary portrait widths, only reducing to two for extremely narrow/large-font windows. Surface uses the VulkanScope neutral #181516 backdrop and product accent; consistent dim scrim covers full window, navigation bar is black with contrast enforcement disabled while the chooser is displayed. Preserve navigation/sort choices and bounded scanning/export semantics.
+- Database compatibility notice explicitly explains that the server rejects old or unaudited producer identities and never presents a rejected upload as success. No producer spoofing; Database 1.0.16 acceptance of 2.2.10 must be separately audited/deployed.
+- GPU Details shows direct GL_RENDERER, GL_VENDOR, GL_VERSION, GLSL, GL context flags/reset/robust access query provenance, runtime EGL identity/context/config/surface evidence, unknown/unavailable attributes and bounded category/diagnostic totals. It must not invent standardized driver versions or infer capability support from branding.
+- Current-source/UI/hash-chain/negative-mutation/clean-extract gates block release. Static PASS does not assert real Android compile, TalkBack, TV or device visual PASS.
 
-## Release 0.1.25 full application/specification/database-parity requirements
-- Application version is 0.1.25 with versionCode 125. OpenGLESScope Database remains independently versioned and this application release is validated against Database 0.1.21 without changing its exact submission schema or D1 storage.
-- Application ABI and Android platform evidence remain present in UI, TXT and self-contained HTML. Database 0.1.21 obtains ABI evidence from the canonical report text; the application must not add unaccepted top-level or technical-report JSON keys merely to duplicate that metadata.
-- Current Khronos baselines remain OpenGL ES 3.2, GLSL ES 3.20 and EGL 1.5. Runtime evidence and exact extension strings remain authoritative over device/GPU naming.
-- The external OpenGL ES capability reference graphics-capability families are a comparison floor only: versions, exact extensions, compressed formats, shader/program binary formats, implementation limits and EGL information must remain covered, while sensors and unrelated Android inventory remain out of scope.
-- GL_KHR_debug implementation limits are queried on pre-3.2 contexts only when the exact GL_KHR_debug extension token is present. On OpenGL ES 3.2 they continue to use the corresponding core queries.
-- GL_EXT_disjoint_timer_query query-counter bit depths for TIME_ELAPSED_EXT and TIMESTAMP_EXT are collected only when the exact extension token is present and glGetQueryivEXT resolves. Missing entry points or query failures are recorded as Unavailable diagnostics rather than guessed values.
-- Every newly attempted extension-backed query must flow through the same limits dataset and query-diagnostic dataset consumed by UI, TXT, HTML and Database submission.
-- No query is executed solely because a GPU vendor/model is known. No unsupported, unavailable or unknown state may be converted to Supported.
-- Database submission remains all-or-nothing, explicit, bounded to 2 MiB, and restricted to the official HTTPS API hostname.
-- Source release validation must check version identity, ABI/report metadata presence, Database 0.1.21 contract compatibility, the new extension-backed query gates and absence of transient build/cache artifacts.
+## Release 2.2.11 license scroll arrows, shared storage feedback and submit affordance correction
+- Release identity is OpenGLESScope 2.2.11 / 2211. Exact immutable predecessor OpenGLESScope 2.2.10 ZIP SHA-256 `f59cbabbac4cd753c019be54af8be154da827eec25b460b6469c018785d8b2f6`; only `app/src/main/java/com/efishell/openglesscope/MainActivity.kt` and `app/build.gradle.kts` may change. All native GL/EGL probes, registry, report schema, transport, manifest and drawable resources are immutable against this predecessor.
+- Supersedes only the 2.2.10 **license link presentation** change: restore the explicit 2.2.9 License `ChevronAffordance`, as requested. The actual missing *page scroll* arrows were caused by `ReleaseNotesContent` not providing `ExpressiveScrollHints`. Both license agreement and update release notes use the same lazy list/keyboard-D-pad navigation and visible-on-scroll boundary indicators as the VulkanScope 3.0.12 reference. Do not confuse link chevrons with in-content scroll indicators.
+- Manifest permission census remains the same as VulkanScope 3.0.12: INTERNET, ACCESS_NETWORK_STATE, REQUEST_INSTALL_PACKAGES, MANAGE_EXTERNAL_STORAGE. The additionally required OpenGL ES 2.0 uses-feature is an API-specific graphics capability, **not a permission**. Do not broaden storage access or request it automatically; retain explicit user initiation, scoped installation permission on demand, and the existing 3-second animated permission-denied action feedback.
+- Shared storage import/export failure status now has an animated, spoken warning with explicit Import failed / Export failed attribution and a non-dismissible-by-error retry path; exceptions do not turn into silent success. Keep bound checks, safe canonical paths and atomic export unchanged.
+- Database submit's trailing upload arrow retains sufficient theme-accent contrast while disabled, *without enabling submission*. Retain readiness, user initiation, validated internet, lifecycle and server producer-identity admission gates; success is only shown after actual server acknowledgement. Database 1.0.16 still needs separate 2.2.11 producer compatibility deployment.
+- Dedicated regression verifier and negative mutation gate are release-blocking; all other earlier contract expectations remain binding except the explicitly superseded 2.2.10 inline-license-row presentation.
 
-## Release 0.2.1 full application, reporting, security and specification audit requirements
-- Application version is 0.2.1 with versionCode 201. Database versioning remains independent.
-- OpenGLESScope Database 0.1.26 is the compatibility reference for schema-v2 / technicalReport-v1 structure, report completeness, Display/HDR evidence, canonical TXT identity and transport/security behavior.
-- Database 0.1.26 currently accepts only producer versions matching 0.1.x. OpenGLESScope 0.2.1 must never falsify its application version to bypass that server-side producer gate. A Database release that explicitly accepts 0.2.x is required before 0.2.1 submissions can be accepted.
-- Android HDR luminance values are physical luminance metadata in cd/m² and must show that unit in the Display/HDR UI, TXT and HTML whenever a value is available. Structured Database fields remain numeric values whose field semantics are luminance in cd/m².
-- HDR_TYPE_INVALID is filtered from Android HDR-type evidence on every supported Android API level where the constant exists; it is never reported as a capability.
-- Display-change refresh work is limited to the activity display for addition/change callbacks while display removal still forces a refresh, avoiding unnecessary recomposition for unrelated displays.
-- Current Khronos baselines remain OpenGL ES 3.2, GLSL ES 3.20 and EGL 1.5. Exact runtime strings and exact runtime extension tokens remain authoritative.
-- No GPU model, vendor branding, Android version or marketing data may be used to infer OpenGL ES/EGL support.
-- UI, TXT, HTML and Database technicalReport payload must continue to expose the same collected runtime identity, exact extensions, limits, runtime formats, shader precision, EGL configuration, query-diagnostic and Android Display/HDR datasets without selective omission.
-- Native probe process isolation, 8 MiB probe-result bound, 20-second timeout, HTTPS-only official endpoints, explicit all-or-nothing submission, 2 MiB submission bound, update-package identity/signing/version validation, and non-exported FileProvider/service protections remain mandatory.
-- Source release archives must contain no build caches, Python bytecode, Gradle caches, IDE state, APK outputs or other transient generated artifacts.
+## Release 2.2.12 reference Extension Details, Database submission, trademark and cold-start timing correction
+- The exact predecessor is OpenGLESScope 2.2.11; immutable ZIP SHA-256 and all production hashes are locked in `tests/golden/2_2_12_release_regression_contract.json`. Only `MainActivity.kt` and app release identity may change. Earlier historical reference evidence remains immutable.
+- Explicit Extension Details uses VulkanScope 3.0.12's evidence-first arrangement: no duplicated copy/share/watch/Encyclopedia action cards (the row's existing long-press evidence menu remains intact), a single content-sized contained Khronos specification action after the evidence entries, followed by an API-truthful interpretation boundary. Never fabricate GL/EGL-specific spec metadata to match Vulkan structures.
+- Database submission mirrors the supplied VulkanScope interaction video and reference: the single TransientActionButton owns three-second pending/success/failure feedback; no redundant second DatabaseSubmissionStateCard. Preserve strict complete-report and validated-internet gates, disabled icon legibility, server-confirmed success only, separate rejection details, result status label, and animated report-ID copy button. Reports remain schema 5 and submissions schema 2; producer admission needs a separate Database deployment.
+- OpenGL® ES™ is the user-visible trademark form. Canonical GL/EGL driver strings, registry tokens, on-wire schema identifiers and logged raw evidence are not altered merely for presentation. Idempotent display normalization must not double-suffix ™.
+- Cold-launch Activity-to-opening-gate delay is captured with monotonic `System.nanoTime()`, published only once after actual opening sequence completes or watchdog releases it, and exposed under Analysis → Diagnostics as seconds with exact milliseconds. It is kept distinct from the dedicated GLES probe collection interval. Configuration-change recreation must not be misrepresented as cold-launch timing. No fabricated per-query instrumentation.
+- New negative-mutation tests must fail on extra details actions, stretched Khronos button, duplicate report-animation card, incorrect report-ID transition, absent ™, removed startup timing, disabled submission gating, and native/manifest drift. Re-run aggregate quality, clean extraction and deterministic packaging. Real Gradle assemble/lint/unit and device behavior must be recorded separately from static checks.
 
+## Release 2.2.13 VulkanScope-equivalent Database failure log dialog audit
+- Exact immutable predecessor: OpenGLESScope 2.2.12 ZIP SHA-256 `243846045b784b4544afc19d7c12f5df7bcef3fe110df803f62878d060de075d`. `tests/golden/2_2_13_release_regression_contract.json` locks all 160 production paths. Only MainActivity.kt and app release identity may change. No report/schema/native/manifest/permission/registry drift.
+- The separate bounded failure dialog was already present in 2.2.12 and MUST remain visible on a genuine failed submission (server rejection, malformed ID, serialization/network/unexpected error), never on success or automatically without a user-initiated submission.
+- Match VulkanScope 3.0.12 DatabaseSubmissionFailureDialog structure, size and actions with product-specific accent: title, bounded scrollable monospaced log (360 dp vertical cap), 96 Ki-character maximum, Copy all and Close; add reference desktop pointer-wheel and TV D-pad scroll modifiers in the exact sequence.
+- HTTP non-success must show the HTTP code and bounded server message in the submit status, and preserve phase=http-response, httpStatus, detail and capped responseBody in the separate diagnostic log. Unknown failure cannot be rendered as upload success. Keep cancellation propagation and server-acknowledgement gate.
+- Dedicated positive/negative source tests, exact predecessor hash chain, source/data/privacy gates, deterministic packaging and clean-extract verification are release-blocking. Android build/lint/unit and device observation are separate evidence classes; never claim PASS when unavailable.
 
-## Release 0.2.2 Android security-patch end-to-end reporting
-- Application version is 0.2.2 with versionCode 202. Database versioning remains independent.
-- Android `Build.VERSION.SECURITY_PATCH` is authoritative system patch-level evidence and is collected directly from Android; it is never inferred from SDK, release, device model, submission time or GPU identity.
-- The security patch is exposed in the Android information UI, canonical TXT report, self-contained HTML Device section and Database schema-2 `device.securityPatch` field.
-- Canonical TXT includes both the top-level `Android security patch: YYYY-MM-DD` evidence line and the DEVICE-section `Security patch: YYYY-MM-DD` line.
-- The Database payload and canonical TXT must carry the same patch level.
-- Android security-patch evidence is platform metadata only and must never alter OpenGL ES, EGL, Display/HDR, extension, limit or format capability state.
-- `Build.VERSION.SECURITY_PATCH` is available from API 23; the application minimum SDK remains 24, so no compatibility fallback or privileged property access is required.
-- Current Android API documentation and Android compatibility requirements define the platform security patch as a user-visible date-based patch level.
-- Existing native probe isolation, report completeness, export escaping, explicit upload, HTTPS host restriction, 2 MiB submission bound, update verification and ABI policy remain mandatory.
+## Release 2.2.14 VulkanScope update-transfer and Database report-list parity
+- Exact predecessor: immutable OpenGLESScope 2.2.13 ZIP and its 160-path production census, with the new allowlist restricted to MainActivity.kt and app versionName/versionCode. SDK 37.2, target 37, permissions, native GL/EGL, reporting schema and locked registries remain unchanged.
+- The Direct Updates consent, confirmation, ABI/release provenance, bounded transfer, pause/resume/cancel and verified-install flow remain enabled only through explicit user action. Replace the indeterminate transfer line with the VulkanScope 3.0.12 14 dp, 180 ms eased, 0–100% bounded determinate track and continuously visible numeric percentage; use authoritative progress totals (transfer length or signed release asset metadata). Do not pretend a missing total proves finished bytes. Verify completed APK before installer handoff. Preserve per-second speed, received/total bytes, state and scrollable bounded live log with desktop wheel/TV D-pad controls.
+- Public Database list keeps 50-summary cursor pagination, 200-unique-summary memory bound, explicit request, validated network and exact-ID comparison. Display equal-weight Refresh/Load more controls and a 50 dp GPU vendor badge using the existing OpenGLESScope runtime vendor/renderer logo resource mapping. It is purely illustrative; GL/EGL runtime evidence is never inferred from artwork. Unknown/translation-layer renderer metadata stays the unknown artwork.
+- 2.2.14-specific positive and negative mutation tests are release-blocking. Preserve all past immutable contract files and do not weaken report/privacy/network verification for UI parity. Distinguish static checks from Android compile/lint/unit/device testing.
 
-## Release 0.2.3 IzzyOnDroid direct-update policy
-- Application version is 0.2.3 with versionCode 203.
-- The built-in GitHub self-updater is opt-in and disabled by default for every installation. No startup update discovery request may run until the user has explicitly enabled direct updates.
-- Enabling direct updates must require an explicit confirmation that names the official EFIShell0/OpenGLESScope GitHub Releases source and states that APKs installed through this path bypass IzzyOnDroid repository scanning and verification.
-- Disabling direct updates must immediately stop future automatic checks and hide pending update UI. Existing package/signing/version/ABI validation remains mandatory whenever direct updates are enabled.
-- Settings owns the direct-update opt-in state. Info may expose manual update checking only while direct updates are enabled.
-- IzzyOnDroid repository identity must not be inferred from Android installer package identity because repository clients can install packages from multiple repositories. The policy is implemented safely by keeping the self-updater disabled by default independent of installer identity.
-- The source release must carry an explicit MIT LICENSE.
-- OpenGL ES 3.2, GLSL ES 3.20, EGL 1.5 capability coverage and complete UI/TXT/HTML/Database reporting must not regress because of this release.
-
-## Release 0.2.4 IzzyOnDroid first-install notice
-- Application version is 0.2.4 with versionCode 204.
-- Direct GitHub updates remain opt-in and disabled by default for every installation.
-- A genuine first installation with direct updates disabled shows one seven-second non-modal information banner using the existing update-status banner visual language.
-- The notice states only that direct GitHub updates are disabled by default and can optionally be enabled in Settings; it must not imply that IzzyOnDroid updates are disabled.
-- The one-time notice must not perform a network request and must not appear on ordinary application upgrades.
-- The separate consent that names the official GitHub Releases source and explains the IzzyOnDroid repository scanning/verification bypass remains mandatory before direct updates can be enabled.
-- OpenGL ES 3.2, GLSL ES 3.20, EGL 1.5 collection, report completeness, Database submission and capability-state semantics must not regress.
+## Release 2.2.15 complete evidence-integrity / current-registry audit
+- Immutable predecessor is exact OpenGLESScope 2.2.14 ZIP SHA-256 `519bc7e06c8c0d78c2b8b3ab3a2d232aad61f31f5528c09648019db9bbd405c6`. Production allowlist: `app/src/main/cpp/openglesscope.cpp` and `app/build.gradle.kts`; all 158 other production files remain identical by SHA-256.
+- GL/EGL renderer/vendor/version strings are validated as bounded UTF-8 and serialized as complete Unicode scalar values in JSON, including surrogate pairs for non-BMP characters. Encoding individual UTF-8 bytes as unrelated `\u00XX` code points is forbidden; invalid source bytes cannot become invented metadata.
+- Explicitly distinguish an empty successful extension enumeration from failed, duplicated, oversized or incomplete GL / EGL display / EGL client enumeration. A mandatory GL extension or binary/compressed format query failure blocks an Available terminal report rather than silently emitting an apparently valid empty capability list.
+- EGL_NO_DISPLAY/EGL_EXTENSIONS query failure on pre-1.5 EGL is Not applicable unless EGL_EXT_client_extensions makes it available; a valid empty returned string remains Available. All client/device/display extension membership is strictly scope-specific.
+- Optional EGL device extension lists and self-test extension enumeration must propagate incomplete/invalid reads to Unavailable rather than invented zero-extension evidence. The self-test must use the current glExtensions completeness signature.
+- GL float limits serialize finite full binary32 round-trip precision (`max_digits10`); no NaN/Infinity is misreported as a usable numeric capability. Raw driver-provided unknown numeric enumerants remain numerically visible instead of fabricated canonical names.
+- `registry/gl.xml` and `registry/egl.xml` remain byte-locked; only their verified exact SHA-256 values are claimed. Upstream live download and Android driver/device tests are separate required evidence, not inferred from an offline registry mirror or static PASS.
+- New positive, host-compiled C++ property tests and negative mutation regressions are release-blocking; report schema 5 and Database submission schema 2 are unchanged. Server acceptance of producer identity 2.2.15 requires separate Database deployment.
 
 
-## Release 0.2.5 Obtainium update-management integration
-- Application version is 0.2.5 with versionCode 205.
-- The built-in direct GitHub updater remains disabled by default and performs no startup network request until explicitly enabled.
-- Runtime UI must not claim an IzzyOnDroid-specific security or repository relationship. Obtainium is presented only as an optional external update manager.
-- Settings exposes an Add to Obtainium action using Obtainium's documented `obtainium://app/` import path.
-- The generated Obtainium configuration targets the official EFIShell0/OpenGLESScope GitHub repository and filters release assets to filenames containing `universal` and ending in `.apk`; architecture auto-filtering is disabled so the universal release asset is selected deterministically.
-- If Obtainium is unavailable, the action falls back to the official Obtainium project page instead of silently failing.
-- Enabling the built-in updater must explain that, when Obtainium is also used, both update managers can check the same official GitHub Releases source and duplicate update notifications.
-- The first-install seven-second information banner keeps the established update-banner visual language and now recommends Obtainium as the external update-management path without performing a network request.
-- Existing APK package/signing/version/ABI validation, explicit installation consent, OpenGL ES 3.2 / GLSL ES 3.20 / EGL 1.5 collection and complete UI/TXT/HTML/Database reporting must not regress.
+## Release 2.2.16 validated-network and bottom navigation parity
+- The exact predecessor is immutable OpenGLESScope 2.2.15 ZIP SHA-256 `1c06fe63a7f6a8f3cf1e01744adb03f9ef442e359cf3a01cd22f3b306c947fa2`; the release contract locks all 160 production paths. Only `MainActivity.kt` and app Gradle version identity may change. Registry, native collector, manifests, permissions, technicalReport schema 5, submission schema 2 and security bounds remain unmodified.
+- The offline status overlay follows VulkanScope 3.0.12's verified state semantics and order: collection, connectivity, update. An offline info badge remains visually and semantically distinguishable from the short transition notification. While collecting offline, network and incomplete-report locks are explicitly explained independently; inspection still works without network. Online recovery must not falsely unlock incomplete reports.
+- Database area shows the reference blue explanatory line when validated connectivity is missing and two distinct lines when both network and complete-report evidence are missing. Distinctness must be preserved in the UI and accessibility tree, alongside the existing compatibility/admission notice and separately logged server failures.
+- **Disabled means disabled**: Submit complete report and public Database link must both be non-activatable without validated internet; Submit additionally requires a terminal complete report and no active upload. The upload icon/background/label use the same muted disabled treatment as the public Database link. Re-check the gates on activation; do not display an active-colored trailing icon in any unavailable state. With all requirements satisfied, submission remains explicit and user-initiated; never silently disable all real reporting or bypass acknowledgement.
+- All four bottom destinations keep equal hit widths and a shared centered artwork slot, including aspect-ratio-correct official GLES and EGL artwork, with white EGL branding and brand-neutral unselected labels. Account for OpenGL® ES™ label length by bounded responsive bar width, portrait/landscape sizing, two-line high-font-scale support and centered text. No fabricated GL/EGL support is derived from artwork. Test RTL and keyboard/D-pad semantics without inventing a fifth destination.
+- A new positive release/source-hash verifier and at least 18 independent negative UI mutations are mandatory. The compiled native UTF-8/extensions/float regression oracle remains active; historical source-version-bound verifiers are retained on disk as immutable evidence, not falsely run against a different release identity. Clean extraction, manifest and deterministic package verification are release-blocking. Actual Android assembly, lint, unit and physical device rendering are separate evidence and must never be reported PASS without execution.
 
-## Release 0.2.6 Obtainium UI simplification
-- Application version is 0.2.6 with versionCode 206.
-- The Direct GitHub updates setting remains present, opt-in and disabled by default.
-- Settings must not expose an Add to Obtainium button or invoke an Obtainium deep link; Obtainium remains an optional external update manager described by informational text only.
-- The portable obtainium-config.json remains in the source release and continues to target the official application GitHub repository with a universal-APK filter.
-- When Direct GitHub updates are disabled, no startup update discovery request is performed by the application.
-- Existing direct-update provenance, package identity, signing-certificate, version and ABI validation remains mandatory when the built-in updater is enabled.
-- Graphics capability collection, reporting, export and Database behavior must not regress.
+## Release 2.2.17 Kotlin TextUnit compile hotfix
+- Release identity is OpenGLESScope 2.2.17 / versionCode 2217 and derives from the exact OpenGLESScope 2.2.16 source ZIP. The predecessor ZIP SHA-256 and all 160 production-source hashes are frozen in `tests/golden/2_2_17_release_regression_contract.json`.
+- The Windows `:app:compileReleaseKotlin` failure at `MainActivity.kt` line 3300 is release-blocking: Compose `TextUnit` does not provide the `minus` operator used by `compactLabelFontSize - 0.5.sp` in the locked toolchain.
+- Preserve the intended navigation geometry without arithmetic on `TextUnit`: the non-accessibility OpenGL ES label uses explicit 7.5 sp landscape / 8.5 sp portrait sizes, equivalent to the previous intended 0.5 sp reduction from 8/9 sp.
+- Only `app/build.gradle.kts` and `MainActivity.kt` may change in production source. Native GL/EGL collection, registry evidence, report schemas, permissions, Database behavior, blur, accessibility, RTL, TV/desktop input and all 2.2.16 navigation semantics remain unchanged.
+- A dedicated compile-hotfix verifier must reject reintroduction of `TextUnit` subtraction, missing explicit OpenGL ES label size selection, version drift, unrelated production mutation or predecessor-hash drift.
+- Static/source gates do not substitute for a real Android build. The user's reached Kotlin compiler failure must be considered fixed only after the corrected source reaches compilation; any new compiler diagnostic remains release-blocking.
+- Deterministic package, clean extraction and rerun of the current aggregate quality gate are mandatory.
 
-## Release 0.2.7 default-enabled direct GitHub updates
-- Application version is 0.2.7 with versionCode 207.
-- This release supersedes the default-off/opt-in-by-default clauses of releases 0.2.3 through 0.2.6; their security validation and explicit APK install-action requirements remain in force.
-- Direct GitHub updates are enabled by default only when no saved `direct_updates_enabled` preference exists. Existing users' explicit saved choice must be preserved across upgrades.
-- A fresh installation may perform the existing non-blocking startup update check against the fixed official EFIShell0/OpenGLESScope GitHub Releases API endpoint.
-- Disabling Direct GitHub updates must persist `false`, stop future startup update discovery, hide pending update UI and prevent update APK download until the user explicitly enables the setting again.
-- Obtainium remains optional external update-management guidance only; no Add to Obtainium runtime button or deep-link action is reintroduced.
-- The portable `obtainium-config.json` remains source metadata and continues to select the official universal APK release asset.
-- Update APK download and installation remain explicit user actions. Existing official-release provenance, HTTPS, package identity, signing-certificate, versionCode/versionName and ABI validation requirements remain mandatory.
-- OpenGL ES/EGL collection, report/export completeness, Database submission, Display/HDR semantics and capability-state semantics must not regress.
-
-## Release 0.2.8 Settings/Info Material 3 Expressive parity
-- Application version is 0.2.8 with versionCode 208. Database versioning remains independent.
-- The top-app-bar Info and Settings affordances must match VulkanScope's established Material 3 Expressive vector assets exactly, preserving 24 dp geometry, tint behavior, touch targets and accessibility labels.
-- On normal destinations, Info is the left action and Settings is the rightmost action, matching VulkanScope exactly. Settings and Info destinations do not expose either top-app-bar action, matching VulkanScope's hierarchy and preventing cross-destination ordering drift.
-- This release is UI-only for the Settings/Info top-bar affordances. OpenGL ES/EGL collection, Display/HDR semantics, report/export completeness, Database submission and update behavior must not regress.
-- Direct GitHub updates remain default-enabled for fresh installs subject to the 0.2.7 preference-preservation and update-security rules; Obtainium remains informational only and no Add to Obtainium runtime action is reintroduced.
+## Release 2.2.18 notification-state and EGL identity provenance audit
+- Immutable predecessor is OpenGLESScope 2.2.17; its ZIP hash and every production path are fixed in `tests/golden/2_2_18_release_regression_contract.json`. Only `MainActivity.kt`, native `openglesscope.cpp`, and `app/build.gradle.kts` may change. All checked-in Khronos XML snapshots, generated catalogues, schema-5 technicalReport / schema-2 submission producers, assets, permissions, transports and product branding remain unchanged.
+- Compare the offline (`ic_info`), online/offline transition (`ic_network_connected` / `ic_network_disconnected`), update-available (`ic_update_available`) and collection-success/failure glyphs against VulkanScope 3.0.12 byte-for-byte. Preserve the source-owned overlay ordering, colors, fade timings, and live-region semantics; never substitute a Wi-Fi-off glyph for the persistent informational offline message.
+- Match VulkanScope's terminal failure lifetime: when runtime probe fails, returns incomplete evidence or cannot establish support (Unknown / Unavailable), its failure banner stays until a new collection rather than being hidden by the success-only timer. Successful completion alone may auto-hide. Do not infer network validation when the platform cannot establish it.
+- EGL display string queries must clear/read eglGetError for *each* EGL_VENDOR, EGL_VERSION and EGL_CLIENT_APIS query, including the initial display extension query. Neither a non-null string returned together with an EGL error nor malformed UTF-8 is authoritative. Required EGL identity failure must make the complete technical report Unavailable with an explicit error, never a fabricated value or a successful empty/partial identity. EGL_CLIENT_APIS is required starting at EGL 1.2.
+- EGL_NO_DISPLAY/EGL_EXTENSIONS is Not applicable for a legacy pre-1.5 implementation only when the driver specifically returns EGL_BAD_DISPLAY with null text. Other errors remain Unavailable. The self-test's EGL display extension enumeration must likewise check the EGL error and completeness gate. Query results from runtime and registry metadata remain separate; all values and unknown enums must retain their real provenance.
+- The Khronos Combined GL current core baseline is ES 3.2, and the Khronos EGL current core baseline is 1.5. Registry-lock hashes, generated catalogues, canonical-name tests, GetPName and EGL-query legality, query coverage, JSON/TXT/HTML/Database schema, security, bounded resources, lifecycle, host-compiled negative fixtures and deterministic clean-extract checks are mandatory. Do not claim newest extension-registry snapshot, NDK build, physical device, or full runtime support without corresponding external evidence.
+- `tools/verify_2_2_18_state_and_evidence.py` and `tools/test_2_2_18_negative_mutations.py` are release-blocking. Earlier per-version immutable rule/test evidence is retained; current tests supersede earlier exact-source expectations only for the three allowlisted production changes.
 
 
-## Release 0.3.0 full Material 3 Expressive application parity
-- Application version is 0.3.0 with versionCode 300. Database versioning remains independent and is not changed by this visual release.
-- AndroidX Compose Material3 is 1.5.0-alpha26 and the application shell uses `MaterialExpressiveTheme` with `MotionScheme.expressive()` while retaining OpenGLESScope's established black/dark surfaces and official brand accent `#BA2A8D` with `#F06BC7` as the existing soft accent.
-- Existing OpenGLESScope visual identity, official OpenGL ES/EGL artwork, GPU-vendor logos, HDR artwork, information hierarchy, destination order, page geometry, card spacing and technical-content density remain intact; Material 3 Expressive may refine component state, shape and motion but must not redesign the product into a different visual identity.
-- Portrait primary navigation uses the Material 3 Expressive short navigation bar/item family. Selected/unselected semantics and destination ordering remain unchanged. Android TV/landscape compact navigation rail focus acquisition, bring-into-view behavior, destination order and destination semantics must not regress.
-- Top-app-bar back, Info and Settings actions use expressive icon-button shape/state behavior while preserving the 0.2.8 Info-left/Settings-right ordering, 24 dp icon geometry, 48 dp touch targets and accessibility labels.
-- Search fields retain the established OpenGLESScope 22 dp geometry required by the 0.1.19 UI rules while adopting expressive tonal containers, focus colors and the search affordance.
-- Format/extension selectors, Explore actions and collection-state chips use expressive filter/assist chip state and shape language without changing filtering semantics or technical labels.
-- The Direct GitHub updates toggle uses expressive switch state treatment while preserving the 0.2.7 default-enabled preference behavior and all update-security requirements.
-- Update confirmation, direct-update consent, update/collection banners, update actions and progress/loading indicators use expressive dialog/button/container/loading/progress language while preserving all existing actions, timing, provenance checks and user consent boundaries.
-- Remaining shared functional navigation/action vector icons use the same rounded Material 3 Expressive geometry established by VulkanScope 0.35.0. Official OpenGL ES/EGL, GPU-vendor and HDR artwork are data/brand assets and must not be redrawn as generic Material icons.
-- Experimental Material 3 Expressive APIs are opted into only at the smallest wrapper/composable scope that directly requires them.
-- OpenGL ES/EGL native collection, probe isolation/timeouts, Android Display/HDR semantics, UI/TXT/HTML completeness, Database payload/schema compatibility, Obtainium metadata, GitHub update behavior and release ABI policy are functionally unchanged by this visual release.
-- `ShortNavigationBarItemDefaults.colors` must use the Material3 1.5.0-alpha26 parameters `selectedTextColorTopIconPosition`, `selectedTextColorStartIconPosition` and `selectedIndicatorColor`; removed/legacy color parameter names are forbidden.
+## Release 2.2.19 specification, memory and performance correction
+- Exact immutable predecessor is OpenGLESScope 2.2.18; all 160 production-source hashes and predecessor ZIP SHA-256 are recorded in `tests/golden/2_2_19_release_regression_contract.json`. Only native `openglesscope.cpp` and `app/build.gradle.kts` may differ in production.
+- If GL_VERSION reports an ES 3.x version, both GL_MAJOR_VERSION and GL_MINOR_VERSION must agree exactly before the collector uses version-specific query gates. Contradictory driver responses invalidate the report and self-test, never authorize newer-core queries or falsely normalize reported values.
+- Shader and program info-log extraction must query/check actual GL errors, bound driver-controlled allocations to 1 MiB, use the returned `GLsizei` written length and reject negative / out-of-capacity lengths. Never search for a presumed NUL outside valid driver-written bytes.
+- EGLConfig two-pass enumeration must reject a changed count rather than silently lose rows. All 31 canonical fields retain existing output order, per-query error data and API legality, but use constant-time indexed access rather than 31 repeated linear name lookups per config.
+- The active release verifier, host-compiled fixtures and at least 12 mutation tests must enforce these changes. Existing 2.2.18 verifier files are immutable historical evidence, not falsely run as current-source hashes. Native resource lifecycle, process timeout, 8 MiB probe publication bound, explicit Database submission and schema 5/2 remain in effect.
+- Khronos public ES 3.2 / EGL 1.5 baseline index checks are not an assertion of byte-for-byte newest extension snapshot. Exact upstream registry refresh, Android build/lint/unit, physical device and sanitizer/heap profiling results must be recorded separately as NOT EXECUTED unless actually performed. Clean deterministic ZIP and source hash equivalence are mandatory.
+
+## Release 2.2.20 EGL query and bounded DMA-BUF report integrity
+- Exact immutable predecessor OpenGLESScope 2.2.19 ZIP and all 160 production hashes are locked in `tests/golden/2_2_20_release_regression_contract.json`. Only the C++ collector and Gradle release identity may change. Existing historical source-specific tests remain archived, not falsely run against a different release identity.
+- Never accept a non-null EGL Device/renderer/driver-name string as Available unless its own `eglGetError` returns EGL_SUCCESS and its text passes bounded UTF-8 validation. Device-handle discovery must also verify EGL_SUCCESS. Do not manufacture `Device N` as an actual renderer name if the query is inapplicable or failed.
+- All two-pass device, DMA-BUF format/modifier and supported-compression-rate enumerations require exact agreement between expected and written counts. Changed counts produce explicit Unavailable evidence and cannot silently omit entries.
+- Every returned 64-bit DMA-BUF modifier and exact `externalOnly` flag must be preserved in existing bounded EGL capability detail; counts alone are insufficient. Unknown numeric modifiers are rendered as raw hexadecimal values without fabricated canonical names. Invalid boolean flags invalidate the individual capability evidence. No schema-5/schema-2 report changes or capability fabrications.
+- Preserve the 128 format, 256 modifier/format, 4096 total modifier and 256 capability safety bounds; preserve complete TXT, HTML, analysis, structured report and Database propagation. No change to permissions, privacy, network submission, lifecycle ownership or registry sources.
+- `tools/verify_2_2_20_device_dma_integrity.py` host-compiled C++20 fixtures and `tools/test_2_2_20_negative_mutations.py` are active release blockers. Current and historical spec/registry, query-coverage, report, memory, security, accessibility and deterministic-package gates must pass. Newest upstream XML refresh, Android assemble/lint/unit, real GPU and long-term memory/sanitizer results remain separate evidence classes and are not inferred from static tests.
 
 
-## Release 0.3.1 binary/compressed format enumeration completeness
-- Application version is 0.3.1 with versionCode 301. Database versioning remains independent and is not changed by this application release.
-- Compressed texture formats must continue to come only from `GL_NUM_COMPRESSED_TEXTURE_FORMATS` and `GL_COMPRESSED_TEXTURE_FORMATS`; extension strings or GPU identity must never synthesize entries.
-- Shader binary formats must continue to come only from `GL_NUM_SHADER_BINARY_FORMATS` and `GL_SHADER_BINARY_FORMATS`.
-- Program binary formats are queried only when OpenGL ES 3.0+ or exact `GL_OES_get_program_binary` runtime evidence makes the query applicable, and values come only from `GL_NUM_PROGRAM_BINARY_FORMATS` / `GL_PROGRAM_BINARY_FORMATS`.
-- Known Khronos/Android registry enumerants used by these three runtime lists are displayed as canonical symbolic name plus raw hexadecimal value. Unknown or future enumerants remain raw hexadecimal values and are never guessed.
-- UI, TXT, HTML, diagnostics and Database submission continue to consume the same collected arrays without omission or schema mutation.
-- Material 3 Expressive UI behavior from 0.3.0, probe-process isolation, bounds, HTTPS restrictions, explicit upload policy and update verification remain unchanged.
+## Release 2.2.21 GPU card, navigation and official EGL brand variants
+- Exact immutable predecessor is OpenGLESScope 2.2.20, SHA-256 and 160 production hashes recorded in `tests/golden/2_2_21_release_regression_contract.json`. Only MainActivity.kt and app/build.gradle.kts may differ in production. 2.2.20 native queries, registry, reports and schemas remain byte-identical.
+- GPU hero card matches the neutral VulkanScope 3.0.12 `#181516` surface, keeps the truthful `System Driver` heading, and replaces the redundant OpenGL ES version row with the independently queried textual `EGL_VENDOR`. OpenGL ES/EGL core defines no Vulkan-style numeric hardware vendor ID. GL_VENDOR and EGL_VENDOR are implementation identifiers, not guarantees of physical silicon.
+- GPU logo attribution is presentation only: match anchored, bounded recognized GL_VENDOR strings, not arbitrary interior substrings or GL_RENDERER/model marketing text. Existing `gpu_vendor_vsi.png` is byte-identical to `gpu_vendor_vivante.png`; until a real independently verified VeriSilicon logo is provided, VSI artwork remains neutral rather than showing a different brand. Unknown, ambiguous, Mesa/software and translation paths use neutral artwork. A logo never supplies evidence for runtime support, a numeric ID, or a specific hardware model. The accessibility description must describe only the artwork actually selected. Database and local hero use the same mapping.
+- Primary destinations are exactly Overview, OpenGL ES, Display, Extensions in that order with equal-width centered items, matched VulkanScope portrait/landscape max widths (310/340 dp) and full system insets, RTL, TalkBack and TV focus. EGL remains reachable through the OpenGL ES destination and Overview; selecting the nested EGL page retains OpenGL ES as the highlighted primary tab. No fifth primary destination or unreachable content.
+- Official EGL asset is immutable and is displayed with ContentScale.Fit, never redrawn into an unofficial imitation or falsely recolored at the pixel source. Identity uses the plain official EGL icon, current-context uses the same mark with a semantic context overlay, and collector pbuffer uses a surface overlay; the companions communicate different meanings. All are accessible through the parent section heading rather than duplicate TalkBack announcements.
+- Dedicated active positive verifier and >=20 independent negative mutations are release blockers; historical 2.2.20 tests remain immutable evidence. Actual Android build, rendering and physical GPU identity validation remain separate evidence classes.
 
 
-## Release 0.3.2 current-registry binary-format maintenance
-- Application version is 0.3.2 with versionCode 302. Database versioning remains independent and is not changed by this application release.
-- The 0.3.1 runtime-only format-enumeration rules remain mandatory.
-- Current Khronos OpenGL ES Extension Registry binary-format enumerants must be decoded when a canonical registered name exists; as of the 2026 registry this includes `GL_SHADER_BINARY_HUAWEI` value `0x9770` and `GL_PROGRAM_BINARY_HUAWEI` value `0x9771`.
-- Symbolic decoding never creates capability evidence. A symbolic name is applied only to a numeric value actually returned by the corresponding runtime format array query.
-- Unknown or future enumerants remain raw hexadecimal values. No GPU vendor/model inference is permitted.
-- external comparison reference remains a comparison floor for relevant OpenGL ES/EGL capability presentation, while Khronos core/extension specifications are authoritative when the two differ or the registry gains newer enumerants.
-- Release metadata in README, Gradle, release notes, changelog, release metadata and audit tooling must agree on versionName/versionCode.
+## Release 2.2.22 VulkanScope evidence-column and long-hold parity + native/report security audit
+- Immutable predecessor is the exact OpenGLESScope 2.2.21 ZIP with the SHA-256 recorded in `tests/golden/2_2_22_release_regression_contract.json`; all 160 production files are individually locked. Only `app/src/main/java/com/efishell/openglesscope/MainActivity.kt` and `app/build.gradle.kts` may change. No GL/EGL registry, native collector, privacy/permission, structured report, TXT, HTML, history or Database payload alteration is permitted in this release.
+- Common capability rows use VulkanScope 3.0.12's bounded `ExpressiveEvidenceRow` Surface rather than uncontained Row/Column text. This applies to GPU `EGL_VENDOR` and every `CapabilityKeyValue` surface throughout Overview, Features, Limits, Display, EGL and Extensions. Row geometry uses 16dp normal corners, 360dp normal stacking, 420dp bordered dialog stacking, 0.88/1.12 two-column widths, 14/13dp horizontal inset and 11/10dp vertical inset, with font-size/length/line-wrap responsiveness. The neutral row background is `#211E1F` (reference); the product-specific magenta is retained for long-hold inset/accent, TV focus and quick-action controls.
+- A long-hold retains the reference 0.985 scale (110ms), accent highlight (110ms), border glow (140ms), 550ms Android TV OK/Enter long hold, bounded context action set and platform-aware desktop secondary-button handling. Explicit evidence inspector dialogs use the identical contained evidence row and `LocalDetailKeyValuePresentation` provider. No additional popup is manufactured for renderer identity.
+- The GPU hero `EGL_VENDOR` row must show the independently queried `report.egl.vendor` value in exactly this reference column component, retaining the plain-text string/provenance distinction from `GL_VENDOR`. OpenGL ES/EGL do not define Vulkan-style numeric hardware vendor IDs; no ID inference or renderer marketing guess is introduced.
+- Existing canonical-name, current locked Khronos registry, query-coverage, source lifecycle, bounded memory, security, report schema/TXT/HTML/Database and accessibility gates remain release blocking. All unchanged native/report sources are verified bytewise against the 2.2.21 predecessor, not claimed independently fixed. Upstream live registry-byte comparison, actual Android assemble/lint/unit, physical GPU comparisons, sanitizer/heap profiling and on-device pixel tests are separately NOT EXECUTED until observed.
+- `tools/verify_2_2_22_evidence_parity.py` and `tools/test_2_2_22_negative_mutations.py` are active release blockers; historical 2.2.21 tests are retained bytewise as predecessor evidence.
+
+## Release 3.0.0 — validated producer and ANGLE attribution
+- Application release identity is 3.0.0 / 3000, paired with Database 3.0.15. Existing report schema 2 and technicalReport schema 5 are unchanged.
+- GL_VENDOR, GL_RENDERER and canonical export/submission payloads retain exact driver-provided values. Google LLC is a presentation name only for historical Google Inc. display labels.
+- ANGLE is a translation layer, not a physical GPU vendor. Qualcomm artwork and an Adreno display title require explicit Qualcomm and Adreno evidence inside the reported ANGLE renderer, without a software-renderer marker.
+- Unknown ANGLE backends and software renderers keep unknown artwork. There is no inferred vendor or device ID.
+- Temporary success/failure controls remain noninteractive for three seconds and upload is disabled until complete collection and validated network are both available.
+- New Database POST accepts the exact 3.0.0/3000 audited producer; older stored reports are still readable.
+
+## Release 3.0.1 — physical GPU identity under ANGLE and persistent failure reporting
+- Show physical GPU name/vendor/artwork only from an explicit recognized model in the reported GL_RENDERER. The ANGLE translation layer or its Vulkan/Direct3D/Metal backend alone is not a GPU identity. Software backends, conflicting signatures and missing logo assets must not receive a fabricated hardware logo.
+- Preserve canonical GL_VENDOR/GL_RENDERER in technical reports, TXT, JSON and Database uploads. The Google LLC name is a presentation normalization only.
+- Collection failure remains visible until a validated collection changes status. Export and upload depend on complete collected evidence and are disabled on failure. Transient submit/copy action results keep the reference three-second interaction lock.
+- New producer identity is OpenGLESScope 3.0.1 / 3001, paired with Database 3.0.17.
+
+## Release 3.0.2 immutable Database warning contract
+- The Database compatibility notice is the VulkanScope 3.0.12 sentence with only VulkanScope replaced by OpenGLESScope. Do not add release numbers, unofficial-app assertions, or historical storage commentary to that yellow warning. Verified by `tools/verify_3_0_2_database_notice.py`.
+- New uploads must identify exact OpenGLESScope 3.0.2 / versionCode 3002 and Database 3.0.19; earlier reports remain GET-readable.
+
+## Release 3.0.3 responsive capability metric parity
+- Match VulkanScope 3.0.12's shared responsive metric grid in OpenGLESScope brand color: 1 column below 300 dp or large text on narrow screens, 2 columns below 760 dp, 3 otherwise. Use the VulkanScope-equivalent shared ExpressiveMetric card in exactly one ExpressiveMetricGrid composable, preserving the independent Overview MetricCard; do not duplicate a Kotlin signature or fall back to muted key/value Matches counters.
+- Features, Limits/Diagnostics, Formats, Extensions, Precision, EGL Configs, common list/search and bounded analysis evidence have exact report-backed metric counts. Filters alter matching counts; Showing is derived from the actual visible page, never invented or overstated.
+- Keep limit vs diagnostic totals disjoint, preserve explicit Available/Unavailable/Not applicable/Unknown semantics and all canonical values. Shader Precision now applies the 25-entry pager. No Vulkan-only sections or fields may be copied into GL/EGL reports.
+- Current exact report submission producer is OpenGLESScope 3.0.3 / versionCode 3003 for Database 3.0.20; older/newer apps cannot POST. Previous reports remain read-only. Schema 2, technical schema 5, normalizer 16 and the locked exact Database warning text do not change.
+- Source tests and clean package reproducibility must gate the new metric presentation and release handshake.
+
+## Release 3.0.4 failed-collection shell and Database producer contract
+
+- Match VulkanScope terminal failure behavior: failure is an explicit unavailable evidence state and must never replace the entire page content with one global EmptyState.
+- Keep Overview hero, detailed red failure card, Explore, current Android Display, Quick Access, offline Encyclopedia and Settings available even without a complete GL/EGL probe.
+- Report-only sections must show a nonempty titled Unavailable page; never infer Unsupported or zero capabilities from missing or failed data. The runtime-count snapshot requires a completed authoritative report.
+- Catch isolated probe exceptions into a terminal unavailable GlReport carrying the actual bounded error reason; do not silently leave report null.
+- Complete report TXT/HTML export and Database submit controls remain locked unless an available complete report exists; failed collection notification stays visible as in the VulkanScope reference.
+- Current app identity is OpenGLESScope 3.0.4/versionCode 3004 and companion Database 3.0.21 accepts this exact pair for new POST. Earlier stored records are preserved and remain readable.
+- tools/verify_3_0_4_failure_navigation.py is a required negative/regression gate and the exact-one ExpressiveMetricGrid compile fix is retained.
 
 
-## Release 0.3.3 full correctness, reporting, security and resource-hygiene audit
-- Application version is 0.3.3 with versionCode 303. Database versioning remains independent; the compatibility reference for this producer is OpenGLESScope Database 0.2.5.
-- Runtime capability evidence must remain authoritative and implementation-derived. No GPU/vendor identity, model table, allowlist or guessed capability may create OpenGL ES, EGL, Display or HDR support claims.
-- Each attempted OpenGL ES implementation query used to enumerate extensions or format arrays must leave explicit diagnostic evidence for the actual query operation. Count queries and value-array queries are separate attempted operations and therefore receive separate diagnostics. A value-array operation that is not executed because its authoritative count is zero must be represented as not applicable rather than as an attempted successful query.
-- OpenGL ES core-version presentation must retain provenance. On contexts where direct `GL_MAJOR_VERSION` and `GL_MINOR_VERSION` queries are valid and successful, UI/TXT/HTML must identify direct-query provenance; fallback parsing from `GL_VERSION` must be labeled as parsed runtime evidence.
-- Disabling Direct GitHub updates is an immediate runtime opt-out: active release-metadata HTTP calls, APK HTTP calls and update coroutines must be cancelled, pending update state must be cleared, and no package installer may be opened by work that completed after the opt-out.
-- A downloaded APK that fails package identity, signing-certificate, versionCode, versionName or archive validation must not remain as a validated target in the private update cache. Temporary partial files must also be removed.
-- On Android 9+ single-signer key rotation, signing compatibility is directional: the currently installed APK signer must be present in the candidate APK signing lineage. A candidate signed only by an older ancestor certificate must not pass merely because the two histories intersect. Multi-signer and legacy cases require exact current signer-set equality.
-- Query-diagnostic additions must flow through the existing UI Diagnostics destination, TXT report, HTML report and Database technical report without weakening the all-or-nothing report requirement or mutating the schema merely for presentation detail.
-- UI, TXT, HTML and Database reports must continue to expose limits, exact GL/EGL extension datasets, compressed texture formats, shader/program binary formats, shader precision, query diagnostics, EGL Configs and Android Display/HDR evidence without silently dropping collected technical data.
-- Native EGL/OpenGL ES probing must continue to release the current context, surface, context and display resources on all normal completion paths; service worker shutdown, isolated process behavior, 8 MiB result bound and 20-second timeout remain mandatory.
-- Release metadata, README, changelog and static audit identities must agree on 0.3.3 / 303.
+## OpenGLESScope 3.0.5 — canonical TXT/JSON submission contract (release-blocking)
+- Producer identity is 3.0.5 / 3005, submission schema 2 / technicalReport schema 5. Database 3.0.25 is the companion; prior producers are read-only in the Database.
+- `reportText()` preserves the existing compact `Pbuffer:` summary and additionally emits eight explicit `Pbuffer ...:` runtime evidence lines. Values come from the same `GlReport.eglRuntime` as `submissionJson()`, never placeholders invented to satisfy a validator.
+- `eglConfigAnalysisValue()` serializes exact `recordableAndroid=`, `framebufferTargetAndroid=`, `colorComponentTypeExt=` and `unavailableAttributes=` fields per actual EGL config. An empty valid EGL config list has no fabricated configuration rows.
+- No invented `GL_*`/`EGL_*` query aliases may be added to repair TXT comparison. Preserve exact native queries and the locked Khronos gl.xml/egl.xml symbols.
+- Database submission failure is a failure: never report HTTP 400/403 as successful, and never upload an incomplete collection.
+- Release gate must assert this producer/Worker canonical format agreement and reject removal of any retained pbuffer field.
 
 
-## Release 0.3.4
+## Release 3.0.6 real-emulator probe-integrity and producer pairing
+- Preserve explicit failed EGL context evidence and attempt ordered supported ES contexts without claiming ES 3.2 is available. Android's advertised ES version and host gfxstream logger are not a substitute for actual queried GL_VERSION.
+- Bounded indexed native format results are raw enumeration evidence and can contain repeated driver-provided format tokens; validate each exact original string, but do not invent, deduplicate, infer, sort or drop format rows. Strict unique identities remain mandatory for GL/EGL extensions, diagnostics, limits, EGL configs and per-(target,internalFormat) rows.
+- Repeated diagnostic query identities are reconciled before serialization; conflicting status/error evidence must become an explicit Unavailable record. Invalid sample enumeration becomes Unavailable, never silently shortened or fabricated as valid.
+- Any non-terminal native output is rejected with a bounded precise validation category; log error provenance in dedicated process, persist a terminal Unavailable reason and completion marker. Do not bypass JSON grammar, field validation, self-test or complete-report upload/export gating.
+- Retain locked locally auditable Khronos GL/EGL core and extension XML SHA-256, standard OpenGL ES 3.2 / GLSL ES 3.20 / EGL 1.5 limits, legal query guards and no synthetic API names. No claim of newer upstream byte-match without an actual re-fetch.
+- App 3.0.6 / 3006 must be paired with Database 3.0.26 for any new report upload; old reports remain readable without reattributing their source version.
+- Required verification: clean source and manifest reproduction, audit, prior regression gates and 3.0.6 focused negative mutations; Android 37.2 x86_64 16 KiB emulator and device evidence require separate execution outside a host-only code review.
 
-- Application version is 0.3.4 with versionCode 304.
-- Query diagnostic names in a complete report are canonical and unique.
-- Repeated internal reads of the same named query must not create duplicate diagnostic entries.
-- If repeated reads disagree, the single canonical diagnostic must preserve the conservative unavailable/inconsistent result rather than hide the conflict.
-- Count and array enumeration evidence remain distinct by their actual GL query names.
-- Database submission must pass the strict duplicate-diagnostic rejection contract.
-
-## Release 0.4.0 local analysis and optional tests
-
-- Application version is 0.4.0 with versionCode 400.
-- Analysis functionality is local-only and must not mutate the canonical TXT, HTML or Database technical report schema or capability evidence.
-- Portable analysis snapshots use the separate `OpenGLESScopeAnalysisSnapshot1` schema and are not accepted as Database technical reports.
-- Snapshot import is explicit through Android SAF, is bounded to 2 MiB, performs no background network access and rejects other snapshot schemas.
-- Report diff output describes submitted/runtime evidence changes only. A regression candidate is not a claim that a capability or driver is defective.
-- OpenGL ES minimum comparisons use only verified Khronos OpenGL ES 3.2 minimum values embedded by the release. Missing or non-numeric runtime values remain Unknown and are never treated as failures.
-- Watched capability tokens are local preferences only and do not alter report collection or submission.
-- Extension detail is based on exact enumerated runtime tokens plus the embedded Khronos engineering baseline. Promotion, dependency or support state must not be inferred when corresponding registry/runtime evidence is absent.
-- Format detail preserves canonical symbolic names and raw values where registered; unknown future values remain raw evidence.
-- Optional active tests require explicit user action and execute in the existing isolated probe process with a 20 second client timeout. Test PASS/FAIL/UNAVAILABLE/NOT_APPLICABLE states are test evidence only and never rewrite capability state.
-- Program-binary self-test data is bounded to 16 MiB and temporary test objects are destroyed before the probe returns.
-- The self-test creates and destroys its own EGL context/surface, shaders and programs and terminates EGL on every completed path.
-- Canonical Database schema remains schema 2 / technicalReport 1.
-- OpenGLESScope Database 0.2.8 remains the audited compatible Database release for the unchanged canonical report contract.
-
-
-## Release 0.4.1 VulkanScope-quality feature parity
-- Application version is 0.4.1 with versionCode 401.
-- Analysis must expose Compare, Spec minimums, Graph, Quality, Watched, Share and isolated Tests using OpenGL ES/EGL-native evidence semantics.
-- Analysis snapshots are bounded to 8 MiB, 32,768 entries, 1,024-character keys and 16,384-character values; overflow fails instead of truncating evidence.
-- Watched evidence is bounded to 256 entries and supports Matched/Missing filtering.
-- OpenGL ES 3.2 implementation-dependent requirement evaluation uses direct runtime queries and preserves minimum-versus-maximum direction; missing evidence stays Unknown.
-- Dependency graph edges come only from exact runtime extension/query gates implemented by OpenGLESScope and never from GPU/vendor inference.
-- Evidence-quality scoring uses explicit diagnostics/safety anomalies only and is never presented as conformance, benchmark or driver-quality evidence.
-- Canonical Database permalinks use `#reports/<64-hex-id>/Overview`; local QR generation must not require a remote service.
-- Database submission must not follow HTTP or HTTPS redirects and remains explicit complete-report only.
-- Isolated self-test results may be attributed only when GL_VENDOR, GL_RENDERER and GL_VERSION match the selected report.
-- Vulkan-only APIs and tuple-state models are not synthesized in OpenGLESScope. Parity applies to quality architecture, evidence-state semantics, analysis, reporting, safety and usability.
-- Current companion Database is OpenGLESScope Database 0.2.9; canonical report schema remains 2 and technicalReport schema remains 1.
-
-## Release 0.7.0 full correctness, security, EGL and reporting audit
-- Application version is 0.7.0 with versionCode 700.
-- Current companion Database is OpenGLESScope Database 0.7.0.
-- Submission schema remains 2; OpenGLESScope 0.7.0 technicalReport schema is 2.
-- Current Khronos engineering baselines remain OpenGL ES 3.2, GLSL ES 3.20 and EGL 1.5.
-- The checked-in external public capability floor remains 145/145 and 49 additional OpenGLESScope implementation queries are release-gated.
-- Exact-extension-gated implementation queries added in 0.7.0 must retain explicit runtime extension prerequisites and end-to-end UI/TXT/HTML/Database paths.
-- Mutable state or API control hints must not be mislabeled as implementation capability limits; specifically GL_NUM_WINDOW_RECTANGLES_EXT and GL_MAX_SHADER_COMPILER_THREADS_KHR are excluded from limit reporting.
-- EGL runtime binding/context/surface evidence and bounded EGL Config extension attributes must preserve unavailable/error provenance rather than fabricating support.
-- Driver-controlled enumeration counts, runtime strings, extension tokens, info logs and self-test binaries remain bounded.
-- Native GL error draining must be finite and EGL teardown must release thread-local EGL state.
-- Probe publication on minSdk 24 must not depend on java.nio.file.Files APIs unavailable on that platform floor.
-- Full release requires the 0.7.0 source verifier, syntax/data checks and source-package hygiene to pass. Full Android compilation is claimed only when actually completed by the toolchain.
-
-## Release 0.7.1 VulkanScope-quality application parity and source-package cleanup
-- Application version is 0.7.1 with versionCode 701. The audited companion Database is OpenGLESScope Database 0.7.2.
-- Quality parity with VulkanScope applies only where an OpenGL ES, EGL, Android display or shared application architecture equivalent exists. Vulkan-specific capability models must never be synthesized.
-- Analysis snapshots must include all current EGL runtime binding/context/surface evidence, every current EGL Config extension-backed attribute and exact unavailable-attribute error provenance.
-- Implementation limits and query diagnostics are separate evidence classes with separate counts and search surfaces; diagnostics must never inflate limit totals.
-- Formats and shader-precision evidence must be independently searchable without truncating the collected dataset.
-- EGL runtime presentation must separate identity, current context/binding, collector pbuffer and explicit unavailable-attribute error evidence.
-- Extension detail may navigate to the authoritative Khronos registry document and may show exact OpenGLESScope query gates, but registry navigation must never infer runtime support, promotion or dependency state.
-- The Analysis query graph covers exact implemented OpenGL ES and EGL query gates and keeps runtime enumeration separate from query-result evidence.
-- Diagnostic quality scoring incorporates explicit EGL current-binding failures while remaining a collection-evidence heuristic, never a conformance, performance or driver-quality verdict.
-- Android runtime/device provenance exposed in UI, TXT and HTML includes manufacturer, brand, model, product, device, board, hardware, Android release/codename/SDK, build ID, incremental build, security patch and fingerprint. Empty platform strings are represented as Unavailable.
-- Database submissions from 0.7.1 include the installed application ABI and Android-supported device ABI list in application metadata. Submission schema remains 2 and technicalReport schema remains 2.
-- README.md, root release.md, dedicated packaged app-store metadata directories and forbidden third-party comparison product naming are absent from the source release archive.
-- Release verification must fail if any of these parity, provenance, archive-hygiene or evidence-separation requirements regress.
-## Release 0.7.2 compile correctness and shared-quality parity
-- Application version is 0.7.2 with versionCode 702. The audited companion Database is OpenGLESScope Database 0.7.3.
-- Any use of experimental Material 3 or Material 3 Expressive APIs must carry the exact required compile-time opt-in at the narrowest appropriate composable/function scope; release compilation may not rely on suppressed or ignored experimental-API diagnostics.
-- Analysis self-test loading behavior follows the shared VulkanScope Material 3 Expressive implementation pattern and must compile under the pinned Material 3 dependency.
-- A release that reaches Kotlin compilation and fails on an experimental API is a release-blocking defect even when native compilation and resource processing succeed.
-- Existing OpenGL ES/EGL evidence, Analysis, report, export, submission and query-state semantics remain unchanged by a compile-only correction.
-- README.md, root release.md, dedicated packaged app-store metadata directories and forbidden third-party comparison product naming remain absent from the source release archive.
-- Release verification must explicitly gate the Analysis Material 3 Expressive opt-in so this compile regression cannot recur.
-
+## Release 3.0.7 — evidence-only translator family identity
+- `Android Emulator OpenGL ES Translator (...)` and `ANGLE (...)` are rendering translation layers, not physical hardware vendors. Presentation-only identity extraction is permitted solely when the actual bounded `GL_RENDERER` contains exactly one unambiguous, recognized explicit GPU model signature; the same vendor/model/logo rules apply to all supported families and models, not a particular test card or brand.
+- Use only bundled appropriately attributed manufacturer artwork. Do not infer a logo or GPU from `GL_VENDOR` implementation branding, the translation-layer name, operating system, Vulkan/Direct3D backends or marketing assumptions. Software backends, duplicate/conflicting GPU models and unrecognized/ambiguous strings retain neutral artwork and their raw reported renderer text.
+- The canonical `GL_VENDOR`, `GL_RENDERER`, EGL provenance, technical TXT/JSON and database submissions remain byte-for-byte runtime evidence. Display names and manufacturer artwork are not hardware attestation, a physical vendor/device ID, feature support, query results or conformance evidence.
+- Source and executable Kotlin/Node regression tests cover cross-family model names, exact raw preservation, emulator translation, ANGLE, software, ambiguity, and missing artwork; app and Database versions must be paired before new POST, retaining historical read-only records and the unchanged cache-first pipeline.

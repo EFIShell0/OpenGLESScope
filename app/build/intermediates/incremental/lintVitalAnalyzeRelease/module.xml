@@ -4,11 +4,11 @@
     name=":app"
     type="APP"
     maven="OpenGLESScope:app:unspecified"
-    agpVersion="9.3.2"
+    agpVersion="9.4.1"
     buildFolder="build"
-    bootClassPath="D:\Android\SDK\platforms\android-37.0\android.jar;D:\Android\SDK\build-tools\36.0.0\core-lambda-stubs.jar"
+    bootClassPath="D:\Android\SDK\platforms\android-37.2\android.jar;D:\Android\SDK\build-tools\36.0.0\core-lambda-stubs.jar"
     javaSourceLevel="11"
-    compileTarget="android-37.0"
+    compileTarget="android-37.2"
     highlightGradualR8Api="false">
   <lintOptions
       abortOnError="true"

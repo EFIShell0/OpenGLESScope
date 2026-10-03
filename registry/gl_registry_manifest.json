@@ -1,0 +1,41 @@
+{
+  "bytes": 2774722,
+  "canonicalRegistry": "https://registry.khronos.org/OpenGL/xml/gl.xml",
+  "commands": 3301,
+  "currentEGL": "1.5",
+  "currentGLSLES": "3.20",
+  "currentOpenGLESCore": "3.2",
+  "enumEntries": 6074,
+  "features": [
+    {
+      "api": "gles1",
+      "name": "GL_VERSION_ES_CM_1_0",
+      "number": "1.0"
+    },
+    {
+      "api": "gles2",
+      "name": "GL_ES_VERSION_2_0",
+      "number": "2.0"
+    },
+    {
+      "api": "gles2",
+      "name": "GL_ES_VERSION_3_0",
+      "number": "3.0"
+    },
+    {
+      "api": "gles2",
+      "name": "GL_ES_VERSION_3_1",
+      "number": "3.1"
+    },
+    {
+      "api": "gles2",
+      "name": "GL_ES_VERSION_3_2",
+      "number": "3.2"
+    }
+  ],
+  "glesExtensionEntries": 350,
+  "registeredExtensions": 863,
+  "sha256": "b9ca2cfa5c676e901c20d34af3407f1687cde0f1336a5ff7a8974d04c7494ad3",
+  "source": "Khronos Combined OpenGL Registry gl.xml; release-locked snapshot revalidated for OpenGLESScope 2.0.0",
+  "verifiedAt": "2026-09-30"
+}

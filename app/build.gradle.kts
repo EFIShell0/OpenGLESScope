@@ -86,19 +86,39 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val releaseVersionName = "0.7.2"
-val releaseVersionCode = 702
+val releaseVersionName = "3.0.7"
+val releaseVersionCode = 3007
 
 android {
     namespace = "com.efishell.openglesscope"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 2
+        }
+    }
     defaultConfig {
         applicationId = "com.efishell.openglesscope"
-        minSdk = 24
+        minSdk = 31
         targetSdk = 37
         versionCode = releaseVersionCode
         versionName = releaseVersionName
-        ndkVersion = "29.0.14206865"
+        buildConfigField("String", "AGP_VERSION", "\"9.4.1\"")
+        buildConfigField("String", "KOTLIN_VERSION", "\"2.4.20\"")
+        buildConfigField("String", "GRADLE_VERSION", "\"9.7.1\"")
+        buildConfigField("String", "NDK_VERSION", "\"30.0.16248370\"")
+        buildConfigField("String", "CORE_KTX_VERSION", "\"1.19.1\"")
+        buildConfigField("String", "SPLASHSCREEN_VERSION", "\"1.2.0\"")
+        buildConfigField("String", "ACTIVITY_COMPOSE_VERSION", "\"1.13.0\"")
+        buildConfigField("String", "COMPOSE_VERSION", "\"1.12.1\"")
+        buildConfigField("String", "MATERIAL3_VERSION", "\"1.5.0-alpha28\"")
+        buildConfigField("String", "LIFECYCLE_VERSION", "\"2.11.0\"")
+        buildConfigField("String", "OKHTTP_VERSION", "\"5.5.0\"")
+        buildConfigField("String", "ZXING_VERSION", "\"3.5.4\"")
+        buildConfigField("int", "COMPILE_SDK_LEVEL", "37")
+        buildConfigField("int", "COMPILE_SDK_MINOR_LEVEL", "2")
+        buildConfigField("int", "MIN_SDK_LEVEL", "31")
+        buildConfigField("int", "TARGET_SDK_LEVEL", "37")
+        ndkVersion = "30.0.16248370"
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
     }
     splits {
@@ -126,15 +146,16 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.19.0")
+    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("androidx.activity:activity-compose:1.13.0")
-    implementation("androidx.compose.ui:ui:1.12.0")
-    implementation("androidx.compose.foundation:foundation:1.12.0")
-    implementation("androidx.compose.animation:animation:1.12.0")
-    implementation("androidx.compose.material3:material3:1.5.0-alpha26")
+    implementation("androidx.compose.ui:ui:1.12.1")
+    implementation("androidx.compose.foundation:foundation:1.12.1")
+    implementation("androidx.compose.animation:animation:1.12.1")
+    implementation("androidx.compose.material3:material3:1.5.0-alpha28")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
-    implementation("com.squareup.okhttp3:okhttp:5.3.0")
+    implementation("com.squareup.okhttp3:okhttp:5.5.0")
     implementation("com.google.zxing:core:3.5.4")
 }
 

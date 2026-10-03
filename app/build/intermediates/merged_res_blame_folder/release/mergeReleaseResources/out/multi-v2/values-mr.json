@@ -1,27 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.efishell.openglesscope.app-mergeReleaseResources-31:/values-mr/values-mr.xml",
+            "outputFile": "com.efishell.openglesscope.app-mergeReleaseResources-33:/values-mr/values-mr.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\ed2aaab545152a53b46bfab9793aab1c\\transformed\\ui\\res\\values-mr\\values-mr.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "107,201,295,377,474,572,659,745,830,919,1002,1082,1167,1238,1322,1398,1474,1550,1626,1692",
-                        "endColumns": "93,93,81,96,97,86,85,84,88,82,79,84,70,83,75,75,75,75,65,121",
-                        "endOffsets": "196,290,372,469,567,654,740,825,914,997,1077,1162,1233,1317,1393,1469,1545,1621,1687,1809"
-                    },
-                    "to": {
-                        "startLines": "3,11,12,13,14,15,16,17,91,92,93,94,95,96,97,98,99,101,102,103",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "209,1035,1129,1211,1308,1406,1493,1579,9600,9689,9772,9852,9937,10008,10092,10168,10244,10421,10497,10563",
-                        "endColumns": "93,93,81,96,97,86,85,84,88,82,79,84,70,83,75,75,75,75,65,121",
-                        "endOffsets": "298,1124,1206,1303,1401,1488,1574,1659,9684,9767,9847,9932,10003,10087,10163,10239,10315,10492,10558,10680"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\27c227cf072cc99974bcb4bd2bce6ec9\\transformed\\foundation\\res\\values-mr\\values-mr.xml",
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\732e8f77deab56a12193236e7355cb64\\transformed\\foundation\\res\\values-mr\\values-mr.xml",
                     "from": {
                         "startLines": "2,3,4",
                         "startColumns": "4,4,4",
@@ -38,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\7ae56080bf03e7e99dfbd3aedf884515\\transformed\\core-1.19.0\\res\\values-mr\\values-mr.xml",
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\26dd9bfa12b0c9b2900d4445f52b1a15\\transformed\\core-1.19.1\\res\\values-mr\\values-mr.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
@@ -55,7 +38,24 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\50f5e142fd1a5e7576b89ad949918e41\\transformed\\material3\\res\\values-mr\\values-mr.xml",
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\132f248090166d17ae9bd4f1b73fd198\\transformed\\ui\\res\\values-mr\\values-mr.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "107,201,295,377,474,572,659,745,830,919,1002,1082,1167,1238,1322,1398,1474,1550,1626,1692",
+                        "endColumns": "93,93,81,96,97,86,85,84,88,82,79,84,70,83,75,75,75,75,65,121",
+                        "endOffsets": "196,290,372,469,567,654,740,825,914,997,1077,1162,1233,1317,1393,1469,1545,1621,1687,1809"
+                    },
+                    "to": {
+                        "startLines": "3,11,12,13,14,15,16,17,91,92,93,94,95,96,97,98,99,101,102,103",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "209,1035,1129,1211,1308,1406,1493,1579,9600,9689,9772,9852,9937,10008,10092,10168,10244,10421,10497,10563",
+                        "endColumns": "93,93,81,96,97,86,85,84,88,82,79,84,70,83,75,75,75,75,65,121",
+                        "endOffsets": "298,1124,1206,1303,1401,1488,1574,1659,9684,9767,9847,9932,10003,10087,10163,10239,10315,10492,10558,10680"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\Administrator\\.gradle\\caches\\9.7.1\\transforms\\6a580cd93fa60aabb2098bc18d2f39a0\\transformed\\material3\\res\\values-mr\\values-mr.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",

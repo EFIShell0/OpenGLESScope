@@ -1,0 +1,9 @@
+{
+  "reference": "exact OpenGLESScope 2.2.17 ZIP",
+  "archivedVerifierHashes": {
+    "verify_2_2_17_kotlin_compile_hotfix.py": "2c60341dc31cb100d2aa5f41109681d9dbede9a8a703d0cb1a9b8dce7c5b8439",
+    "test_2_2_17_negative_mutations.py": "5083cb558ea01d8e5060696643bbde118aec014b39d3164eebf5bd42702fb1c5",
+    "test_2_2_16_negative_mutations.py": "708010c00e960db2d80ac94f779a518dffbddfa82f2b19774361acac36fdafb5",
+    "test_2_2_15_negative_mutations.py": "31159f4f15c4181aec7485d221d86b014cfc078cdc6f00d68d814e4702db5cab"
+  }
+}

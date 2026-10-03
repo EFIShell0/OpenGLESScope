@@ -1,0 +1,43 @@
+{
+  "bytes": 195480,
+  "canonicalRegistry": "https://registry.khronos.org/EGL/api/egl.xml",
+  "commands": 158,
+  "currentEGL": "1.5",
+  "enumEntries": 694,
+  "features": [
+    {
+      "api": "egl",
+      "name": "EGL_VERSION_1_0",
+      "number": "1.0"
+    },
+    {
+      "api": "egl",
+      "name": "EGL_VERSION_1_1",
+      "number": "1.1"
+    },
+    {
+      "api": "egl",
+      "name": "EGL_VERSION_1_2",
+      "number": "1.2"
+    },
+    {
+      "api": "egl",
+      "name": "EGL_VERSION_1_3",
+      "number": "1.3"
+    },
+    {
+      "api": "egl",
+      "name": "EGL_VERSION_1_4",
+      "number": "1.4"
+    },
+    {
+      "api": "egl",
+      "name": "EGL_VERSION_1_5",
+      "number": "1.5"
+    }
+  ],
+  "registeredExtensions": 167,
+  "sha256": "3327619123cdaa999400b41a7060180616df42571a0fdd11e9726e026f6d0fb8",
+  "source": "Khronos EGL Registry egl.xml; supplied current snapshot revalidated for OpenGLESScope 2.0.0",
+  "verifiedAt": "2026-09-30"
+}

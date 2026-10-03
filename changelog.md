@@ -1,88 +1,88 @@
-# 0.7.2
+# OpenGLESScope 3.0.7
 
-- Fixed release compilation of the Analysis self-test loading indicator by applying the required Material 3 Expressive opt-in to the Analysis composable, matching the shared VulkanScope implementation pattern.
-- Kept the existing OpenGL ES/EGL Analysis behavior and evidence semantics unchanged; this is a compile-correctness fix rather than a capability inference change.
-- Audited the companion Database Compare presentation against the shared VulkanScope interaction/layout architecture.
-- Source archive policy continues to exclude README.md, root release.md, dedicated packaged app-store metadata directories and forbidden third-party comparison product naming.
+### Fixed
+- Display explicitly reported GPU family/model and bundled manufacturer artwork for Android Emulator OpenGL ES Translator as well as ANGLE, across supported model families without altering native GL_VENDOR/GL_RENDERER or exported report evidence.
+- Keep software, ambiguous, conflicting and unknown renderer strings on neutral artwork rather than inventing hardware identity.
 
-# 0.7.1
+### Changed
+- New application version 3.0.7 / 3007; companion Database 3.0.27 for new submissions.
 
-- Closed remaining shared application-quality gaps against VulkanScope where an OpenGL ES/EGL equivalent exists.
-- Added full EGL runtime/config evidence to Analysis snapshots and EGL query gates to the Analysis graph.
-- Separated query diagnostics from implementation-limit totals.
-- Added search and query provenance to Formats and search to Shader Precision.
-- Reorganized EGL runtime detail into identity, current binding/context, collector pbuffer and exact failure evidence.
-- Added Khronos registry navigation and exact implemented query-gate evidence to extension detail.
-- Expanded Android OS/device provenance across UI, TXT and HTML.
-- Added installed ABI and supported device ABI metadata to Database submissions.
-- Source ZIP policy now excludes README.md in addition to existing clean-archive restrictions.
+# OpenGLESScope 3.0.6
 
-# 0.7.0
+### Fixed
+- Preserve bounded driver-native compressed and shader/program binary enumeration evidence even if a driver reports repeated format tokens, without relaxing independent extension-name checks.
+- Reconcile repeated query diagnostic identities without claiming a successful query from conflicting evidence; classify invalid internal-format samples as explicitly Unavailable.
+- Identify the specific rejected JSON field category in isolated probe logs and terminal failure reason instead of generic Unknown.
+- Preserve spec-backed OpenGL ES 3.2→3.1→3.0→2.0 context fallback and complete-report gating.
 
-- Full OpenGL ES/EGL correctness, specification, reporting, security, memory-safety and optimization audit.
-- Added EGL runtime/context/surface evidence and expanded extension-gated EGL Config attributes with exact error preservation.
-- Added 18 valid extension-backed GL implementation queries; public external comparison reference floor remains 145/145 with 49 OpenGLESScope extras.
-- Removed misleading mutable/hint states from capability-limit reporting.
-- Hardened native cleanup, GL error draining, runtime-string/token/info-log/program-binary bounds and second-stage enumeration validation.
-- Expanded Analysis dependency coverage while retaining 104 OpenGL ES 3.2 Spec minimum checks.
-- Advanced current Database technicalReport to schema 2 while retaining top-level schema 2.
+### Changed
+- Release 3.0.6 / 3006; Database 3.0.26 companion required before new submissions.
 
-# 0.4.1
+# OpenGLESScope 3.0.5
 
-- Expanded Analysis to Compare, Spec minimums, Graph, Quality, Watched, Share and isolated Tests with VulkanScope-quality UX adapted to OpenGL ES/EGL evidence semantics.
-- Expanded lossless bounded snapshots to 8 MiB / 32,768 entries and added evidence-kind/state filters plus completeness-aware regression candidates.
-- Expanded the OpenGL ES 3.2 implementation-requirement evaluator to 104 directly queried minimum/maximum requirements.
-- Added exact runtime extension-to-query dependency visualization and diagnostic evidence-quality analysis without capability inference.
-- Added Matched/Missing watched filtering, canonical Database permalink copy/share and local QR generation.
-- Hardened Database submission against redirects and isolated self-test attribution against GL runtime identity mismatch.
-- Updated AGP 9.3.2 and Gradle 9.7.1 while retaining API 37, NDK r29, C++20 and three release ABIs.
+### Fixed
+- Keep Overview, navigation, Android Display, Encyclopedia and Settings visible after an unavailable/failed OpenGL ES/EGL collection, matching VulkanScope failure-state presentation.
+- Show explicit unavailable evidence on report-only pages instead of a blank workspace; preserve real probe failure reasons without inventing capability data.
+- Retain complete-report gating for exports and Database submission.
 
-# 0.4.0
+# OpenGLESScope 3.0.3 — release Kotlin compile hotfix (same version)
 
-- Added offline local report comparison, regression-candidate analysis, spec-minimum checks, watched capabilities, detailed format/extension inspection and isolated optional runtime tests.
-- Analysis data is local-only and does not alter canonical capability or Database evidence.
+- Fixed: Removed a duplicate `ExpressiveMetricGrid` composable that caused `:app:compileReleaseKotlin` overload-resolution ambiguity. Retains VulkanScope 3.0.12 responsive `ExpressiveMetric` implementation and keeps existing Overview `MetricCard`.
+- Added: Release-blocking source assertions for a unique metric-grid signature so this exact Kotlin regression cannot silently pass `QUALITY_GATE`. No versionCode, reporting schema, renderer, or Database contract changes.
 
-# 0.3.4
+# OpenGLESScope 3.0.3
 
-- Fixed duplicate query-diagnostic records introduced by 0.3.3 when count queries were reused by Limits and runtime-format enumeration.
-- Canonical diagnostic names are now unique; repeated internal reads merge into one conservative evidence record instead of producing duplicate names rejected by Database validation.
-- Preserves separate count and array diagnostics for extension, compressed texture, shader binary and program binary enumeration.
-- Restores OpenGLESScope Database complete-report submission compatibility.
+- Changed: Shared VulkanScope responsive metric-card typography, spacing, grid and filtered/paged counts applied to capability lists and analysis search; OpenGLESScope brand color retained.
+- Changed: Features, Limits/Diagnostics, Formats, Extensions, Shader Precision, EGL Configs and general search/list views use truthful evidence metrics and explicit Showing page ranges; Shader Precision uses the bounded shared pager.
+- Preserved: API-specific GL/EGL queries and counts, raw reports, the locked database compatibility warning, schema 2/5, and ANGLE physical-GPU presentation.
+- Changed: Producer identity 3.0.3/3003, paired only with Database 3.0.20.
 
-# 0.3.3
+# OpenGLESScope 3.0.2
 
-- Completed a full rules-driven correctness, reporting, security and resource-hygiene audit.
-- Added per-query diagnostics for format count/value enumeration and `GL_NUM_EXTENSIONS`.
-- Added accurate direct-vs-parsed OpenGL ES core-version provenance to UI, TXT and HTML.
-- Fixed Direct GitHub updater cancellation/opt-out races and invalid APK cache cleanup.
-- Tightened directional APK signing-lineage validation for certificate rotation.
-- Updated Database compatibility metadata to Database 0.2.5.
+- Changed: Restored the exact VulkanScope Database compatibility notice with OpenGLESScope branding only.
+- Changed: Matched the Database privacy introduction to the reference.
+- Changed: Producer version 3.0.2 / 3002 for Database 3.0.19.
 
-# 0.3.2
+# OpenGLESScope 3.0.1
 
-- Audited OpenGLESScope 0.3.1 against the current Khronos OpenGL ES registry and the public external OpenGL ES capability reference reporting floor.
-- Added symbolic decoding for the 2026 Khronos-registered HUAWEI shader/program binary formats (`0x9770` and `0x9771`).
-- Preserved raw hexadecimal fallback for unknown future enumerants and runtime-only capability evidence.
-- Corrected stale README version metadata.
-- Kept Database schema, Material 3 Expressive UI, update behavior, probe isolation and ABI policy unchanged.
+- Fixed: ANGLE physical GPU family/model detection and matching available vendor logo for explicitly reported Qualcomm, Arm, Imagination, Samsung, NVIDIA, AMD, Intel, Broadcom, Vivante and Huawei. VeriSilicon model evidence is retained but its incorrectly aliased Vivante logo is not used. Unknown, software and conflicting signatures do not fabricate a GPU.
+- Preserved: Driver-reported GL_VENDOR / GL_RENDERER in TXT, JSON, history and Database submission; Google LLC is display-only normalization.
+- Changed: New report producer version to 3.0.1 / 3001, matching Database 3.0.17.
+- Verified: Persistent collection-failure banner and disabled report-dependent actions; transient failure/success lock remains three seconds.
 
-# 0.3.1
+# OpenGLESScope 3.0.1
 
-- Verified runtime collection of compressed texture, shader binary and program binary formats against the OpenGL ES capability-viewer coverage floor.
-- Added symbolic decoding for EXT BPTC, EXT RGTC and sRGB S3TC compressed formats while preserving raw hexadecimal values.
-- Added symbolic decoding for MESA and DMP program binary formats while preserving unknown enumerants as raw hexadecimal values.
-- No capability is inferred from GPU/vendor identity; all format lists remain sourced from the corresponding runtime OpenGL ES queries.
+- Changed: Application release identity to 3.0.1 (3001) for Database 3.0.17.
+- Fixed: Explicit ANGLE Qualcomm/Adreno renderer presentation, manufacturer display name, and vendor artwork without changing canonical GL evidence.
+- Verified: Transient action success/failure lock and upload prerequisites remain aligned with shared reference.
 
-# 0.3.0
+# OpenGLESScope 2.2.22
 
-- Completed the application-wide Material 3 Expressive UI transition while preserving OpenGLESScope's established visual identity.
-- Added expressive theme/motion, short portrait navigation, component state/shape treatments, dialogs, banners and progress/loading presentation.
-- Aligned shared functional icons with VulkanScope 0.35.0 while preserving official OpenGL ES/EGL, GPU-vendor and HDR artwork.
-- Preserved capability collection, reports, Database integration, update security and Android TV/landscape navigation behavior.
-## 0.7.0 source-package cleanup
+## Fixed
+- Match VulkanScope's contained, responsive two-column evidence rows everywhere instead of uncontained static text, including long-press inset/focus and dialog presentation.
+- Present EGL_VENDOR in the System Driver hero with the same type hierarchy, dimensions and focus treatment as VulkanScope's Vendor ID, retaining the exact queried textual value.
 
-- Removed all third-party comparison product naming from shipped source, filenames, audits and release tooling.
-- Removed packaged app-store metadata bundles.
-- Removed the root release.md file from the source ZIP.
-- Added permanent project rules preventing these items from returning.
+## Verified
+- Immutable 2.2.21 native collector, Khronos registry and report code; registry/name/query/report, security, resource and lifecycle source gates. No invented vendor ID or runtime capability.
+- Device profiling, newest upstream full XML comparison and real Android build are separate verification tasks.
 
+# Historical 2.2.21
+
+## Fixed
+- Reject EGL Device renderer/name text when `eglQueryDeviceStringEXT` reports an EGL error or malformed UTF-8; preserve error provenance rather than accepting a non-null driver pointer as success.
+- Stop reporting synthetic `Device 0`/`Device 1` placeholders as actual renderer values when no authoritative device renderer has been queried.
+- Reject unstable two-pass EGL Device, DMA-BUF format/modifier and surface-compression enumeration counts instead of presenting partial results as complete.
+- Preserve real 64-bit DMA-BUF modifiers and each `externalOnly` flag in bounded EGL capability details, rather than reporting counts alone. Invalid flags explicitly invalidate the per-format query evidence.
+- Require successful EGL error verification for current-display device-handle and MESA driver-name queries.
+
+## Verified
+- GL/EGL locked registry hashes, canonical names, GL/EGL core/extension query legality and existing structured/TXT/HTML/Database schema alignment; VulkanScope 3.0.12 API-neutral resource/security methodology.
+- Android APK/lint/unit, physical-driver stress, long-duration RAM/heap profiling, sanitizers and newest upstream registry byte-level comparison are separate release qualifications; they are not implied by static PASS.
+
+## 2.2.21
+- Changed: GPU hero card neutral surface, System Driver label and EGL_VENDOR identity evidence; no synthetic numeric vendor ID.
+- Changed: Bottom tabs now Overview / OpenGL ES / Display / Extensions in portrait/landscape. EGL remains accessible through OpenGL ES.
+- Changed: Official EGL artwork remains unchanged and is used with distinguishable identity/context/pbuffer companion marks.
+- Fixed: GL_VENDOR-based GPU artwork attribution; uncertain/translation-layer identities now use neutral artwork.
+
+- Fixed canonical report text (EGL pbuffer/detail and EGL Config output) to match the strict Database submission contract; retained raw report and native evidence.

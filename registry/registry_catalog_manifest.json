@@ -1,0 +1,14 @@
+{
+  "catalogSha256": "d53eee58cb59c74b6490a2c50c3a71e28a4271db0fd3c90a087fcc375447a878",
+  "catalogUncompressedBytes": 880639,
+  "eglCoreVersions": 6,
+  "eglEntries": 1065,
+  "eglExtensions": 167,
+  "eglXmlSha256": "3327619123cdaa999400b41a7060180616df42571a0fdd11e9726e026f6d0fb8",
+  "entries": 5261,
+  "glCoreVersions": 5,
+  "glEntries": 4196,
+  "glExtensions": 350,
+  "glXmlSha256": "b9ca2cfa5c676e901c20d34af3407f1687cde0f1336a5ff7a8974d04c7494ad3",
+  "schema": "OpenGLESScopeRegistryCatalogManifest1"
+}

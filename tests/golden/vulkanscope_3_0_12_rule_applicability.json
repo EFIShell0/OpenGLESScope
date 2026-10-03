@@ -1,0 +1,1201 @@
+{
+  "schema": "OpenGLESScopeVulkanScopeRulesApplicability1",
+  "reference": "VulkanScope 3.0.12 PROJECT_RULES.md",
+  "referenceHeadingCount": 199,
+  "entries": [
+    {
+      "index": 1,
+      "heading": "Non-negotiable",
+      "status": "adopted",
+      "coverage": "Non-negotiable release discipline"
+    },
+    {
+      "index": 2,
+      "heading": "ABI",
+      "status": "adapted",
+      "coverage": "OpenGLESScope ABI set"
+    },
+    {
+      "index": 3,
+      "heading": "Architecture",
+      "status": "adopted",
+      "coverage": "process/UI/native architecture discipline"
+    },
+    {
+      "index": 4,
+      "heading": "Surface and display",
+      "status": "adapted",
+      "coverage": "Android Display/HDR plus EGL surface evidence"
+    },
+    {
+      "index": 5,
+      "heading": "Extensions",
+      "status": "adapted",
+      "coverage": "GL/EGL extension evidence"
+    },
+    {
+      "index": 6,
+      "heading": "Features and limits",
+      "status": "adapted",
+      "coverage": "GL/EGL features and implementation limits"
+    },
+    {
+      "index": 7,
+      "heading": "Formats",
+      "status": "adapted",
+      "coverage": "GL/EGL formats and binary evidence"
+    },
+    {
+      "index": 8,
+      "heading": "Complete report collection",
+      "status": "adopted",
+      "coverage": "complete report preservation"
+    },
+    {
+      "index": 9,
+      "heading": "Release quality",
+      "status": "adopted",
+      "coverage": "release evidence and gate discipline"
+    },
+    {
+      "index": 10,
+      "heading": "Mandatory evidence workflow for every future change",
+      "status": "adopted",
+      "coverage": "mandatory evidence workflow"
+    },
+    {
+      "index": 11,
+      "heading": "Build compatibility",
+      "status": "adopted",
+      "coverage": "toolchain compatibility"
+    },
+    {
+      "index": 12,
+      "heading": "Build gate",
+      "status": "adopted",
+      "coverage": "Android build gate evidence class"
+    },
+    {
+      "index": 13,
+      "heading": "Network address-family policy",
+      "status": "adopted",
+      "coverage": "IPv4/IPv6 network policy"
+    },
+    {
+      "index": 14,
+      "heading": "Application updates",
+      "status": "adopted",
+      "coverage": "official GitHub update hardening"
+    },
+    {
+      "index": 15,
+      "heading": "Current upstream and structured-report baseline",
+      "status": "adapted",
+      "coverage": "locked GL/EGL registry and schema baseline"
+    },
+    {
+      "index": 16,
+      "heading": "Info / Settings visual scope",
+      "status": "adopted",
+      "coverage": "Settings/Info visual and information architecture"
+    },
+    {
+      "index": 17,
+      "heading": "Release 0.32.5 update confirmation and complete-export gate",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 18,
+      "heading": "Release 0.32.6 collection mutation gate",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 19,
+      "heading": "Release 0.32.7 Turnip SAF picker and Database 0.34.4 compatibility",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 20,
+      "heading": "0.32.8 Turnip SAF and HDR presentation",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 21,
+      "heading": "0.32.9 Turnip SAF regression restoration",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 22,
+      "heading": "0.33.0 complete Turnip/SAF restoration",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 23,
+      "heading": "0.33.1 collection gate for driver controls",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 24,
+      "heading": "Release 0.33.2 capability-page Material 3 Expressive redesign",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 25,
+      "heading": "Release 0.33.3 full application audit",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 26,
+      "heading": "0.33.4 Info, theme and Android TV parity requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 27,
+      "heading": "0.33.5 update discovery and banner parity requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 28,
+      "heading": "Release 0.33.6 update-dialog parity requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 29,
+      "heading": "Release 0.33.7 full producer/report/display audit",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 30,
+      "heading": "Release 0.33.8 Kotlin release-build repair",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 31,
+      "heading": "Release 0.33.9 Properties & Limits summary parity",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 32,
+      "heading": "Release 0.33.10 Properties & Limits summary semantics",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 33,
+      "heading": "Release 0.34.0 legacy reference field-level parity",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 34,
+      "heading": "Release 0.34.2 complete-report parity audit",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 35,
+      "heading": "Release 0.34.2 Host Image Copy promoted-name parity",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 36,
+      "heading": "Release 0.34.3 IzzyOnDroid direct-update policy",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 37,
+      "heading": "Release 0.34.4 IzzyOnDroid first-install notice",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 38,
+      "heading": "Release 0.34.5 Obtainium update-management integration",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 39,
+      "heading": "Release 0.34.6 Obtainium UI simplification",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 40,
+      "heading": "Release 0.34.7 default-enabled direct GitHub updates",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 41,
+      "heading": "Release 0.34.8 FormatFeatureFlags2 and expressive navigation icons",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 42,
+      "heading": "Release 0.34.9 full Material 3 Expressive surface pass",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 43,
+      "heading": "Release 0.35.0 Material 3 Expressive compile-fix requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 44,
+      "heading": "Release 0.35.1 full application security and correctness audit",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 45,
+      "heading": "Release 0.40.0 local analysis and optional tests",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 46,
+      "heading": "Release 0.40.1 analysis build-fix requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 47,
+      "heading": "Release 0.40.2 full application audit requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 48,
+      "heading": "Release 0.41.0 advanced analysis, registry reference and sharing requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 49,
+      "heading": "Release 0.41.1 Analysis Compose build-fix requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 50,
+      "heading": "Release 0.41.2 full correctness, compatibility and reporting audit requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 51,
+      "heading": "Release 0.41.3 queue and Vulkan Video evidence semantics",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 52,
+      "heading": "Release 0.41.4 full application hardening and reporting audit",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 53,
+      "heading": "Release 0.41.5 Analysis, Profiles and Database compatibility requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 54,
+      "heading": "Release 0.41.6 Kotlin compile-gate requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 55,
+      "heading": "Release 0.41.7 Image Format Properties2 correctness requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 56,
+      "heading": "Release 0.41.8 Image Format Properties2 tuple-result and build baseline requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 57,
+      "heading": "Release 0.41.9 Image Format Properties2 query-outcome separation requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 58,
+      "heading": "Release 0.41.10 Image Format Properties2 tuple-state completeness requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 59,
+      "heading": "Release 0.41.11 reporting-state and canonical-mask requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 60,
+      "heading": "Release 0.41.12 Database submission reliability requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 61,
+      "heading": "Release 0.41.13 Database query-group state requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 62,
+      "heading": "Release 0.41.14 Kotlin compile-correctness requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 63,
+      "heading": "Release 0.41.15 canonical enumeration and Android HDR provenance requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 64,
+      "heading": "Release 0.41.16 native/Kotlin compile-correctness requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 65,
+      "heading": "Release 0.41.17 native warning-clean compile requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 66,
+      "heading": "Release 0.41.18 full correctness, provenance and report-integrity requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 67,
+      "heading": "Release 0.41.19 collection serialization, report preservation and package hygiene requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 68,
+      "heading": "Release 0.41.20 full reporting, registry-reference and stale-state correctness requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 69,
+      "heading": "Release 0.41.21 Surface, external-capability and evidence-state correctness requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 70,
+      "heading": "Release 0.41.22 full re-audit, multi-device and query-state correctness requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 71,
+      "heading": "Release 0.41.23 Vulkan Video routing, partial-evidence and update-version integrity requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 72,
+      "heading": "Release 0.41.24 Surface enumeration, bounded partial-evidence and native-lifecycle requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 73,
+      "heading": "Release 0.41.25 Android 17 native dynamic-code hardening requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 74,
+      "heading": "Release 0.41.26 export-snapshot, driver-mutation and UI-thread correctness requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 75,
+      "heading": "Release 0.41.27 checkpoint, incomplete-enumeration and bounded-driver-scan correctness requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 76,
+      "heading": "Release 0.41.28 simple-feature completeness and isolated-crash fast-fail requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 77,
+      "heading": "Release 0.41.29 base-completeness, extension-state and Turnip traversal requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 78,
+      "heading": "Release 0.41.30 spec-lock, regression-contract and reproducible-quality-gate requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 79,
+      "heading": "Release 0.41.31 spec-correctness, provisional-registry and allowlisted-regression requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 80,
+      "heading": "Release 0.41.32 Vulkan 1.4.361, registry-census, concurrency and resource-budget requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 81,
+      "heading": "Release 0.41.33 Vulkan 1.4.361 CMake registry-lock build-regression requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 82,
+      "heading": "Release 0.41.34 real release-compiler regression requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 83,
+      "heading": "Release 0.41.35 Turnip post-checkpoint lifecycle and bounded-detail-collection requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 84,
+      "heading": "Release 0.41.36 terminal probe-publication handshake and evidence-workflow requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 85,
+      "heading": "Release 0.41.37 pre-return terminal publication, one-shot process isolation and bounded base-timeout requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 86,
+      "heading": "Release 0.41.38 single terminal-owner and post-JNI handoff requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 87,
+      "heading": "Release 0.41.39 base terminal JSON structural-integrity requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 88,
+      "heading": "Release 0.41.40 report-field semantics, evidence-state and Database-contract requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 89,
+      "heading": "Release 0.41.41 Surface identity, binary-property and provenance requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 90,
+      "heading": "Release 0.41.42 HTML state-presentation and registry-label requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 91,
+      "heading": "Release 0.41.43 driver-bound Surface rebind requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 92,
+      "heading": "Release 0.41.44 authoritative Vulkan Profiles evaluation requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 93,
+      "heading": "Release 0.41.45 locked Vulkan Video StdVideo registry census requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 94,
+      "heading": "Release 0.41.46 Material 3 Expressive information-architecture requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 95,
+      "heading": "Release 0.80.0 full security, memory, specification and design audit requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 96,
+      "heading": "Release 0.80.1 Overview Encyclopedia requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 97,
+      "heading": "Release 0.80.2 local Vulkan encyclopedia expansion",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 98,
+      "heading": "Release 0.80.3 separate Overview tools and crash-safe Encyclopedia search",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 99,
+      "heading": "Release 0.80.4 detail affordance, scroll/TV and collection-outcome requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 100,
+      "heading": "Release 0.80.5 update release-notes Android TV and design-integrity requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 101,
+      "heading": "Release 0.80.6 TalkBack and large-text/display-size accessibility requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 102,
+      "heading": "Release 0.80.7 system-language, bidi, system-font and update-information requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 103,
+      "heading": "Release 0.80.8 final collection-status, AGP and Database companion requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 104,
+      "heading": "Release 0.80.9 explicit detail-action and Database 0.39.23 companion requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 105,
+      "heading": "Release 0.80.10 Vulkan 1.4.362 registry/header requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 106,
+      "heading": "Release 0.80.12 Compose role compile-regression requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 107,
+      "heading": "Release 0.80.13 Material 3 Expressive full-UI coherence requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 108,
+      "heading": "Release 0.80.14 PaddingValues compile-regression requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 109,
+      "heading": "Release 0.80.15 responsive overlay-scroll and detail-dialog requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 110,
+      "heading": "Release 1.0.0 advanced evidence, analysis and workflow requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 111,
+      "heading": "Release 1.0.1 full security, specification, correctness and usability audit requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 112,
+      "heading": "Release 1.0.2 Material 3 Expressive filters, connectivity state, Turnip metadata and accessibility requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 113,
+      "heading": "Release 1.0.3 Kotlin regular-expression compile-regression requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 114,
+      "heading": "Release 1.0.4 offline availability, Turnip driver manager and filter-edge continuity requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 115,
+      "heading": "Release 1.0.5 Kotlin default-parameter call-site compile-regression requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 116,
+      "heading": "Release 1.0.6 driver confirmation, network transition and UI-coherence requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 117,
+      "heading": "Release 1.0.7 Turnip manager, combined connectivity and continuation UI requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 118,
+      "heading": "Release 1.0.8 driver-manager, confirmation-action, external-link and no-SAF exchange requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 119,
+      "heading": "Release 1.0.9 detail-dialog, action-target, driver-evidence and fallback-guidance requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 120,
+      "heading": "Release 1.0.10 PaddingValues import compile-regression requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 121,
+      "heading": "Release 1.0.11 active-driver exclusivity and semantic-icon UI requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 122,
+      "heading": "Release 1.0.12 SAF fallback detection, fallback-dialog and supplied-icon requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 123,
+      "heading": "Release 1.0.13 update-action and semantic-icon refinement requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 124,
+      "heading": "Release 1.0.14 fallback-import compile and first-install update-intro requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 125,
+      "heading": "Release 1.0.15 system-document-picker launch-first and full-audit requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 126,
+      "heading": "Release 1.0.16 Info, Memory and Database compatibility requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 127,
+      "heading": "Release 1.0.17 semantic icon correction and Database 1.0.8 compatibility requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 128,
+      "heading": "Release 1.0.18 compile-regression and full retained-audit requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 129,
+      "heading": "Release 1.0.19 semantic UI refinement requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 130,
+      "heading": "Release 1.2.0 UI, reporting and audit requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 131,
+      "heading": "Release 1.2.1 Settings/update-check requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 132,
+      "heading": "Release 1.2.2 Settings navigation, interaction-target and semantic-artwork requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 133,
+      "heading": "Release 1.2.3 compile, Database result and Android 12 minimum requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 134,
+      "heading": "Release 1.2.4 History, Settings motion and Share-action requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 135,
+      "heading": "Release 1.2.5 Settings destination-transition correction",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 136,
+      "heading": "Release 1.3.0 Vulkan registered-mark presentation and library-license disclosure",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 137,
+      "heading": "Release 1.3.1 searchable paged single-select filters and HDR logo disclosure",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 138,
+      "heading": "Release 1.3.2 persistent update-transfer dialog requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 139,
+      "heading": "Release 1.3.3 SAF and SAF-fallback removal-only requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 140,
+      "heading": "Release 1.3.4 in-app Turnip file manager requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 141,
+      "heading": "Release 1.3.5 full correctness, security, performance and UX audit requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 142,
+      "heading": "Release 1.3.6 in-app import/export storage completion requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 143,
+      "heading": "Release 1.3.7 Material3 Expressive compile opt-in fix",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 144,
+      "heading": "Release 1.3.8 filter selector and Turnip file-manager Material 3 Expressive refinement",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 145,
+      "heading": "Release 1.3.9 filter popup, export/storage browser and file-manager interaction refinement",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 146,
+      "heading": "Release 1.3.10 filter-arrow interaction, Turnip duplicate-source presentation and About disclosure refinement",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 147,
+      "heading": "Release 1.3.11 compile fix and updater palette hardening",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 148,
+      "heading": "Release 1.3.12 filter compactness, shared-storage actions and driver-manager Expressive refinement",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 149,
+      "heading": "Release 1.3.13 filter anchoring, driver branding and Turnip metadata semantics",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 150,
+      "heading": "Release 1.4.0 filter unification and Quick Access icon refinement",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 151,
+      "heading": "Release 1.4.1 filter scroll containment and Turnip slot metadata",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 152,
+      "heading": "Release 1.4.2 landscape filter sizing and compact centered pagination",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 153,
+      "heading": "Release 1.4.3 landscape filter width and rotation state retention",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 154,
+      "heading": "Release 1.4.4 ChromeOS runtime evidence, adaptive dialogs, Expressive navigation and launch motion",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 155,
+      "heading": "Release 1.4.5 Googlebook OS evidence, Vulkan 1.4.364 registry and full correctness audit",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 156,
+      "heading": "Release 1.4.6 launch sequencing and compact navigation requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 157,
+      "heading": "Release 1.4.7 compile repair and mouse pointer scrolling requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 158,
+      "heading": "Release 1.4.16 Surface destination, capsule navigation and transient-status overlay requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 159,
+      "heading": "Release 1.5.0 compact floating navigation and startup watchdog requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 160,
+      "heading": "Release 1.5.1 profile evidence, reference-sized navigation and opening refinement requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 161,
+      "heading": "Release 1.5.2 AGP 9.4.1 full audit and build-chain hardening requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 162,
+      "heading": "Release 1.5.3 overlay and navigation obstruction requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 163,
+      "heading": "Release 1.5.4 landscape compact-navigation requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 164,
+      "heading": "Release 1.5.5 landscape safe-width requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 165,
+      "heading": "Release 2.0.0 collection timing instrumentation requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 166,
+      "heading": "Release 2.0.2 parallel one-shot correctness, overlay and desktop pointer requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 167,
+      "heading": "Release 2.0.3 adaptive parallel scheduler requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 168,
+      "heading": "Release 2.0.4 adaptive six-lane scheduler and Android TV evidence long-press requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 169,
+      "heading": "Release 2.0.5 Android TV key-input compile-fix requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 170,
+      "heading": "Release 2.0.6 Surface chooser scrollability requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 171,
+      "heading": "Release 2.1.0 translucent UI, file-manager layouts, bounded page rendering, determinate updates and Database result actions",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 172,
+      "heading": "Release 2.1.1 collection pager Kotlin compile-fix requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 173,
+      "heading": "Release 2.1.2 header, layout and scroll refinement requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 174,
+      "heading": "Release 2.1.3 Telegram-style header, 25-item sticky pagination, shared file sorting and dialog-accent requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 175,
+      "heading": "Release 2.1.4 Kotlin compile restoration requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 176,
+      "heading": "Release 2.1.5 transparent header, aligned wordmark, unified file-manager options and sticky-pager requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 177,
+      "heading": "Release 2.1.6 frosted header, file-menu close action and coordinated paging overlay requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 178,
+      "heading": "Release 2.1.7 smooth glass, semantic file icons, pinned-pager lane ordering and SPIR-V trademark requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 179,
+      "heading": "Release 2.1.8 sticky-pager reporter Kotlin compile restoration requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 180,
+      "heading": "Release 2.1.9 clipping-independent pinned-pager overlay requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 181,
+      "heading": "Release 2.1.10 progressive pager-to-glass handoff and bounded backdrop requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 182,
+      "heading": "Release 2.1.11 Compose GraphicsLayer import compile restoration requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 183,
+      "heading": "Release 2.1.13 unified pager settle and bounded frosted chrome requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 184,
+      "heading": "Release 2.1.14 pager landing and unified glass requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 185,
+      "heading": "Release 2.1.15 single-pager anchor tracking and continuous shared glass requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 186,
+      "heading": "Release 2.1.16 lazy-viewport pager alignment requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 187,
+      "heading": "Release 3.0.0 edge-to-edge chrome, header underlap, opening rule and overlay coordination requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 188,
+      "heading": "Release 3.0.1 opening-rule stability, landscape file-manager, desktop secondary-input and page-separation requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 189,
+      "heading": "Release 3.0.2 Material 3 Expressive loading compile restoration",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 190,
+      "heading": "Release 3.0.3 Analysis minimum confirmations, graph usability, full-screen Turnip file-manager, TV navigation and copy-feedback requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 191,
+      "heading": "Release 3.0.4 Kotlin compile restoration requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 192,
+      "heading": "Release 3.0.5 full-screen file-manager, diagnostic timing and Database lookup requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 193,
+      "heading": "Release 3.0.6 Analysis CompositionLocal compile restoration requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 194,
+      "heading": "Release 3.0.7 Database vendor identity, animated file-manager search, auditable Quality and self-test result requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 195,
+      "heading": "Release 3.0.8 hardware D-pad navigation, analysis clarity, metric presentation and file-manager motion requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 196,
+      "heading": "Release 3.0.9 Database date/time, driver identity and semantic icon uniqueness requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 197,
+      "heading": "Release 3.0.10 Kotlin compile and File Manager landscape requirements",
+      "status": "historical_methodology_reference",
+      "coverage": "Historical VulkanScope release rule retained as methodology evidence; applicable API-neutral classes are superseded by current OpenGLESScope rules and gates."
+    },
+    {
+      "index": 198,
+      "heading": "Release 3.0.11 Turnip File Manager validated folder-count requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    },
+    {
+      "index": 199,
+      "heading": "Release 3.0.12 Turnip folder-scan Kotlin compile restoration requirements",
+      "status": "api_specific_reference",
+      "coverage": "Vulkan product-specific history; only API-neutral safety/UI/test methodology is inherited through the current OpenGLESScope contract."
+    }
+  ]
+}

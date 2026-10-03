@@ -1,13 +1,7 @@
-# OpenGLESScope 0.7.0 external OpenGL ES capability reference public capability-floor audit
+# OpenGLESScope 2.2.0 public capability reference audit
 
-The checked-in `PUBLIC_CAPABILITY_REFERENCE_MATRIX.csv` is the auditable OpenGL ES public-database capability floor used by the project.
+`PUBLIC_CAPABILITY_REFERENCE_MATRIX.csv`, the locked `gl.xml`, and the supplied locked `egl.xml` are unchanged from 2.1.4. OpenGLESScope 2.2.0 changes no public capability reference, canonical registry name or runtime-support semantic.
 
-- Public external comparison reference core capability floor: 145 rows.
-- OpenGLESScope coverage: 145/145.
-- Additional OpenGLESScope implementation queries: 49.
-- Every tracked row has an in-app/TXT/HTML/Database path.
-- The release verifier requires every tracked capability token to remain present in the native collector.
+Registry names, Encyclopedia entries, aliases, ownership and specification metadata remain reference evidence only. Runtime support continues to require exact runtime enumeration/query evidence; Unknown, unavailable and failed evidence is never guessed into Supported or Unsupported.
 
-The parity target is graphics capability inspection. CPU inventory, sensors, generic Android feature inventory and legacy OpenGL ES 1.x are not copied merely to inflate counts because they are outside OpenGLESScope's stated graphics scope.
-
-0.7.0 also removes two values that must not be represented as capability limits: `GL_NUM_WINDOW_RECTANGLES_EXT` is mutable state and `GL_MAX_SHADER_COMPILER_THREADS_KHR` is the KHR parallel-compile control/hint state rather than a reported implementation maximum.
+The normative capability baseline remains OpenGL ES 3.2, GLSL ES 3.20 revision 8 and EGL 1.5. VulkanScope 3.0.12 remains the byte-locked API-neutral methodology and interaction reference.

@@ -1,0 +1,12 @@
+{
+  "apiBaseline": "OpenGL ES 3.2",
+  "bundledRegistryPath": "registry/gl.xml",
+  "eglBaseline": "1.5",
+  "eglBundledRegistryPath": "registry/egl.xml",
+  "eglRegistrySha256": "3327619123cdaa999400b41a7060180616df42571a0fdd11e9726e026f6d0fb8",
+  "eglSourceUrl": "https://registry.khronos.org/EGL/api/egl.xml",
+  "glslEsBaseline": "3.20",
+  "registrySha256": "b9ca2cfa5c676e901c20d34af3407f1687cde0f1336a5ff7a8974d04c7494ad3",
+  "sourceUrl": "https://registry.khronos.org/OpenGL/xml/gl.xml",
+  "verifiedAt": "2026-09-30"
+}

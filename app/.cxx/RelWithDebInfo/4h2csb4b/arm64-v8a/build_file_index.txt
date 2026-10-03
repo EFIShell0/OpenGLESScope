@@ -1,0 +1,1 @@
+C:\Users\Administrator\Desktop\OpenGLESScope\app\src\main\cpp\CMakeLists.txt

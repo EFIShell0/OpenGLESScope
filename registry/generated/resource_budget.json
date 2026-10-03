@@ -1,0 +1,44 @@
+{
+  "analysis": {
+    "maxCompressedSnapshotBytes": 4194304,
+    "maxHistoryRecords": 8,
+    "maxSnapshotBytes": 8388608
+  },
+  "database": {
+    "maxResponseBytes": 65536,
+    "maxSubmissionBytes": 2097152
+  },
+  "json": {
+    "maxContainerItems": 131072,
+    "maxDepth": 64
+  },
+  "native": {
+    "maxDmaBufFormatCount": 128,
+    "maxDmaBufModifierCountPerFormat": 256,
+    "maxDmaBufModifierCountTotal": 4096,
+    "maxEglCompressionRateCount": 32,
+    "maxEglConfigCount": 4096,
+    "maxEglDeviceCount": 32,
+    "maxExtensionTokenBytes": 4096,
+    "maxGlEnumerationCount": 16384,
+    "maxInfoLogBytes": 1048576,
+    "maxInternalFormatSampleCounts": 64,
+    "maxProgramBinaryBytes": 8388608,
+    "maxRuntimeStringBytes": 1048576
+  },
+  "release": "1.4.0",
+  "report": {
+    "maxDiagnostics": 16384,
+    "maxEglCapabilities": 256,
+    "maxEglConfigs": 4096,
+    "maxInternalFormats": 256,
+    "maxLimits": 8192
+  },
+  "service": {
+    "maxProbeTimeoutMs": 60000,
+    "maxResultBytes": 8388608
+  },
+  "updater": {
+    "maxApkBytes": 268435456
+  }
+}
